@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "checkJs": true,
+        "baseUrl": ".",
+        "typeRoots": ["."]
+    },
+    "include": [
+        "**/*.jsol.js",
+        "**/*.jsol"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
