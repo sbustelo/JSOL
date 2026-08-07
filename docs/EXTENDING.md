@@ -39,9 +39,11 @@ JSOL's compiler pipeline is deliberately modular: the lexer and linter don't kno
 
 If Python, Go, C#, or something not even on this list is useful to you, this is the license to go build it. No permission needed, no request to file. Fork it, write the target compiler, ship it under your own name if you want.
 
-## Support
+## ☕ Say thanks
 
-This project is maintained on personal time, for free, with no plan to charge for it. If a target you built, or JSOL itself, saved you real work and you want to say thanks, there's a "buy me a coffee" link at [your-link-here]. Entirely optional, never required.
+This project is maintained on personal time, for free, with no plan to charge for it. If you want to say thanks, you can [buy me a coffee](https://cafecito.bustelo.com.ar/).
+
+Entirely optional, never required.
 
 ---
 
