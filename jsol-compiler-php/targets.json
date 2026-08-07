@@ -1,0 +1,19 @@
+{
+	"default": "",
+	"targets": {
+
+		
+		"j0": {
+			"js": {
+				"prefix": "window.j0 = (function() {\n",
+				"suffix": "\n  return $export;\n})();"
+			},
+			"php": {
+				"prefix": "<?php\ndeclare(strict_types=1);\nnamespace App\\Core;\n",
+				"suffix": ""
+			}
+		}
+
+
+	}
+}

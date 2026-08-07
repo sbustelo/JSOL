@@ -1,0 +1,44 @@
+// @JSOL v0.1.5 - Self-Hosted Compiler Linter Module
+
+const $auditPragma = function($sourceCode) {
+    const $errors = [];
+    let $hasPragma = false;
+    JSOL.JS(() => {
+        const $rxPragma = new RegExp("^\\s*\\/\\/\\s*@?jsol\\b", "i");
+        $hasPragma = $rxPragma.test($sourceCode);
+    });
+    JSOL.PHP(() => {
+        $hasPragma = (bool)preg_match('/^\\s*\\/\\/\\s*@?jsol\\b/i', $sourceCode);
+    });
+    if ($hasPragma === false) {
+        $errors.push("Fatal: Missing MANDATORY @JSOL pragma on Line 1.");
+    }
+    return JSOL.dict("valid", JSOL.count($errors) === 0, "errors", $errors);
+};
+
+const $auditForbiddenPatterns = function($maskedCode) {
+    const $errors = [];
+    let $hasFunctionalMethods = false;
+    JSOL.JS(() => {
+        const $rxFunc = new RegExp("\\.(map|filter|reduce|forEach|find)\\s*\\(");
+        $hasFunctionalMethods = $rxFunc.test($maskedCode);
+    });
+    JSOL.PHP(() => {
+        $hasFunctionalMethods = (bool)preg_match('/\\.(map|filter|reduce|forEach|find)\\s*\\(/', $maskedCode);
+    });
+    if ($hasFunctionalMethods === true) {
+        $errors.push("Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.");
+    }
+    let $hasLengthProperty = false;
+    JSOL.JS(() => {
+        const $rxLen = new RegExp("\\.length\\b");
+        $hasLengthProperty = $rxLen.test($maskedCode);
+    });
+    JSOL.PHP(() => {
+        $hasLengthProperty = (bool)preg_match('/\\.length\\b/', $maskedCode);
+    });
+    if ($hasLengthProperty === true) {
+        $errors.push("Linter Error: Accessing .length is FORBIDDEN. Use JSOL.count() for arrays or JSOL.len() for strings.");
+    }
+    return JSOL.dict("valid", JSOL.count($errors) === 0, "errors", $errors);
+};

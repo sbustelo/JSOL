@@ -1,0 +1,108 @@
+// @JSOL v0.2.0 - Self-Hosted JS Target Compiler
+const $compileToJS = function($maskedCode, $prefix, $suffix) {
+    const $processBlock = function($code, $keyword, $unwrap) {
+        let $result = $code;
+        let $continue = true;
+        while ($continue === true) {
+            let $startIdx = -1;
+            JSOL.JS(() => { $startIdx = $result.indexOf($keyword); });
+            JSOL.PHP(() => { $startIdx = strpos($result, $keyword); if ($startIdx === false) $startIdx = -1; });
+            
+            if ($startIdx === -1) {
+                $continue = false;
+            } else {
+                let $openBrace = -1;
+                JSOL.JS(() => { $openBrace = $result.indexOf("{", $startIdx); });
+                JSOL.PHP(() => { $openBrace = strpos($result, "{", $startIdx); if ($openBrace === false) $openBrace = -1; });
+                
+                if ($openBrace === -1) {
+                    $continue = false;
+                } else {
+                    let $braceCount = 1;
+                    let $closeBrace = -1;
+                    const $rLen = JSOL.len($result);
+                    for (let $i = $openBrace + 1; $i < $rLen; $i = $i + 1) {
+                        let $char = "";
+                        JSOL.JS(() => { $char = $result.substring($i, $i + 1); });
+                        JSOL.PHP(() => { $char = substr($result, $i, 1); });
+                        if ($char === "{") { $braceCount = $braceCount + 1; }
+                        if ($char === "}") { $braceCount = $braceCount - 1; }
+                        if ($braceCount === 0) {
+                            $closeBrace = $i;
+                            break;
+                        }
+                    }
+                    
+                    if ($closeBrace === -1) {
+                        $continue = false;
+                    } else {
+                        let $endIdx = $closeBrace + 1;
+                        let $findingEnd = true;
+                        while ($endIdx < $rLen && $findingEnd === true) {
+                            let $char = "";
+                            JSOL.JS(() => { $char = $result.substring($endIdx, $endIdx + 1); });
+                            JSOL.PHP(() => { $char = substr($result, $endIdx, 1); });
+                            if ($char === " " || $char === "\n" || $char === "\r" || $char === ")" || $char === ";") {
+                                $endIdx = $endIdx + 1;
+                            } else {
+                                $findingEnd = false;
+                            }
+                        }
+                        
+                        let $before = "";
+                        let $after = "";
+                        JSOL.JS(() => {
+                            $before = $result.substring(0, $startIdx);
+                            $after = $result.substring($endIdx);
+                        });
+                        JSOL.PHP(() => {
+                            $before = substr($result, 0, $startIdx);
+                            $after = substr($result, $endIdx);
+                        });
+                        
+                        if ($unwrap === true) {
+                            let $inner = "";
+                            JSOL.JS(() => { $inner = $result.substring($openBrace + 1, $closeBrace); });
+                            JSOL.PHP(() => { $inner = substr($result, $openBrace + 1, $closeBrace - $openBrace - 1); });
+                            JSOL.JS(() => { $result = $before + $inner + $after; });
+                            JSOL.PHP(() => { $result = $before . $inner . $after; });
+                        } else {
+                            JSOL.JS(() => { $result = $before + $after; });
+                            JSOL.PHP(() => { $result = $before . $after; });
+                        }
+                    }
+                }
+            }
+        }
+        return $result;
+    };
+
+    let $transformed = $maskedCode;
+    
+    $transformed = $processBlock($transformed, "JSOL.PHP", false);
+    $transformed = $processBlock($transformed, "JSOL.JS", true);
+
+    JSOL.JS(() => {
+        const $rxUse = new RegExp("JSOL\\.use\\s*\\([\\s\\S]*?\\)\\s*;?", "g");
+        $transformed = $transformed.replace($rxUse, "");
+        const $rxDict = new RegExp("JSOL\\.dict\\s*\\(", "g");
+        $transformed = $transformed.replace($rxDict, "JSOL.dict(");
+        const $rxCount = new RegExp("JSOL\\.count\\s*\\(\\s*(\\$[a-zA-Z0-9_]+)\\s*\\)", "g");
+        $transformed = $transformed.replace($rxCount, "$1.length");
+        const $rxLen = new RegExp("JSOL\\.len\\s*\\(\\s*(\\$[a-zA-Z0-9_]+)\\s*\\)", "g");
+        $transformed = $transformed.replace($rxLen, "$1.length");
+        const $rxHasKey = new RegExp("JSOL\\.hasKey\\s*\\(\\s*([^,]+)\\s*,\\s*([^)]+)\\s*\\)", "g");
+        $transformed = $transformed.replace($rxHasKey, "Object.prototype.hasOwnProperty.call($1, $2)");
+    });
+    JSOL.PHP(() => {
+        $transformed = preg_replace('/JSOL\\.use\\s*\\([\\s\\S]*?\\)\\s*;?/', '', $transformed);
+        $transformed = preg_replace('/JSOL\\.count\\s*\\(\\s*(\\$[a-zA-Z0-9_]+)\\s*\\)/', '$1.length', $transformed);
+        $transformed = preg_replace('/JSOL\\.len\\s*\\(\\s*(\\$[a-zA-Z0-9_]+)\\s*\\)/', '$1.length', $transformed);
+        $transformed = preg_replace('/JSOL\\.hasKey\\s*\\(\\s*(.+?)\\s*,\\s*(.+?)\\s*\\)/', 'Object.prototype.hasOwnProperty.call($1, $2)', $transformed);
+    });
+
+    let $finalOutput = "";
+    JSOL.JS(() => { $finalOutput = $prefix + $transformed + $suffix; });
+    JSOL.PHP(() => { $finalOutput = $prefix . $transformed . $suffix; });
+    return $finalOutput;
+};
