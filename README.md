@@ -1,12 +1,13 @@
 # JSOL (JavaScript Source Of Logic) - v.0.2
-2026, Santiago Bustelo
-MIT License
+2026, Santiago Bustelo • MIT License
 
-<img src="../assets/mascot/jsol-mascot-full.png" width="280" alt="JSOL mascot">
+<img src="assets/mascot/jsol-mascot-full.png" width="280" alt="JSOL mascot">
 
 JSOL is an ultra-strict, isomorphic JavaScript subset designed to write pure business logic once and compile it seamlessly to both JavaScript (Frontend) and PHP (Backend).
 
 It guarantees bit-for-bit output deterministic parity between V8 (Node/Browser) and Zend Engine (PHP 8.x) by eliminating syntax ambiguities, runtime environment dependencies, and asymmetric language features.
+
+JSOL can compile itself. Since JSOL scope is limited to business logic, I/O is handled by the "index" entry point.
 
 **Use Cases:**
 
@@ -14,6 +15,8 @@ It guarantees bit-for-bit output deterministic parity between V8 (Node/Browser) 
 2.  **Validation:** Strict form rules, length limits, and sanitization evaluated in real time on the client and re-verified on the server.
 3.  **E-commerce Engines:** Tax calculations, discounts, and cart rules (what the client sees is exactly what the server bills).
 4.  **State Machines:** Logic prediction in games or cooperative interfaces, running on clients to avoid initial lag, and then on the server to validate and synchronize.
+
+** This is a preliminary version of the project. I am revising documemtation as now; this document describes 0.1.4, and will be updated and split in manageable separate documents on next commits. **
 
 ## 1\. Why JSOL? (Origin & Architectural Comparison)
 
@@ -93,23 +96,8 @@ Some architectures represent logic as JSON AST trees (e.g., `{"and": [{"==": [1,
 
 ## 3\. Project Architecture
 
-The JSOL ecosystem is split into a 4-tier modular pipeline:
+This section is currentlyl being revised.
 
-```
-jsol-root/
-├── index.php                 # CLI Runner / Orchestrator entry point
-├── jsol-env.d.ts             # TypeScript definitions for VS Code Intellisense
-├── example/
-│   ├── sample.jsol           # Source file
-│   ├── sample.js             # Transpiled Frontend JS
-│   └── sample.php            # Transpiled Backend PHP
-└── jsol-compiler/
-    ├── lexer.php             # Masking / Unmasking of strings and comments
-    ├── linter.php            # Static rule validator (+ native JSLint bridge)
-    ├── js-compiler.php       # JS Target transpiler & payload optimizer
-    ├── php-compiler.php      # PHP Target transpiler & syntax transformer
-    └── engine.php            # Compiler pipeline orchestrator
-```
 
 ## 4\. Performance Rationale & Array Iteration
 
