@@ -1,16 +1,19 @@
 # JSOL Roadmap
 
 This document tracks where JSOL is and what's next, in priority order.
+As a backlog, it is not (and cannot be) final nor accurate; actual work on it may uncover current imprecisions, mistakes, etc.
 
 ## Where we are: v0.2.0, Level 1 complete
 
-The published compiler covers what this document calls **Level 1**: wrappers backed by deterministic, engine-agnostic logic (`JSOL.count`, `JSOL.len`, `JSOL.dict`, the `JSOL.bw*` family, `JSOL.closure`/`JSOL.use`). Level 1 wrappers require no runtime verification because the guarantee comes from the wrapper's implementation, proven once, by the compiler maintainer, forever. The compiler is self-hosted (see `SELF_HOSTING.md`) and fixed-point verified on both JS and PHP hosts.
+The published compiler covers what this document calls **Level 1**: wrappers backed by deterministic, engine-agnostic logic (`JSOL.count`, `JSOL.len`, `JSOL.dict`, the `JSOL.bw*` family, `JSOL.closure`/`JSOL.use`).
+
+Level 1 wrappers require no runtime verification because the guarantee comes from the wrapper's implementation, proven once, by the compiler maintainer, forever. The compiler is self-hosted (see `SELF_HOSTING.md`) and fixed-point verified on both JS and PHP hosts.
 
 Everything below this line doesn't exist yet. This is backlog, not changelog.
 
 ---
 
-## Wrappers will need a contract-verification pipeline; PHP is the blocker
+## Wrappers will need a contract-verification pipeline. PHP should be the only actual blocker; Node should not be baked in as the only available JS engine.
 
 **Level 2** wrappers (e.g. regex) will need a contract-verification pipeline, which in turn would need JS and PHP. JS has no single required runtime: it runs in Node, in a browser, in a headless browser, in any embedded JS engine. PHP has no equivalent flexibility — there is exactly one way to run PHP, which is PHP.
 
@@ -24,10 +27,10 @@ This reframes two things below: the Host Orchestration Layer, and how the Level 
 
 ## Priority 0 (ship anytime, no dependencies): Level 1 wrapper additions
 
-[IPAX](https://ipax.bustelo.com.ar/) is the project that spawned JSOL. Two wrappers earned their place from real usage in the IPAX port, are fully deterministic, and need no contract model:
+[IPAX](https://ipax.bustelo.com.ar/) is the project that spawned JSOL. Two wrappers (or set of wrappers) earned their place from real usage in the IPAX port, are fully deterministic, and need no contract model:
 
-- **`JSOL.round($val, $decimals)`** — replaces the repeated `parseFloat($x.toFixed(n))` / `round($x, n)` pattern found more than ten times in IPAX's ergonomics engine. One implementation, one place a rounding-edge bug can hide, instead of ten.
-- **`JSOL.upper($str)`** — replaces `.toUpperCase()` / `strtoupper()`. Trivial, no asymmetry risk for the ASCII hex strings it's used for today, but centralizing it now costs nothing and closes the last dual-block in the color-parsing code that didn't need one. While IPAX doesn't convert strings to lowercase, a `JSOL.lowe($str)` wrapper will make intuitive sense given we'll implement `JSOL.upper`.
+- **`JSOL.round($val, $decimals)`** — replaces a repeated split JS/PHP math pattern found more than ten times in IPAX's ergonomics engine. One implementation, one place a rounding-edge bug can hide, instead of ten. It's still to be defined if it makes sense to cover different rounding mechanisms, etc., considering differences not only in method naming but also math engines, in order to ensure JSOL functions compile to different architectures ensuring deterministic input/output parity.
+- **`JSOL.upper($str)`** — replaces `.toUpperCase()` / `strtoupper()`. Trivial, no asymmetry risk for the ASCII hex strings it's used for today, but centralizing it now costs nothing and closes a dual-block in the color-parsing code that didn't need one. While IPAX doesn't convert strings to lowercase, a `JSOL.lowe($str)` wrapper will make intuitive sense given we'll implement `JSOL.upper`. This opens the question whether other string functions should be supported, and if so, which ones should be core functions and which ones should be extensions (as defined below).
 
 These go straight into `LANGUAGE_SPEC.md` Section 2.8 and the compiler's existing substitution logic. No architecture change required, this is the same mechanism `JSOL.count` already uses.
 
@@ -37,14 +40,14 @@ These go straight into `LANGUAGE_SPEC.md` Section 2.8 and the compiler's existin
 
 ### The problem
 
-`JSOL.hexToInt`, and everything IPAX-specific that would follow it (OKLCH conversion helpers, APCA-specific lookups), doesn't belong bundled into the same compiler core as `JSOL.count`. IPAX is the project that motivated JSOL's existence, but it isn't JSOL, and a different downstream project will want its own helpers that have nothing to do with color math. Collapsing "core, load-bearing for any JSOL project" and "useful for one specific project" into a single wrapper table doesn't scale and makes the core harder to audit.
+`JSOL.hexToInt`, and everything IPAX-specific (or Whatever-Project-specific) that would follow it (OKLCH conversion helpers, APCA-specific lookups), doesn't belong bundled into the same compiler core as `JSOL.count`. IPAX is the project that motivated JSOL's existence, but it isn't JSOL, and a different downstream project will want its own helpers that have nothing to do with color math. Collapsing "core, load-bearing for any JSOL project" and "useful for one specific project" into a single wrapper table doesn't scale and makes the core harder to audit.
 
 ### The design proposal
 
 Split the wrapper namespace into two tiers:
 
 - **Core** (`JSOL.*`): the existing Level 1 table, plus Level 2 once it ships. Ships with the compiler. Anyone using JSOL gets it, no setup.
-- **Extension helpers** (`JSOL.ext.<namespace>.<helperName>()`, naming TBD): live outside the compiler, one file per helper, discoverable rather than hardcoded. IPAX's helpers become the first extension package; someone else's domain gets their own.
+- **Extension / Project helpers** (`JSOL.ext.<namespace>.<helperName>()`, naming TBD): live outside the compiler, one file per helper, discoverable rather than hardcoded. IPAX's helpers can become the first extension package; someone else's domain gets their own.
 
 ### Discovery is an input, not a runtime operation
 
@@ -57,12 +60,13 @@ Practical consequence: only helpers actually referenced in a given `.jsol` file 
 ### Open question to resolve before implementing
 
 Do extension helpers ever get to be *written in JSOL itself* (for helpers with no engine asymmetry, recursively compiled the normal way), or are they always hand-written per-target like `JSOL.count`'s current implementation? Deterministic helpers (most of what IPAX needs beyond regex) could plausibly just be `.jsol` files that compile normally and get included as dependencies. Helpers backed by genuinely asymmetric primitives (anything regex-shaped) can't — they need the Level 2 machinery below regardless of which tier they live in.
+A strategy could be: the ultimate truth would be JS/PHP helpers. JSOL helpers, if any, should be compiled first; their output will exist as JS/PHP files along "orphan" JS/PHP helpers. We'll see how this develops.
 
 ---
 
 ## Priority 2: Host Orchestration Layer
 
-`jsol-compiler1` already runs in a browser context (that's existing, working precedent). `jsol-compiler-node`/`jsol-compiler-php` currently assume CLI only. Formalize environment detection in both:
+`jsol-compiler-node`/`jsol-compiler-php` currently assume CLI only. Formalize environment detection in both:
 
 - **`index.js`**: detect Node vs. browser (`typeof process !== "undefined" && process.versions?.node` vs. `typeof window !== "undefined"`). In Node, read `--source`/`--out-dir` from argv, write output via `fs`. In a browser, accept source and manifest as function/message input, return compiled output rather than writing files, since there's nothing to write to.
 - **`index.php`**: detect CLI vs. web SAPI (`PHP_SAPI === 'cli'` vs. not). In CLI, read argv, write to disk. In a web context, read from `$_GET`/`$_POST`, respond over HTTP instead of touching the filesystem — this is what lets someone compile JSOL through a web UI with no shell access at all, matching what V1 already does today.
@@ -75,9 +79,9 @@ This isn't just DX polish. It's the prerequisite for Priority 3's contract runne
 
 ### Why Level 2 is a different kind of guarantee than Level 1
 
-The language cannot statically guarantee isomorphism the moment regex is involved. PCRE and V8 are different engines with real, non-textual differences (variable-length lookbehind support, backtracking behavior, Unicode property handling). No amount of linting the pattern *string* can prove two engines will behave identically on it. The only thing that actually proves parity is running both engines and comparing real output.
+The language cannot statically guarantee isomorphism the moment regex is involved. PCRE and V8 are different engines with real, non-textual differences (variable-length lookbehind support, backtracking behavior, Unicode property handling). No amount of linting the pattern *string* can prove two engines will behave identically on it. What we can do, is running both engines and comparing real output considering a set of tests provided by the project itself.
 
-### The wrappers
+### Proposed wrappers
 
 ```
 JSOL.regexMatch($pattern, $string, $flags)
@@ -107,7 +111,7 @@ Once Level 2 ships, IPAX's actual regex usage (`$parseHexToRGB` and anywhere els
 
 ## Summary: build order
 
-1. `JSOL.round`, `JSOL.upper` — ship now, zero dependencies.
+1. `JSOL.round`, `JSOL.upper` — next step, zero dependencies.
 2. Helper Architecture (directory-based, core/extension split, discovery-as-input) — unblocks moving IPAX-specific helpers out of core cleanly.
 3. Host Orchestration Layer (`index.js`/`index.php` environment detection) — infrastructure Level 2's test runner needs to honor the PHP-is-the-only-blocker principle instead of accidentally requiring Node.
 4. Level 2 (regex wrappers + mandatory contract enforcement + dual-engine test runner).
