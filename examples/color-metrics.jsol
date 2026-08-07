@@ -1,0 +1,45 @@
+// @JSOL
+
+const $calculateColorMetrics = function($hexString) {
+    let $regexMatch = null;
+    let $warningMsg = "";
+
+    JSOL.JS(() => {
+        $regexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec($hexString);
+    });
+
+    JSOL.PHP(() => {
+        preg_match('/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i', $hexString, $regexMatch);
+        if (empty($regexMatch)) $regexMatch = null;
+    });
+
+    if ($regexMatch === null) {
+        return JSOL.dict("valid", false, "rgb", null, "warning", "Invalid format");
+    }
+
+    const $r = JSOL.hexToInt($regexMatch[1]);
+    const $g = JSOL.hexToInt($regexMatch[2]);
+    const $b = JSOL.hexToInt($regexMatch[3]);
+
+    const $mask = JSOL.bwAnd($r, 0xFF);
+
+    if ($mask > 128) {
+        $warningMsg = `High red value detected: ${$mask}`;
+    }
+
+    // Closure with explicit dependency declaration
+    const $factor = 1.5;
+    const $computeScore = function($val) {
+        JSOL.use($factor);
+        return Math.floor($val * $factor);
+    };
+
+    const $finalScore = $computeScore($r);
+
+    return JSOL.dict(
+        "valid", true,
+        "rgb", JSOL.dict("r", $r, "g", $g, "b", $b),
+        "warning", $warningMsg,
+        "score", $finalScore
+    );
+};

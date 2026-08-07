@@ -106,7 +106,7 @@ The following are the complete, closed set of native-behavior wrappers. There is
 
 ## 3. The Signature Asymmetry Problem
 
-This section explains why functional array methods are excluded from the grammar rather than merely discouraged. It's not a style preference; it's that a regex-based compiler cannot transpile them correctly, ever.
+This section explains why functional array methods are excluded from the grammar rather than merely discouraged. It's not a style preference, it's that a regex-based compiler cannot transpile them correctly, ever.
 
 JavaScript's array methods are object methods: the array owns the call, the callback is an argument.
 
@@ -253,3 +253,7 @@ This table is a derived summary of Section 2. If something here contradicts Sect
 | `async` / `await` / `Promise` / `Worker` inside JSOL | ⛔️ | Orchestrate from outside; see Section 5.1 |
 
 **Enforcement note**: this specification is the source of truth regardless of what the linter currently checks. The linter implements a growing subset of these rules as a convenience and a safety net, not as the definition of the language. A rule being unenforced by the linter today does not make code that violates it valid JSOL.
+
+---
+
+*JSOL v0.2 — 2026-08-07, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

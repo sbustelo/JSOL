@@ -2,6 +2,7 @@
 .DS_Store
 Thumbs.db
 
+
 # Ignorar directorios de dependencias
 vendor/
 node_modules/
@@ -15,15 +16,12 @@ node_modules/
 *.tmp
 *.temp
 
-# Ignorar symlinks a gitignore
-gitignore\ \(symlink\ al\ archivo\ oculto\).txt
-gitignore.txt
 # Ignorar cualquier archivo que empiece con "gitignore" y tenga .txt
 gitignore*.txt
 
-# Ignorar archivos de dump internos/auxiliares (con doble guión bajo para este proyecto)
-__project-dump.php
-__project-dumped.txt
+# Ignorar archivos que empiezan con guión bajo
+_*
+
 # Ignorar archivos de dump generados
 *.dump
 *.nodump
