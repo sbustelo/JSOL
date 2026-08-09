@@ -23,6 +23,17 @@ It was built inside **j0**, a zero-config, zero-binary-dependency PHP/JS framewo
 
 <img src="assets/mascot/jsol-mascot-full.png" width="280" alt="JSOL mascot, full body">
 
+## Design Pillars
+
+Four principles shape every rule in the specification. When two of them pull in different directions, this is the order that decides:
+
+1. **Clarity** — a JSOL algorithm has to be readable by the person who owns the business logic, not just by a compiler. When a portability rule would force an algorithm into an unreadable shape, the rule loses, not the readability. This is also why JSOL doesn't standardize *how* you structure code (nested functions vs. flat scope, for instance) — that's implementation shape, not business logic, and JSOL only prescribes what changes the actual numbers a program produces.
+2. **Portability** — the same source runs correctly on every proven target. This is where Deterministic Parity comes from: given identical inputs, every target's output has to match, bit for bit.
+3. **Performance** — the compiled output should be no heavier and no slower than it has to be. This is where Zero Dead Code comes from: nothing gets shipped that a given file doesn't actually use.
+4. **Developer Experience** — writing, compiling, and debugging JSOL should be as frictionless as the constraints allow. This is where the AST-free compiler pipeline comes from (fast, small, easy to embed in an existing build, easy to reason about), and where Zero Runtime Dependencies comes from (no toolchain to install before you can start).
+
+Full detail, with the reasoning behind each derived rule, in [docs/LANGUAGE_SPEC.md](docs/LANGUAGE_SPEC.md) Section 1.
+
 ## Use Cases
 
 JSOL fits any scenario where the same logic has to run identically on two or more independently-implemented runtimes, or when a canonical, human-readable standard is required:
@@ -62,13 +73,14 @@ Full setup, per distribution, in [docs/GETTING_STARTED.md](docs/GETTING_STARTED.
 
 | Doc | What's in it |
 |---|---|
+| [docs/DESIGN_PHILOSOPHY.md](docs/DESIGN_PHILOSOPHY.md) | Why the spec projects ahead of what's actually built |
 | [docs/LANGUAGE_SPEC.md](docs/LANGUAGE_SPEC.md) | The permitted grammar, the wrapper vocabulary, the rules |
 | [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | How to compile a `.jsol` file, per distribution |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Why each restriction exists, the performance case, costs included |
 | [docs/ADOPTION_ECONOMICS.md](docs/ADOPTION_ECONOMICS.md) | The ROI model: when the upfront constraints pay for themselves |
 | [docs/COMPARISON.md](docs/COMPARISON.md) | JSOL vs. Haxe, WebAssembly, JSON-driven math |
 | [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) | What it means that the compiler compiles itself |
-| [docs/EXTENDING.md](docs/EXTENDING.md) | Feasibility notes on other target languages (exploratory) |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | The vision, and everything still ahead |
 | [docs/JSOL_AI_INSTRUCTIONS.md](docs/JSOL_AI_INSTRUCTIONS.md) | System prompt for AI assistants generating or refactoring JSOL |
 
 ## Examples
