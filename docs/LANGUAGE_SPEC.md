@@ -9,10 +9,12 @@ JSOL is 100% valid JavaScript. Not all JavaScript is JSOL.
 
 ## 1. Design Principles
 
-- **Zero Runtime Dependencies**: JSOL source never touches `window`, `document`, `$_SERVER`, `$_GET`, or any host-environment global. Orchestration lives outside the `.jsol` file, never inside it.
-- **Deterministic Parity**: Given identical inputs, the JS and PHP transpilations of a `.jsol` file MUST produce bit-for-bit identical outputs.
-- **AST-Free Pipeline**: Compilation is a lexer mask plus deterministic string transformations. No AST, no external toolchain, no binary dependency.
-- **Zero Dead Code**: Environment-specific blocks and closure dependency declarations are stripped or inlined per target, so neither output carries payload the other target doesn't need.
+Four pillars, in priority order when two of them conflict:
+
+- **Clarity**: a JSOL algorithm has to be readable by the person who owns the business logic, not just by a compiler. When a portability rule would force an algorithm into an unreadable shape, the rule loses. JSOL only prescribes what changes the output a program produces (types, operators, control flow determinism) — it never prescribes code shape (nested functions vs. flat scope, for instance), because that's implementation structure, not business logic.
+- **Portability**: the same source runs correctly on every proven target. **Deterministic Parity** is what Portability means for JSOL specifically: given identical inputs, every target's transpilation MUST produce bit-for-bit identical output.
+- **Performance**: compiled output is no heavier and no slower than it has to be. **Zero Dead Code** follows directly: environment-specific blocks, unused helpers, and closure dependency declarations are stripped or inlined per target, so no output carries payload it doesn't use.
+- **Developer Experience**: writing, compiling, and debugging JSOL is as frictionless as the other three pillars allow. Two things follow from this, not from Portability or Performance: the **AST-free compiler pipeline** (a lexer mask plus deterministic string transformations, no external toolchain, easy to embed in an existing build), and **Zero Runtime Dependencies** (JSOL source never touches `window`, `document`, `$_SERVER`, `$_GET`, or any host-environment global — orchestration lives outside the `.jsol` file, and nothing needs installing before you can start).
 
 ---
 
