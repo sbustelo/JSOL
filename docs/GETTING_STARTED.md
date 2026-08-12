@@ -1,6 +1,7 @@
 # Getting Started
 
-JSOL ships as three separate distributions. Pick the one that matches what you're doing.
+JSOL ships as three separate distributions in v0.2.90.
+Pick the one that matches what you're doing.
 
 | I want to... | Use |
 |---|---|
@@ -58,4 +59,4 @@ After changing anything here, re-run the fixed-point check described in [SELF_HO
 
 ---
 
-*JSOL v0.2 — 2026-08-07, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.90 — 2026-08-11, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

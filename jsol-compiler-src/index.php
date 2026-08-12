@@ -16,6 +16,30 @@ class JSOL {
         }
         return $obj;
     }
+    public static function use(...$args) {}
+    public static function strIndexOf($haystack, $needle) {
+        $r = strpos($haystack, $needle);
+        return $r === false ? -1 : $r;
+    }
+}
+
+class Str {
+    public static function indexOf($h, $n) { $r = strpos($h, $n); return $r === false ? -1 : $r; }
+    public static function len($s) { return mb_strlen($s, "UTF-8"); }
+    public static function sub($s, $start, $len) { return mb_substr($s, $start, $len, "UTF-8"); }
+    public static function char($s, $idx) { return mb_ord(mb_substr($s, $idx, 1, "UTF-8")); }
+    public static function fromChar($c) { return mb_chr($c, "UTF-8"); }
+    public static function replace($s, $search, $replace) { return str_replace($search, $replace, $s); }
+}
+
+class Arr {
+    public static function count($a) { return count($a); }
+    public static function push(&$a, $i) { $a[] = $i; return $a; }
+}
+
+class Map {
+    public static function create(...$args) { return JSOL::dict(...$args); }
+    public static function has($obj, $key) { return isset($obj[$key]); }
 }
 
 // 1. Load Compiled JSOL Engine Parts (Order Matters)
@@ -24,11 +48,11 @@ $parts = [
     'linter.php',
     'cli-parser.php',
     'config-parser.php',
+    'regex.php',
     'js-compiler.php',
     'php-compiler.php',
     'engine.php'
 ];
-
 foreach ($parts as $part) {
     $path = __DIR__ . '/' . $part;
     if (!file_exists($path)) {

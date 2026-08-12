@@ -3,8 +3,10 @@
 ## 1. MANDATORY CONTEXT REQUIREMENT (SINGLE SOURCE OF TRUTH)
 Before processing, refactoring, or generating any JSOL code, you MUST load `docs/LANGUAGE_SPEC.md` (the grammar and rules) and, if available, the `jsol-compiler-src/` source files.
 
-* `docs/LANGUAGE_SPEC.md` is your **Absolute Rulebook** for syntax, the permitted grammar, forbidden features, bitwise wrappers, and math mappings.
+* `docs/LANGUAGE_SPEC.md` is your Absolute Rulebook for syntax, permitted grammar, forbidden features, and domain mappings ('Str.*', 'Arr.*', 'Map.*', 'Math.*', 'Bit.*', 'Cast.*', 'Regex.*').
 * You are strictly forbidden from guessing, inferring, or using native JS/PHP features that contradict `docs/LANGUAGE_SPEC.md`. If a construct isn't in the permitted grammar (Section 2 of that document), it is not JSOL, regardless of whether it happens to be valid JavaScript.
+* You are strictly forbidden from using deprecated wrappers ('JSOL.count', 'JSOL.len', 'JSOL.dict') in new v0.2.90+ code. Use 'Arr.count', 'Str.len', 'Map.create'.
+
 
 ---
 
@@ -37,11 +39,12 @@ Before writing or approving any line of code, evaluate this question: **"Will th
 
 When analyzing or refactoring code for JSOL, simulate execution in both **V8 (JavaScript)** and **Zend Engine (PHP 8.x)** to catch these before they ship:
 
-1. **UTF-16 (V8) vs. byte-indexed (Zend)**: Never access strings by direct index (`$str[$i]`) or iterate characters directly. Multi-byte characters and emoji cause index drift between engines. Use `JSOL.len()` and procedural transforms, or isolated `JSOL.JS`/`JSOL.PHP` blocks.
+1. **UTF-16 (V8) vs. byte-indexed (Zend)**: Never access strings by direct index (`$str[$i]`) or iterate characters directly. Multi-byte characters and emoji cause index drift between engines. Use `Str.sub`, `Str.len`, `Str.char`.
 2. **Float precision overflow**: Keep integers strictly below `Number.MAX_SAFE_INTEGER` (2^53 - 1). Always use `Math.floor()` for integer division.
-3. **Numeric string keys in dictionaries**: PHP auto-casts numeric string keys to integers (`['10' => $v]` becomes `[10 => $v]`), breaking strict-equality comparisons against V8 objects. Never use pure numeric string keys in `JSOL.dict()`.
-4. **Implicit truthiness divergence**: `"0"` and `[]` are truthy in JS, falsy in PHP. Never use implicit truthiness (`if ($x)`). Require explicit comparisons: `JSOL.len($str) > 0`, `JSOL.count($arr) > 0`, `$x === null`.
+3. **Numeric string keys in dictionaries**: PHP auto-casts numeric string keys to integers (`['10' => $v]` becomes `[10 => $v]`), breaking strict-equality comparisons against V8 objects. Never use pure numeric string keys in `Map.create()`.
+4. **Implicit truthiness divergence**: `"0"` and `[]` are truthy in JS, falsy in PHP. Never use implicit truthiness (`if ($x)`). Use explicit comparisons ('Str.len($str) > 0', 'Arr.count($arr) > 0', '$x === null').
 5. **Array mutation semantics**: JS arrays/objects pass by reference; PHP arrays pass by value (copy-on-write). Do not write logic that relies on a callee mutating a caller's array.
+6. **String Concatenation:** Never use bare '+' for string concatenation. Use template literals or the '+ "" +' pattern.
 
 ---
 

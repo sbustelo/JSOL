@@ -1,4 +1,4 @@
-// @JSOL v0.2.0 - Targets Configuration Normalizer
+// @JSOL v0.2.90 - Targets Configuration Normalizer
 const $normalizeTargetsConfig = function($rawConfig) {
     const $jsConfig = JSOL.dict("default", "", "targets", JSOL.dict());
     const $phpConfig = JSOL.dict("default", "", "targets", JSOL.dict());

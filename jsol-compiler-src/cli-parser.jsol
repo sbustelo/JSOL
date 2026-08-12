@@ -1,4 +1,4 @@
-// @JSOL v0.2.0 - CLI Arguments Parser
+// @JSOL v0.2.90 - CLI Arguments Parser
 const $parseRawCliArgs = function($rawArgs) {
     const $options = JSOL.dict("source", "", "outDir", "", "target", "", "jsTarget", "", "jsPrefix", "", "jsSuffix", "", "phpTarget", "", "phpPrefix", "", "phpSuffix", "");
     const $count = JSOL.count($rawArgs);

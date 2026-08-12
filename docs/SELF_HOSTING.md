@@ -2,6 +2,12 @@
 
 The JSOL compiler (`jsol-compiler-src/`) is written in JSOL. It compiles itself, to both its own JS and PHP targets, and the result of that self-compilation is byte-for-byte identical to the compiler it started from. This document explains what that means and why it's a real milestone, not a party trick.
 
+## Milestone v0.2.90: Thompson VM Integration & Self-Hosting Purity
+
+In v0.2.90, the compiler integrated its own Thompson VM Regex Engine ('regex.jsol') written in 100% pure JSOL. This eliminated target-specific environment isolation blocks ('JSOL.JS' / 'JSOL.PHP') from the compiler source logic.
+
+Fixed-point convergence holds across both Node.js and PHP hosts, producing byte-identical transpiled output.
+
 ## What "self-hosting" means here
 
 There are two distinct claims, and it's worth keeping them separate:

@@ -36,13 +36,26 @@ Earlier drafts of this roadmap listed C++ as a stretch goal requiring "real sema
 
 Everything below this line outlines the path to JSOL v1.0, ensuring the specification is robust enough to support strict statically-typed target languages.
 
-## Where we are: v0.2.0, Level 1 complete
+## Where we are: v0.2.90 (Fixed-Point Bootstrap & Thompson VM Engine Complete)
 
-The published compiler proves the AST-free, regex-based compilation pipeline works for dynamic targets (JS/PHP). It covers what this document calls **Level 1**: wrappers backed by deterministic, engine-agnostic logic (`JSOL.count`, `JSOL.len`, `JSOL.dict`, the `JSOL.bw*` family, `JSOL.closure`/`JSOL.use`).
+The v0.2.90 compiler proves the AST-free, regex-based compilation pipeline with pure JSOL self-hosting. It covers what this document calls **Level 1**: wrappers backed by deterministic, engine-agnostic logic.
 
 Level 1 wrappers require no runtime verification because the guarantee comes from the wrapper's implementation, proven once, by the compiler maintainer, forever. The compiler is self-hosted (see `SELF_HOSTING.md`) and fixed-point verified on both JS and PHP hosts.
 
 However, to support the C-like universe and the educational use-case, the core needs structural shifts.
+
+### Completed in v0.2.90:
+- **Priority 0 (Academic Wrapper Redesign):** Core domain namespaces ('Str.*', 'Arr.*', 'Map.*', 'Math.*', 'Bit.*', 'Cast.*') fully integrated and active across the compiler source.
+- **Priority 4 (Pure JSOL Regex Reference Engine):** Integrated Thompson VM ('regex.jsol') written in 100% pure JSOL. Eliminates environment isolation closures ('JSOL.JS' / 'JSOL.PHP') from the compiler, achieving full self-hosting purity.
+- **Fixed-Point Convergence:** Verified byte-for-byte convergence across Node.js and PHP hosts.
+
+## Next Steps (Path to v0.3.0)
+
+1. **Refactor 'Regex.*' Domain Namespace (Technical Debt):** Transition 'regex.jsol' functions ('$regexMatch', '$regexReplace') from bare global functions into the formal 'Regex.*' domain namespace ('Regex.match', 'Regex.replace', 'Regex.test') to eliminate global scope pollution and unify with 'Str.*'/'Arr.*'. (See 'docs/PENDING_IMPROVEMENTS.md').
+2. **Priority 1 & 2 (Control Flow Strictness & Static Typing Prefixes):** Enforce '$s' (string), '$i' (index), '$q' (quantity), '$a' (array), '$m' (map), '$b' (boolean) strictly across all source variables.
+3. **Priority 3 (Helper Architecture):** Core vs. Reference vs. Extension packages.
+4. **Priority 5 & 6 (Host Orchestration Layer & Contract Model):** Formalize cross-target test runner infrastructure.
+
 
 Everything below this line doesn't exist yet. This is backlog, not changelog.
 
@@ -160,7 +173,7 @@ The safe subset of regex syntax the reference engine supports: literals, `.`, ch
 
 ### Compilation strategy, not yet finalized
 
-For a **literal pattern** (known at compile time, the common case — `JSOL.re("^#?([a-f\d]{2})...", $hex, "safe")`), the compiler can run Thompson construction itself, at compile time, and embed only the resulting state table plus a small generic table-walking interpreter in the output — no regex parser needed in the shipped artifact. For a **dynamic pattern** (built at runtime, rare but legitimate), the full constructor (parser + Thompson construction) has to ship in the output, since the state table can't be precomputed. The compiler distinguishes the two cases the same way it already distinguishes literals from expressions elsewhere in the pipeline (via masking), and only includes what a given file actually needs — Zero Dead Code applied to the regex engine specifically. Whether the state-table interpreter and the full constructor are themselves written in JSOL (self-hosted, elegant, but a real bootstrap-ordering question to work through) or hand-written once per host as part of the compiler itself (simpler now, smaller asymmetry surface to verify) is still open.
+For a **literal pattern** (known at compile time, the common case — `JSOL.re("^#?([a-fd]{2})...", $hex, "safe")`), the compiler can run Thompson construction itself, at compile time, and embed only the resulting state table plus a small generic table-walking interpreter in the output — no regex parser needed in the shipped artifact. For a **dynamic pattern** (built at runtime, rare but legitimate), the full constructor (parser + Thompson construction) has to ship in the output, since the state table can't be precomputed. The compiler distinguishes the two cases the same way it already distinguishes literals from expressions elsewhere in the pipeline (via masking), and only includes what a given file actually needs — Zero Dead Code applied to the regex engine specifically. Whether the state-table interpreter and the full constructor are themselves written in JSOL (self-hosted, elegant, but a real bootstrap-ordering question to work through) or hand-written once per host as part of the compiler itself (simpler now, smaller asymmetry surface to verify) is still open.
 
 ## Priority 5: Host Orchestration Layer
 
@@ -207,14 +220,19 @@ Once this ships, IPAX's actual `"fast"`-equivalent regex usage migrates to `JSOL
 
 ## Summary: build order
 
-1. `JSOL.round`, `JSOL.upper`, and the rest of Priority 0's generative core — zero dependencies, ship first.
+DONE:
+
+1. `JSOL.round`, `JSOL.upper`, and the rest of Priority 0's generative core — zero dependencies, ship first. DONE
+4. Priority 4 (pure-JSOL regex engine) — the actual unlock for self-hosting purity and for C-like targets beyond JS/PHP. DONE
+
+TO DO:
+
 2. Priority 1 (control flow strictness) and Priority 2 (typing prefix, once the `$sconeP`-class collisions and the `$g` DMS parsing rule are resolved against real code).
 3. Priority 3 (Helper Architecture) — unblocks moving IPAX-specific helpers out of core cleanly.
-4. Priority 4 (pure-JSOL regex engine) — the actual unlock for self-hosting purity and for C-like targets beyond JS/PHP.
 5. Priority 5 (Host Orchestration Layer) — infrastructure Priority 6's test runner needs to honor the PHP-is-the-only-blocker principle instead of accidentally requiring Node.
 6. Priority 6 (the Contract Model) — for whatever asymmetric primitives remain once Priority 4 removes regex from that list.
 7. Migrate IPAX's remaining hand-written `JSOL.JS`/`JSOL.PHP` blocks onto whichever of the above actually resolves them. This is the actual goal this whole roadmap exists to reach.
 
 ---
 
-*JSOL v0.2 r. 2026-08-09, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2 r. 2026-08-11, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

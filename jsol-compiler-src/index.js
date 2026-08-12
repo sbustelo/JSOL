@@ -16,7 +16,27 @@ global.JSOL = {
         return obj;
     },
     count: function(arr) { return arr ? arr.length : 0; },
-    len: function(str) { return str ? str.length : 0; }
+    len: function(str) { return str ? str.length : 0; },
+    use: function() {}
+};
+
+global.Str = {
+    indexOf: function(h, n) { return h.indexOf(n); },
+    len: function(s) { return s.length; },
+    sub: function(s, start, len) { return s.substring(start, start + len); },
+    char: function(s, idx) { return s.charCodeAt(idx); },
+    fromChar: function(c) { return String.fromCharCode(c); },
+    replace: function(s, search, replace) { return s.split(search).join(replace); }
+};
+
+global.Arr = {
+    count: function(a) { return a.length; },
+    push: function(a, i) { a.push(i); return a; }
+};
+
+global.Map = {
+    create: function(...args) { return global.JSOL.dict(...args); },
+    has: function(obj, key) { return Object.prototype.hasOwnProperty.call(obj, key); }
 };
 
 const context = vm.createContext(global);
@@ -25,6 +45,7 @@ const parts = [
     'linter.js',
     'cli-parser.js',
     'config-parser.js',
+    'regex.js',
     'js-compiler.js',
     'php-compiler.js',
     'engine.js'
@@ -46,6 +67,8 @@ fullCode += `
 global.$parseRawCliArgs = typeof $parseRawCliArgs !== 'undefined' ? $parseRawCliArgs : null;
 global.$normalizeTargetsConfig = typeof $normalizeTargetsConfig !== 'undefined' ? $normalizeTargetsConfig : null;
 global.$executeCompilationPipeline = typeof $executeCompilationPipeline !== 'undefined' ? $executeCompilationPipeline : null;
+global.$regexMatch = typeof $regexMatch !== 'undefined' ? $regexMatch : null;
+global.$regexReplace = typeof $regexReplace !== 'undefined' ? $regexReplace : null;
 `;
 
 vm.runInContext(fullCode, context, { filename: 'jsol-engine.js' });

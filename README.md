@@ -5,6 +5,9 @@
 
 **An isomorphic business-logic standard for zero-dependency ecosystems.**
 
+Version: v0.2.90
+
+
 ## What is JSOL?
 
 Over a decade ago, Douglas Crockford took JavaScript, amputated all executable code from it, and gave us **JSON**: the de facto standard for transporting *data*.
@@ -14,6 +17,11 @@ Over a decade ago, Douglas Crockford took JavaScript, amputated all executable c
 JSOL lets you write complex mathematical and procedural rules once, run them natively in the browser, and transpile them to other languages for the backend, with no Abstract Syntax Tree and no external toolchain. It's the missing link for isomorphism in lightweight frameworks.
 
 JavaScript and PHP are the first proven targets. Extending this is part of the [vision and call for support](docs/ROADMAP.md).
+
+## What's New in v0.2.90
+- Pure JSOL Thompson VM Regex Engine integrated.
+- Domain namespaces ('Str.*', 'Arr.*', 'Map.*', 'Math.*', 'Bit.*', 'Cast.*') active.
+- Fixed-point convergence verified across JS and PHP hosts.
 
 ## Why JSOL exists
 

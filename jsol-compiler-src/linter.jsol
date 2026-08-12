@@ -1,44 +1,81 @@
-// @JSOL v0.1.5 - Self-Hosted Compiler Linter Module
+// @JSOL v0.2.90 - Self-Hosted Compiler Linter Module (regex-free)
+const $isWordChar = function($ch) {
+    if ($ch === "") { return false; }
+    const $code = Str.char($ch, 0);
+    if ($code >= 48 && $code <= 57) { return true; }
+    if ($code >= 65 && $code <= 90) { return true; }
+    if ($code >= 97 && $code <= 122) { return true; }
+    if ($code === 95) { return true; }
+    return false;
+};
 
 const $auditPragma = function($sourceCode) {
     const $errors = [];
     let $hasPragma = false;
-    JSOL.JS(() => {
-        const $rxPragma = new RegExp("^\\s*\\/\\/\\s*@?jsol\\b", "i");
-        $hasPragma = $rxPragma.test($sourceCode);
-    });
-    JSOL.PHP(() => {
-        $hasPragma = (bool)preg_match('/^\\s*\\/\\/\\s*@?jsol\\b/i', $sourceCode);
-    });
-    if ($hasPragma === false) {
-        $errors.push("Fatal: Missing MANDATORY @JSOL pragma on Line 1.");
+    const $len = Str.len($sourceCode);
+
+    let $i = 0;
+    let $skipping = true;
+    while ($i < $len && $skipping === true) {
+        const $c = Str.sub($sourceCode, $i, 1);
+        if ($c === " " || $c === "\t" || $c === "\n" || $c === "\r") {
+            $i = $i + 1;
+        } else {
+            $skipping = false;
+        }
     }
-    return JSOL.dict("valid", JSOL.count($errors) === 0, "errors", $errors);
+
+    if (Str.sub($sourceCode, $i, 2) === "//") {
+        let $lineEnd = $i;
+        let $scanning = true;
+        while ($lineEnd < $len && $scanning === true) {
+            if (Str.sub($sourceCode, $lineEnd, 1) === "\n") {
+                $scanning = false;
+            } else {
+                $lineEnd = $lineEnd + 1;
+            }
+        }
+        const $firstLine = Str.sub($sourceCode, $i, $lineEnd - $i);
+        if (Str.indexOf($firstLine, "JSOL") !== -1) {
+            $hasPragma = true;
+        }
+    }
+
+    if ($hasPragma === false) {
+        Arr.push($errors, "Fatal: Missing MANDATORY @JSOL pragma on Line 1.");
+    }
+    return Map.create("valid", Arr.count($errors) === 0, "errors", $errors);
 };
 
 const $auditForbiddenPatterns = function($maskedCode) {
     const $errors = [];
+
+    const $functionalMethods = [".map(", ".filter(", ".reduce(", ".forEach(", ".find("];
     let $hasFunctionalMethods = false;
-    JSOL.JS(() => {
-        const $rxFunc = new RegExp("\\.(map|filter|reduce|forEach|find)\\s*\\(");
-        $hasFunctionalMethods = $rxFunc.test($maskedCode);
-    });
-    JSOL.PHP(() => {
-        $hasFunctionalMethods = (bool)preg_match('/\\.(map|filter|reduce|forEach|find)\\s*\\(/', $maskedCode);
-    });
+    const $fmCount = Arr.count($functionalMethods);
+    for (let $fm = 0; $fm < $fmCount; $fm = $fm + 1) {
+        if (Str.indexOf($maskedCode, $functionalMethods[$fm]) !== -1) {
+            $hasFunctionalMethods = true;
+        }
+    }
     if ($hasFunctionalMethods === true) {
-        $errors.push("Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.");
+        Arr.push($errors, "Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.");
     }
+
     let $hasLengthProperty = false;
-    JSOL.JS(() => {
-        const $rxLen = new RegExp("\\.length\\b");
-        $hasLengthProperty = $rxLen.test($maskedCode);
-    });
-    JSOL.PHP(() => {
-        $hasLengthProperty = (bool)preg_match('/\\.length\\b/', $maskedCode);
-    });
-    if ($hasLengthProperty === true) {
-        $errors.push("Linter Error: Accessing .length is FORBIDDEN. Use JSOL.count() for arrays or JSOL.len() for strings.");
+    const $mLen = Str.len($maskedCode);
+    for (let $p = 0; $p < $mLen; $p = $p + 1) {
+        if (Str.sub($maskedCode, $p, 7) === ".length") {
+            const $nextChar = Str.sub($maskedCode, $p + 7, 1);
+            if ($isWordChar($nextChar) === false) {
+                $hasLengthProperty = true;
+                break;
+            }
+        }
     }
-    return JSOL.dict("valid", JSOL.count($errors) === 0, "errors", $errors);
+    if ($hasLengthProperty === true) {
+        Arr.push($errors, "Linter Error: Accessing .length is FORBIDDEN. Use Arr.count() for arrays or Str.len() for strings.");
+    }
+
+    return Map.create("valid", Arr.count($errors) === 0, "errors", $errors);
 };

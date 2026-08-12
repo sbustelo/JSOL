@@ -1,44 +1,87 @@
-// @JSOL v0.2.0 - Self-Hosted Compiler Lexer Module
+// @JSOL v0.2.90 - Self-Hosted Compiler Lexer Module (regex-free)
 const $maskSourceCode = function($sourceCode) {
     const $tokens = [];
-    let $maskedCode = $sourceCode;
-    JSOL.JS(() => {
-        let $tokenIndex = 0;
-        const $patternStr = "(\"([^\"\\\\]|\\\\.)*\"|'([^'\\\\]|\\\\.)*'|\\`([^\\`\\\\]|\\\\.)*\\`|\\/\\*[\\s\\S]*?\\*\\/|\\/\\/[^\\n]*)";
-        const $regex = new RegExp($patternStr, "g");
-        $maskedCode = $sourceCode.replace($regex, function($match) {
-            const $key = "__JSOL_TOKEN_" + $tokenIndex + "__";
-            $tokens.push(JSOL.dict("key", $key, "value", $match));
+    let $result = "";
+    let $tokenIndex = 0;
+    const $len = Str.len($sourceCode);
+    let $i = 0;
+
+    while ($i < $len) {
+        const $c = Str.sub($sourceCode, $i, 1);
+
+        if ($c === "\"" || $c === "'" || $c === "`") {
+            const $quoteChar = $c;
+            const $start = $i;
+            $i = $i + 1;
+            let $scanning = true;
+            while ($i < $len && $scanning === true) {
+                const $cc = Str.sub($sourceCode, $i, 1);
+                if ($cc === "\\") {
+                    $i = $i + 2;
+                } else if ($cc === $quoteChar) {
+                    $i = $i + 1;
+                    $scanning = false;
+                } else {
+                    $i = $i + 1;
+                }
+            }
+            const $value = Str.sub($sourceCode, $start, $i - $start);
+            const $key = "__JSOL_STR_" + "" + $tokenIndex + "" + "__";
+            Arr.push($tokens, Map.create("key", $key, "value", $value));
+            $result = $result + "" + $key;
             $tokenIndex = $tokenIndex + 1;
-            return $key;
-        });
-    });
-    JSOL.PHP(() => {
-        $tokenIndex = 0;
-        $pattern = '/("([^"\\\\]|\\\\.)*"|\'([^\'\\\\]|\\\\.)*\'|`([^`\\\\]|\\\\.)*`|\\/\\*[\\s\\S]*?\\*\\/|\\/\\/[^\\n]*)/';
-        $maskedCode = preg_replace_callback($pattern, function($matches) use (&$tokens, &$tokenIndex) {
-            $key = "__JSOL_TOKEN_" . $tokenIndex . "__";
-            $tokens[] = ["key" => $key, "value" => $matches[0]];
+
+        } else if ($c === "/" && Str.sub($sourceCode, $i, 2) === "//") {
+            const $start = $i;
+            let $scanning = true;
+            while ($i < $len && $scanning === true) {
+                if (Str.sub($sourceCode, $i, 1) === "\n") {
+                    $scanning = false;
+                } else {
+                    $i = $i + 1;
+                }
+            }
+            const $value = Str.sub($sourceCode, $start, $i - $start);
+            const $key = "__JSOL_COM_" + "" + $tokenIndex + "" + "__";
+            Arr.push($tokens, Map.create("key", $key, "value", $value));
+            $result = $result + "" + $key;
             $tokenIndex = $tokenIndex + 1;
-            return $key;
-        }, $sourceCode);
-    });
-    return JSOL.dict("maskedCode", $maskedCode, "tokens", $tokens);
+
+        } else if ($c === "/" && Str.sub($sourceCode, $i, 2) === "/*") {
+            const $start = $i;
+            $i = $i + 2;
+            let $scanning = true;
+            while ($i < $len && $scanning === true) {
+                if (Str.sub($sourceCode, $i, 2) === "*/") {
+                    $i = $i + 2;
+                    $scanning = false;
+                } else {
+                    $i = $i + 1;
+                }
+            }
+            const $value = Str.sub($sourceCode, $start, $i - $start);
+            const $key = "__JSOL_COM_" + "" + $tokenIndex + "" + "__";
+            Arr.push($tokens, Map.create("key", $key, "value", $value));
+            $result = $result + "" + $key;
+            $tokenIndex = $tokenIndex + 1;
+
+        } else {
+            $result = $result + "" + $c;
+            $i = $i + 1;
+        }
+    }
+
+    return Map.create("maskedCode", $result, "tokens", $tokens);
 };
 
 const $unmaskSourceCode = function($maskedCode, $tokens) {
     let $restoredCode = $maskedCode;
-    const $tokenCount = JSOL.count($tokens);
+    const $tokenCount = Arr.count($tokens);
     for (let $i = 0; $i < $tokenCount; $i = $i + 1) {
         const $token = $tokens[$i];
         const $key = $token["key"];
         const $val = $token["value"];
-        JSOL.JS(() => {
-            $restoredCode = $restoredCode.split($key).join($val);
-        });
-        JSOL.PHP(() => {
-            $restoredCode = str_replace($key, $val, $restoredCode);
-        });
+        $restoredCode = Str.replace($restoredCode, $key, $val);
     }
     return $restoredCode;
 };

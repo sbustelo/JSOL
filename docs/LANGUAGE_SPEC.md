@@ -66,11 +66,11 @@ while (<condition>) { <statements> }
 ### 2.5 Data construction
 
 ```js
-JSOL.dict("key1", $val1, "key2", $val2)   // structured record, replaces object literals
+Map.create("key1", $val1, "key2", $val2)   // structured record, replaces object literals
 [$a, $b, $c]                               // array literal, construction only
 ```
 
-Object literal syntax (`{ key: value }`) and object shorthand are not part of the grammar; `JSOL.dict()` is the only way to construct a keyed record. Array literals are permitted for construction; array *mutation* goes through explicit calls (`.push()`), not literal re-assignment tricks.
+Object literal syntax (`{ key: value }`) and object shorthand are not part of the grammar; `Map.create()` is the only way to construct a keyed record. Array literals are permitted for construction; array *mutation* goes through explicit calls (`.push()`), not literal re-assignment tricks.
 
 ### 2.6 Expressions
 
@@ -90,19 +90,32 @@ JSOL.PHP(() => {
 
 This is the single place in the grammar where an arrow function with a block body is permitted, and only in this exact zero-parameter form, passed directly as the sole argument to `JSOL.JS` or `JSOL.PHP`. See Section 5 for why this construct exists and why it is a closure and not a comment block.
 
-### 2.8 The wrapper vocabulary
+### 2.8 The Vocabulary Matrix (v0.2.90 Standard)
+
+These are language-level scoping and target-isolation mechanisms. They do not belong to a data domain and remain in the root namespace:
+
+| Primitive | Purpose & Behavior |
+|---|---|
+| JSOL.use($v1, $v2, ...) | Declares parent scope variables captured by a closure (translates to 'use ($v1, $v2)' in PHP). |
+| JSOL.closure([...deps], fn) | Explicit closure scope bridging across targets. |
+| JSOL.JS(() => { ... }) | Executable closure unwrapped exclusively in JavaScript target output. |
+| JSOL.PHP(() => { ... }) | Executable closure unwrapped exclusively in PHP target output. |
+
+#### Domain Namespaces (Standard Data Operations)
+
+All data manipulation operates through strict CS domain classifications.
 
 The following are the complete, closed set of native-behavior wrappers. There is no escape hatch outside this list: if a wrapper doesn't exist for something, that something is not expressible in JSOL yet, and the answer is to propose a wrapper, not to reach for the native operator.
 
-| Wrapper | Replaces |
-|---|---|
-| `JSOL.count($arr)` | `.length` on arrays |
-| `JSOL.len($str)` | `.length` / `strlen()` on strings |
-| `JSOL.dict(...)` | object literals |
-| `JSOL.hexToInt(...)` | `parseInt()`, native casting |
-| `JSOL.bwAnd`, `bwOr`, `bwXor`, `bwNot`, `bwShiftL`, `bwShiftR` | native bitwise operators |
-| `JSOL.closure([...deps], function(...) {...})` | manual closure scope bridging |
-| `JSOL.use($var1, $var2, ...)` | dependency declaration inside a function body |
+| Domain | Namespace | Primitive Methods |
+|---|---|---|
+| String | Str.* | Str.len($s), Str.sub($s, $start, $len), Str.indexOf($s, $needle), Str.replace($s, $search, $replace), Str.char($s, $idx), Str.fromChar($code), Str.upper($s), Str.lower($s) |
+| Array | Arr.* | Arr.count($a), Arr.push($a, $item), Arr.pop($a), Arr.shift($a), Arr.slice($a, $start, $end), Arr.indexOf($a, $item) |
+| Hash Map | Map.* | Map.create("k1", $v1, ...), Map.has($m, $key), Map.keys($m) |
+| Math | Math.* | Math.floor($n), Math.abs($n), Math.pow($b, $e), Math.min($a, $b), Math.max($a, $b), Math.round($n) |
+| Bitwise | Bit.* | Bit.and($a, $b), Bit.or($a, $b), Bit.xor($a, $b), Bit.not($a), Bit.shiftL($a, $b), Bit.shiftR($a, $b) |
+| Cast | Cast.* | Cast.toStr($val), Cast.toInt($val) |
+| Regex | Regex.* | Regex.match($pat, $str, $flags), Regex.replace($pat, $rep, $str, $flags), Regex.test($pat, $str, $flags) |
 
 ---
 
@@ -140,7 +153,7 @@ const $doubled = $items.map(function($x) { return $x * 2; });
 
 // JSOL
 const $doubled = [];
-const $count = JSOL.count($items);
+const $count = Arr.count($items);
 for (let $i = 0; $i < $count; $i = $i + 1) {
     $doubled.push($items[$i] * 2);
 }
@@ -174,7 +187,7 @@ The restrictions in Section 2 aren't purely about transpilation safety. They hav
 
 ### Rule 1: Never index strings directly
 
-V8 strings are UTF-16 code units; PHP strings are byte sequences. `$str[$i]` or direct character iteration will drift out of sync the moment a multi-byte character (accents, emoji) appears. Use `JSOL.len()` and procedural transforms, or an isolated `JSOL.JS`/`JSOL.PHP` pair.
+V8 strings are UTF-16 code units; PHP strings are byte sequences. `$str[$i]` or direct character iteration will drift out of sync the moment a multi-byte character (accents, emoji) appears. Use `Str.len()` and procedural transforms, or an isolated `JSOL.JS`/`JSOL.PHP` pair.
 
 ### Rule 2: Integer bounds and division
 
@@ -182,17 +195,26 @@ Keep integers strictly below `Number.MAX_SAFE_INTEGER` (2^53 - 1). Always use `M
 
 ### Rule 3: No numeric-string dictionary keys
 
-PHP auto-casts numeric string keys to integers (`['10' => $v]` becomes `[10 => $v]`), which breaks strict-equality comparisons against a JS object with the same nominal keys. Never use pure numeric strings as `JSOL.dict()` keys.
+PHP auto-casts numeric string keys to integers (`['10' => $v]` becomes `[10 => $v]`), which breaks strict-equality comparisons against a JS object with the same nominal keys. Never use pure numeric strings as `Map.create()` keys.
 
 ### Rule 4: No implicit truthiness
 
-`"0"` and `[]` are truthy in JS, falsy in PHP. `if ($x)` is never valid JSOL. Require explicit checks: `JSOL.len($str) > 0`, `JSOL.count($arr) > 0`, `$x === null`.
+`"0"` and `[]` are truthy in JS, falsy in PHP. `if ($x)` is never valid JSOL. Require explicit checks: `Str.len($str) > 0`, `Arr.count($arr) > 0`, `$x === null`.
 
 ### Rule 5: No array/object mutation across function boundaries
 
 JS arrays and objects pass by reference; PHP arrays are copy-on-write value types. Logic that depends on a callee mutating a caller's array will behave correctly in JS and silently fail in PHP. Return new values instead of relying on mutation.
 
 ### Rule 6: Environment isolation blocks (`JSOL.JS` / `JSOL.PHP`)
+
+**Isolation blocks should be used only as a provisional last resort**
+
+JSOL's compiler was riddled with isolation blocks, which solved functionality temporarily, but thwarted portability and further development.
+
+JSOL 2.90 sports its own Regex Engine (Thompson VM), regex.jsol.
+Targeting native Regex engines remain as an example below.
+
+…
 
 Regex execution differs fundamentally between V8 (`.exec()`) and PCRE (`preg_match()`), and some operations have no shared syntax at all across the two targets. When a specific operation cannot be written once and compiled to both, isolate it:
 
@@ -247,15 +269,16 @@ This table is a derived summary of Section 2. If something here contradicts Sect
 | Functional array methods (`.map`, `.filter`, `.reduce`, `.forEach`, `.find`) | ⛔️ | Imperative `for` / `while` |
 | Implicit truthiness (`if ($str)`) | ⛔️ | Explicit comparisons |
 | Arrow functions with parameters and a block body | ⛔️ | `function($x) { ... }` |
-| Object literals / shorthand | ⛔️ | `JSOL.dict(...)` |
 | Spread operator | ⛔️ | Explicit loop construction |
 | Environment access (`window`, `document`, `$_POST`, `$_GET`) | ⛔️ | Host orchestration layer, outside `.jsol` |
 | Native casting (`parseInt`, `parseFloat`, `.toString()`) | ⛔️ | `JSOL.hexToInt`, `+ "" +` |
-| Native bitwise operators | ⛔️ | `JSOL.bw*` |
+| Native bitwise operators | ⛔️ | `Bit.and`, `Bit.or`, `Bit.xor` |
+| Native array methods (.length, .push) | ⛔️ | `Arr.count`, `Arr.push` |
+| Native string methods (.length, .substring) | ⛔️ | `Str.len`, `Str.sub` |
 | `async` / `await` / `Promise` / `Worker` inside JSOL | ⛔️ | Orchestrate from outside; see Section 5.1 |
 
 **Enforcement note**: this specification is the source of truth regardless of what the linter currently checks. The linter implements a growing subset of these rules as a convenience and a safety net, not as the definition of the language. A rule being unenforced by the linter today does not make code that violates it valid JSOL.
 
 ---
 
-*JSOL v0.2 — 2026-08-07, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.90 — 2026-08-11, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
