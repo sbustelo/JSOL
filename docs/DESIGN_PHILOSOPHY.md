@@ -43,3 +43,7 @@ JSOL replacing Excel is extremely unlikely. Excel has forty years of adoption, a
 But the value of aiming there was never because of an actual expectation of even getting there. It's what asking the question honestly forces you to define: what would actually be *better* than what a business person has today, and what would the world look like if that better thing existed. That's a real design question with a real answer, independent of whether JSOL personally ever ships it. And once that answer exists, it produces a test that's worth applying to every decision made today, however small: if everything else lined up tomorrow (e.g., the adoption, the tooling, the third-party compilers this document has been imagining) would today's specification still be sound… or would *it* be the reason the better outcome couldn't happen?
 
 The goal isn't to guarantee the future arrives. It's to make sure that in the unlikely case it does, the spec should not be the thing standing in its way.
+
+---
+
+*This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content has been reviewed for technical accuracy and adherence to project constraints.*

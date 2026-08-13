@@ -1,4 +1,4 @@
-// @JSOL v0.2.90 - Self-Hosted Engine Orchestrator
+// @JSOL v0.2.0 - Self-Hosted Engine Orchestrator
 const $resolveWrappers = function($targetsConfig, $cliTargetFlag, $cliPrefixOverride, $cliSuffixOverride) {
     let $prefix = "";
     let $suffix = "";

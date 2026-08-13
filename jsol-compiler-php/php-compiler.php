@@ -1,5 +1,5 @@
 <?php
-// @JSOL v0.2.90 - Self-Hosted PHP Target Compiler (Pure JSOL)
+// @JSOL v0.2.91 - Self-Hosted PHP Target Compiler (Pure JSOL)
 $compileToPHP = function($maskedCode, $prefix, $suffix) use ($regexReplace) {
 
     
@@ -160,6 +160,9 @@ $compileToPHP = function($maskedCode, $prefix, $suffix) use ($regexReplace) {
     $transformed = $regexReplace("function\\s*\\(([^)]*)\\)\\s*\\{\\s*JSOL\\.use\\s*\\(([^)]+)\\)\\s*;?", "function($1) use ($2) {\n", $transformed, "g");
 
     $transformed = str_replace( "Map.create(",  "JSOL.dict(", $transformed);
+
+    $transformed = str_replace( "Regex.replace(",  "$" . "mRegex[\"replace\"](", $transformed);
+    $transformed = str_replace( "Regex.match(",  "$" . "mRegex[\"match\"](", $transformed);
 
     $transformed = $processCall($transformed, "Str.sub(", "sub");
     $transformed = $processCall($transformed, "Str.len(", "len");

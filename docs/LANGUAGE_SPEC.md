@@ -1,6 +1,8 @@
 # JSOL Language Specification
 2026, [Santiago Bustelo](https://www.bustelo.com.ar/) • MIT License
 
+v.0.2.91 • 2026-08-12
+
 This document is the authoritative definition of the JSOL language. It defines JSOL by what it **is**, not by what it forbids. A construct is valid JSOL if and only if it matches one of the forms defined in Section 2. The forbidden-features list in Section 6 is a derived reference, not the source of truth.
 
 JSOL is 100% valid JavaScript. Not all JavaScript is JSOL.
@@ -116,6 +118,51 @@ The following are the complete, closed set of native-behavior wrappers. There is
 | Bitwise | Bit.* | Bit.and($a, $b), Bit.or($a, $b), Bit.xor($a, $b), Bit.not($a), Bit.shiftL($a, $b), Bit.shiftR($a, $b) |
 | Cast | Cast.* | Cast.toStr($val), Cast.toInt($val) |
 | Regex | Regex.* | Regex.match($pat, $str, $flags), Regex.replace($pat, $rep, $str, $flags), Regex.test($pat, $str, $flags) |
+
+#### Type Prefix Matrix — locked for v0.3
+
+First character of variables, in lowercase, declares its type.
+
+**Implemented and enforced now:**
+
+`$i` (index), `$q` (quantity), `$n` (number/float), `$s` (string), `$a` (array), `$m` (Map), `$b` (boolean), `$f` (function, typed-parameter position only), `$x` (regex, see §4), `$y` (byte/binary).
+
+- **`$q` (Quantity):** Strict integer, e.g., `1234`. **Rationale:** Countable items are discrete; decimals are meaningless and can break downstream calculations. The compiler forces a number format with no decimals and applies `Math.trunc` on read to prevent a user from breaking the calculation by injecting decimals.
+    - **Input:** `const $qUnits = 3;`
+    - **Output:** Cell `=3` *(Format: Number, 0 decimal places)*
+
+- **`$i` (Index):** Unsigned integer (greater than or equal to zero). **Rationale:** Used exclusively for iterating or measuring lengths (e.g., string lengths, loop counters). Negative values are nonsensical in this context.
+    - **Input:** `const $iCounter = 0;`
+    - **Output:** Cell `=0` *(Format: Number, 0 decimal places)*
+
+- **`$s` (String / Text):** Plain text strings, e.g., `"Hello World"`. **Rationale:** Immutable text data for labels, messages, or keys.
+    - **Input:** `const $sProduct = "Licencia PRO";`
+    - **Output:** Cell `Licencia PRO` *(Format: Text)*
+
+- **`$b` (Boolean):** True or False: `true`, `false`. **Rationale:** Binary logic gates. In Excel, maps to the English constants `TRUE` and `FALSE`. The compiler MUST NOT output localized versions.
+    - **Input:** `const $bIsValid = true;`
+    - **Output:** Cell `=TRUE` *(Format: Boolean)*
+
+- **`$d` (Date):** Internally operates in milliseconds since 1970 UTC. **Rationale:** Provides a universal, timezone-aware integer for calculations before formatting. The compiler maps it to Excel's date serial number.
+    - **Input:** `const $dToday = Date.now();`
+    - **Output:** Cell `=45000` *(Format: Date, displays as configured)*
+
+- **`$a` (Array / List):** A linear list. **Rationale:** Ordered collections for iteration or lookup. In Excel, compiles to a static column (e.g., `A1:A10`).
+    - **Input:** `const $aItems = Arr.create("A", "B", "C");`
+    - **Output:** Range `A1:A3` containing the three values.
+
+- **`$m` (Map / Dictionary):** A two-dimensional table. **Rationale:** Key-value or relational data for searches. In Excel, compiles to a two-dimensional matrix range.
+    - **Input:** `const $mTaxTable = Map.create(...);`
+    - **Output:** A populated range like `A1:B2`.
+
+- **`$f` (Function):** Used to declare logical routines. **Rationale:** Encapsulates reusable calculation blocks.
+    - **Input:** `const $fDiscount = (...) => { ... };`
+    - **Output:** No direct cell output; defines a compilable block.
+
+
+**Reserved, not implemented — linter rejects any use:**
+
+`$c` (Currency), `$p` (Percentage), `$g` (Geometry/Angle), `$t` (Time/Duration), `$d` (Date).
 
 ---
 

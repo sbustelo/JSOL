@@ -1,0 +1,198 @@
+:root {
+    --jsol-bg: #1e1e1e;
+    --jsol-surface: #2d2d2d;
+    --jsol-text: #e0e0e0;
+    --jsol-text-muted: #888888;
+    --jsol-accent: #4a90e2;
+    --jsol-input-bg: #fffbdd;
+    --jsol-input-text: #000000;
+    --jsol-border: #444444;
+    --jsol-success: #50c878;
+    --jsol-error: #ff4c4c;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--jsol-bg);
+    color: var(--jsol-text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.jsol-repl-sidebar {
+    width: 280px;
+    background: var(--jsol-surface);
+    border-right: 1px solid var(--jsol-border);
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.jsol-repl-file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.jsol-repl-link {
+    display: block;
+    padding: 0.5rem;
+    color: var(--jsol-text-muted);
+    text-decoration: none;
+    border-radius: 4px;
+    margin-bottom: 0.25rem;
+    word-break: break-all;
+    font-size: 0.9rem;
+}
+
+.jsol-repl-link:hover {
+    background: var(--jsol-border);
+    color: var(--jsol-text);
+}
+
+.jsol-repl-link[data-active="true"] {
+    background: var(--jsol-accent);
+    color: #fff;
+    font-weight: bold;
+}
+
+.jsol-repl-main {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+..jsol-repl-table-wrap {
+    background: var(--jsol-surface);
+    border: 1px solid var(--jsol-border);
+    border-radius: 6px;
+    overflow: auto;
+    margin-top: 1rem;
+}
+
+.jsol-repl-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.jsol-repl-btn-add {
+    background: var(--jsol-surface);
+    color: var(--jsol-text-muted);
+    border: 1px solid var(--jsol-border);
+    padding: 0.4rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.jsol-repl-btn-add:hover {
+    background: var(--jsol-border);
+    color: var(--jsol-text);
+}
+
+.jsol-repl-btn-add kbd {
+    background: rgba(0,0,0,0.3);
+    padding: 0.15rem 0.35rem;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.jsol-repl-grid {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.jsol-repl-grid th,
+.jsol-repl-grid td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--jsol-border);
+    border-right: 1px solid var(--jsol-border);
+}
+
+.jsol-repl-grid th {
+    background: rgba(0,0,0,0.2);
+    font-size: 0.85rem;
+    font-family: monospace;
+}
+
+.jsol-repl-grid th small {
+    text-transform: uppercase;
+    font-family: system-ui, sans-serif;
+    color: var(--jsol-text-muted);
+}
+
+.jsol-repl-grid th[data-type="input"] {
+    border-top: 3px solid #f1c40f;
+}
+
+.jsol-repl-grid th[data-type="output"] {
+    border-top: 3px solid var(--jsol-accent);
+}
+
+.jsol-repl-input {
+    width: 100%;
+    background: var(--jsol-input-bg);
+    color: var(--jsol-input-text);
+    border: 1px solid transparent;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+.jsol-repl-input:focus {
+    outline: 2px solid var(--jsol-accent);
+}
+
+.jsol-repl-output {
+    font-family: monospace;
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: var(--jsol-success);
+}
+
+.jsol-repl-output[data-bool="false"] {
+    color: var(--jsol-error);
+}
+
+.jsol-repl-output[data-error="true"] {
+    background-color: #3b1515;
+    color: #ffcccc;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid var(--jsol-error);
+    font-size: 0.85rem;
+}
+
+
+.jsol-repl-docs {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(0,0,0,0.2);
+    border-left: 4px solid var(--jsol-border);
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    color: var(--jsol-text-muted);
+}
+
+.jsol-repl-error-log {
+    background: #331111;
+    border: 1px solid var(--jsol-error);
+    color: #ffcccc;
+    padding: 1rem;
+    margin-top: 1rem;
+    font-family: monospace;
+    white-space: pre-wrap;
+}

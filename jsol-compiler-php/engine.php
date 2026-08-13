@@ -1,5 +1,5 @@
 <?php
-// @JSOL v0.2.90 - Self-Hosted Engine Orchestrator
+// @JSOL v0.2.0 - Self-Hosted Engine Orchestrator
 $resolveWrappers = function($targetsConfig, $cliTargetFlag, $cliPrefixOverride, $cliSuffixOverride) {
     $prefix = "";
     $suffix = "";

@@ -235,4 +235,8 @@ TO DO:
 
 ---
 
+*This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content has been reviewed for technical accuracy and adherence to project constraints.*
+
+---
+
 *JSOL v0.2 r. 2026-08-11, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

@@ -1,5 +1,5 @@
 <?php
-// @JSOL v0.2.90 - Pure JSOL Regex Engine (Thompson VM)
+// @JSOL v0.2.91 - Pure JSOL Regex Engine (Thompson VM)
 
 $parseAtom = function($pat, $i, $n, $gc, $fns) {
     $c = mb_substr($pat,  $i,  1, "UTF-8");
@@ -498,3 +498,8 @@ $regexReplace = function($patternStr, $replacementStr, $str, $flags) use ($parse
 
     return $result;
 };
+
+$mRegex = JSOL::dict(
+    "match", $regexMatch,
+    "replace", $regexReplace
+);

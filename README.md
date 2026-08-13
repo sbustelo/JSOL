@@ -5,7 +5,7 @@
 
 **An isomorphic business-logic standard for zero-dependency ecosystems.**
 
-Version: v0.2.90
+Version: v0.2.91 • 2026-08-12
 
 
 ## What is JSOL?
@@ -18,10 +18,11 @@ JSOL lets you write complex mathematical and procedural rules once, run them nat
 
 JavaScript and PHP are the first proven targets. Extending this is part of the [vision and call for support](docs/ROADMAP.md).
 
-## What's New in v0.2.90
+## What's New in v0.2.91
 - Pure JSOL Thompson VM Regex Engine integrated.
 - Domain namespaces ('Str.*', 'Arr.*', 'Map.*', 'Math.*', 'Bit.*', 'Cast.*') active.
 - Fixed-point convergence verified across JS and PHP hosts.
+- Interactive Visual REPL Interpreter (`interpreter/`) introduced.
 
 ## Why JSOL exists
 
@@ -51,6 +52,18 @@ JSOL fits any scenario where the same logic has to run identically on two or mor
 3. **E-commerce & Business Rules**: Tax calculations, commission tiers, and cart rules, ensuring what the client displays is mathematically identical to what the server bills, eliminating reconciliation sync issues.
 4. **Strict Validation**: Complex form rules, algorithmic checksums (Luhn, IBAN), and sanitization evaluated in real time on the client and re-verified byte-for-byte on the server.
 5. **State Machines**: Logic prediction in games or cooperative interfaces, running client-side to avoid input lag, then re-run server-side to validate and synchronize deterministically.
+
+## Interactive Visual REPL Interpreter
+
+JSOL includes an interactive, browser-based REPL interpreter located in `interpreter/` that allows developers and business analysts to test algorithms in real time using a spreadsheet-like grid interface.
+
+<img src="assets/interpreter/repl-luhn-example.png" width="100%" alt="JSOL REPL Interpreter">
+
+- Zero build steps required: scan, compile, and execute in memory.
+- Reads `@contract` comment blocks to populate default test cases.
+- Fully portable: `interpreter.php` can be copied into any subfolder (such as `examples/`) to inspect local `.jsol` files immediately.
+
+See [`interpreter/README.md`](interpreter/README.md) for full usage instructions.
 
 ## Advantages and honest tradeoffs
 
@@ -104,3 +117,8 @@ Entirely optional, never required.
 ## License
 
 See [LICENSE](LICENSE).
+
+
+---
+
+*This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](docs/AI_ENGINEERING_METHODOLOGY.md).*

@@ -38,3 +38,7 @@ _The JSOL-X mascot is a vision at the time: a fuzzy hologram with preliminary JS
 JSOL-X is not a separate language. It is JSOL with additional rules that make Excel compilation possible. Any valid JSOL-X program is valid JSOL. The reverse is not true: JSOL allows mutation, closures, recursion, and procedural `if` — all things Excel cannot represent.
 
 This is the same pattern as JSOL-C: same syntax, stricter rules, the linter should reject what the target cannot handle.
+
+---
+
+*This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](../AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content has been reviewed for technical accuracy and adherence to project constraints.*

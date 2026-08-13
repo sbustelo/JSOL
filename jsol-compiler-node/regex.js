@@ -1,4 +1,4 @@
-// @JSOL v0.2.90 - Pure JSOL Regex Engine (Thompson VM)
+// @JSOL v0.2.91 - Pure JSOL Regex Engine (Thompson VM)
 
 const $parseAtom = function($pat, $i, $n, $gc, $fns) {
     const $c = $pat.substring( $i, ( $i) + ( 1));
@@ -497,3 +497,8 @@ const $regexReplace = function($patternStr, $replacementStr, $str, $flags) {
 
     return $result;
 };
+
+const $mRegex = JSOL.dict(
+    "match", $regexMatch,
+    "replace", $regexReplace
+);

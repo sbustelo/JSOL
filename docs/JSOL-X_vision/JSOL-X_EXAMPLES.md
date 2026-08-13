@@ -348,6 +348,10 @@ The `VLOOKUP` in Dashboard!B2 uses `TRUE` as the fourth argument, which enables 
 
 It demonstrates a lookup table with range matching (`VLOOKUP(..., TRUE)`), a calculation with a floor constraint (the `IF(D2>E2, D2, E2)` pattern), and the interaction between two business rules (discount scale and minimum price) that must both be visible and auditable in the spreadsheet.
 
+---
+
+*This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](../AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content has been reviewed for technical accuracy and adherence to project constraints.*
+
 * * *
 
 _JSOL v0.2 — 2026-08-10, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](https://../LICENSE)_

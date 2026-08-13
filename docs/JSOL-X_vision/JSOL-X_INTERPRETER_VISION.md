@@ -201,6 +201,10 @@ An educator teaching programming with JSOL (the "executable pseudocode" use case
 
 The interpreter is the bridge between "code that developers read" and "results that humans understand." It just happens that JSOL-X, with its Excel target and its business audience, is the use case that makes that bridge necessary.
 
+---
+
+*This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](../AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content has been reviewed for technical accuracy and adherence to project constraints.*
+
 * * *
 
 _JSOL v0.2 — 2026-08-10, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](https://../LICENSE)_

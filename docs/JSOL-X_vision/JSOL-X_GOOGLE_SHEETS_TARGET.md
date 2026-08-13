@@ -208,6 +208,10 @@ The key insight is that Google Sheets is **easier** than Excel. The compiler for
 
 Google Sheets can arrive first, with a fraction of the compiler complexity, and deliver most of the business value.
 
+---
+
+*This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](../AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content has been reviewed for technical accuracy and adherence to project constraints.*
+
 * * *
 
 _JSOL v0.2 — 2026-08-10, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](https://../LICENSE)_

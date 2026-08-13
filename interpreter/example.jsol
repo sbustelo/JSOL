@@ -1,0 +1,130 @@
+// @JSOL v0.2.91
+
+// The @description block is rendered below the table in the interpreter UI.
+/**
+ * @description
+ * Validates a card number using the Luhn algorithm (modulus 10 algorithm).
+ * This checksum formula is used to validate various identification numbers,
+ * primarily credit card numbers.
+ * 
+ * @param {string} $sCardNumber - The card number to validate (may contain spaces, dashes, etc.)
+ * @returns {boolean} - True if the card number passes the Luhn check, false otherwise.
+ * 
+ * Standard Test Card Examples:
+ * 
+ * Visa:
+ *   4509 9535 6623 3704
+ *   4000 6200 0000 0007
+ * 
+ * Mastercard:
+ *   5555 5555 5555 4444
+ *   5031 7557 3453 0604
+ * 
+ * American Express:
+ *   3700 000000 00002
+ *   3711 803032 57522
+ * 
+ * Diners Club:
+ *   3600 6666 3333 44
+ * 
+ * Sources:
+ * - https://www.mercadopago.com.ar/developers/es/docs/your-integrations/test/cards
+ * - https://docs.adyen.com/development-resources/test-cards-and-credentials/test-card-numbers
+ */
+
+// The @contract block specifies test cases and default values for the REPL.
+// The "in" and "expect" wrappers are optional; a test case can state input parameters directly:
+/**
+ * @contract
+ * {
+ *   "cases": [
+ *     { "in": { "$sCardNumber": "1234 5678 9100 1234" }, "expect": { "_result": false } },
+ *     { "$sCardNumber": "4509 9535 6623 3704" }
+ *   ]
+ * }
+ */
+
+
+
+const $validateLuhn = function($sCardNumber) {
+    
+	// Step 1: Clean the input - keep only ASCII digits (0-9)
+	// We walk the string manually instead of using Regex.* here: the Luhn
+	// algorithm is a digit-processing problem, not a pattern-matching one,
+	// and this keeps the example free of any regex engine parity concerns.
+	// $qCode: "q" = Quantity. ASCII code of the current character.
+	// ASCII '0' = 48, ASCII '9' = 57 — anything outside that range is discarded.
+	const $iRawLen = Str.len($sCardNumber);
+	let $sCleanCard = "";
+	for (let $i = 0; $i < $iRawLen; $i = $i + 1) {
+		const $qCode = Str.char($sCardNumber, $i);
+		if ($qCode >= 48 && $qCode <= 57) {
+			$sCleanCard = $sCleanCard + Str.sub($sCardNumber, $i, 1);
+		}
+	}
+    
+    // Step 2: Get the length of the cleaned card number
+    // $iLen: "i" = Index (unsigned integer). Stores the length for loop boundaries.
+    // Used exclusively for iteration and string position calculations.
+    const $iLen = Str.len($sCleanCard);
+    
+    // Step 3: Validate the length is within valid range for card numbers
+    // Most major card brands have between 13-19 digits
+    if ($iLen < 13 || $iLen > 19) {
+        return false;
+    }
+    
+    // Step 4: Initialize variables for the Luhn algorithm
+    // $qSum: "q" = Quantity (strict integer). Accumulator for the checksum.
+    // Defined as quantity because we need a precise integer for the modulo operation at the end.
+    // Decimals would break the "% 10" check, so the compiler enforces integer type.
+    let $qSum = 0;
+    
+    // $bAlternate: "b" = Boolean. Flag that toggles between doubling and not doubling.
+    // Simple true/false control flow to alternate the doubling rule.
+    let $bAlternate = false;
+    
+    // Step 5: Process digits from RIGHT to LEFT (starting from the check digit)
+    // The rightmost digit is the check digit and is NOT doubled
+    // $i: "i" = Index. Loop counter that decrements from (length-1) down to 0.
+    for (let $i = $iLen - 1; $i >= 0; $i = $i - 1) {
+        
+        // Step 5a: Extract the current digit as a string
+        // $sChar: "s" = String. Single character from the card number.
+        // Stays as string because we need to convert it explicitly to integer.
+        const $sChar = Str.sub($sCleanCard, $i, 1);
+        
+        // Step 5b: Convert to integer for arithmetic operations
+        // $qDigit: "q" = Quantity (strict integer). The current digit as a number.
+        // Converted from string to integer because we need to perform arithmetic (doubling, addition).
+        let $qDigit = Cast.toInt($sChar);
+        
+        // Step 6: Apply the doubling rule - double every second digit
+        // Starting from the rightmost digit, double every second digit
+        if ($bAlternate === true) {
+            // Arithmetic operation requires integer type
+            $qDigit = $qDigit * 2;
+            
+            // Step 7: If doubling results in a two-digit number (10-18),
+            // subtract 9 to get the sum of the digits (digit sum)
+            // Example: 16 -> 1+6 = 7, which is 16-9 = 7
+            if ($qDigit > 9) {
+                $qDigit = $qDigit - 9;
+            }
+        }
+        
+        // Step 8: Add the current digit (possibly doubled) to the running sum
+        // $qSum is quantity because it's a running total of integer values
+        $qSum = $qSum + $qDigit;
+        
+        // Step 9: Toggle the alternate flag for the next iteration
+        // This ensures we double every second digit
+        // $bAlternate is boolean because it's a true/false toggle
+        $bAlternate = !$bAlternate;
+    }
+    
+    // Step 10: The card number is valid if the sum is divisible by 10
+    // (i.e., the checksum digit makes the total a multiple of 10)
+    // Modulo operation requires integer operands, hence $qSum is quantity type
+    return ($qSum % 10) === 0;
+};
