@@ -9,7 +9,9 @@ window.Str = {
     char: (s, i) => s.charCodeAt(i), 
     fromChar: c => String.fromCharCode(c), 
     indexOf: (h, n) => h.indexOf(n),
-    replace: (s, a, b) => s.split(a).join(b)
+    replace: (s, a, b) => s.split(a).join(b),
+    lower: s => s ? String(s).toLowerCase() : '',
+    upper: s => s ? String(s).toUpperCase() : ''
 };
 window.Arr = { 
     count: a => a ? a.length : 0, 
