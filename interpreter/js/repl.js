@@ -5,17 +5,21 @@ window.JSOL = {
 };
 window.Str = { 
     len: s => s ? s.length : 0, 
-    sub: (s, a, b) => s.substring(a, a+b), 
-    char: (s, i) => s.charCodeAt(i), 
+    sub: (s, a, b) => s ? s.substring(a, a+b) : '', 
+    char: (s, i) => s ? s.charCodeAt(i) : 0, 
     fromChar: c => String.fromCharCode(c), 
-    indexOf: (h, n) => h.indexOf(n),
-    replace: (s, a, b) => s.split(a).join(b),
+    indexOf: (h, n) => h ? h.indexOf(n) : -1,
+    replace: (s, a, b) => s ? s.split(a).join(b) : '',
     lower: s => s ? String(s).toLowerCase() : '',
-    upper: s => s ? String(s).toUpperCase() : ''
+    upper: s => s ? String(s).toUpperCase() : '',
+    trim: s => s ? String(s).trim() : '',
+    split: (s, d) => s ? String(s).split(d) : []
 };
 window.Arr = { 
     count: a => a ? a.length : 0, 
-    push: (a, i) => { a.push(i); return a; } 
+    push: (a, i) => { a.push(i); return a; },
+    join: (a, d) => Array.isArray(a) ? a.join(d) : '',
+    slice: (a, s, l) => Array.isArray(a) ? a.slice(s, s + l) : []
 };
 window.Map = { 
     create: (...args) => window.JSOL.dict(...args), 
@@ -24,16 +28,24 @@ window.Map = {
 };
 window.Math = Math;
 window.Bit = {
-    and: (a, b) => a & b, or: (a, b) => a | b, xor: (a, b) => a ^ b
+    and: (a, b) => a & b, 
+    or: (a, b) => a | b, 
+    xor: (a, b) => a ^ b,
+    not: a => ~a,
+    shiftL: (a, b) => a << b,
+    shiftR: (a, b) => a >> b
 };
 window.Cast = {
     toInt: v => parseInt(v, 10),
+    toFloat: v => parseFloat(v),
     toStr: v => String(v)
 };
 window.$mRegex = {
     replace: (p, r, s, f) => { const re = new RegExp(p, f); return s.replace(re, r); },
-    match: (p, s, f) => { const re = new RegExp(p, f); const m = re.exec(s); return m ? { matched: true, groups: m } : { matched: false }; }
+    match: (p, s, f) => { const re = new RegExp(p, f); const m = re.exec(s); return m ? { matched: true, groups: m } : { matched: false }; },
+    test: (p, s, f) => { const re = new RegExp(p, f); return re.test(s); }
 };
+window.Regex = window.$mRegex;
 
 document.addEventListener('DOMContentLoaded', () => {
     const metaNode = document.querySelector('[data-js-hook="metadata"]');
@@ -53,18 +65,48 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // SSOT: Read the function's return signature directly from the source code
+	// SSOT: Read the function's return signature directly from the source code
     let outputCols = ['_result'];
     const fnStr = window[funcName].toString();
     const dictMatch = fnStr.match(/return\s+(?:window\.)?JSOL\.dict\(([\s\S]*?)\);?/);
     
     if (dictMatch) {
         const argsStr = dictMatch[1];
-        const stringMatches = argsStr.match(/(["'])(?:(?=(\\?))\2.)*?\1/g);
-        if (stringMatches) {
+        let args = [];
+        let current = '';
+        let inStr = false;
+        let strQuote = '';
+        let pCount = 0, bCount = 0, cCount = 0;
+        
+        for (let i = 0; i < argsStr.length; i++) {
+            const ch = argsStr[i];
+            const prev = i > 0 ? argsStr[i-1] : '';
+            if ((ch === '"' || ch === "'") && prev !== '\\') {
+                if (!inStr) { inStr = true; strQuote = ch; }
+                else if (ch === strQuote) { inStr = false; }
+            }
+            if (!inStr) {
+                if (ch === '(') pCount++;
+                else if (ch === ')') pCount--;
+                else if (ch === '[') bCount++;
+                else if (ch === ']') bCount--;
+                else if (ch === '{') cCount++;
+                else if (ch === '}') cCount--;
+            }
+            if (ch === ',' && !inStr && pCount === 0 && bCount === 0 && cCount === 0) {
+                args.push(current.trim());
+                current = '';
+            } else {
+                current += ch;
+            }
+        }
+        if (current.trim() !== '') args.push(current.trim());
+
+        if (args.length >= 2) {
             outputCols = [];
-            for (let i = 0; i < stringMatches.length; i += 2) {
-                outputCols.push(stringMatches[i].replace(/^["']|["']$/g, ''));
+            for (let i = 0; i < args.length; i += 2) {
+                const keyStr = args[i].replace(/^["']|["']$/g, '');
+                outputCols.push(keyStr);
             }
         }
     }
