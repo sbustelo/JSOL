@@ -1,4 +1,4 @@
-// @JSOL v0.2.91 - Self-Hosted PHP Target Compiler (Pure JSOL)
+// @JSOL v0.2.92 - Self-Hosted PHP Target Compiler (Pure JSOL)
 const $compileToPHP = function($maskedCode, $prefix, $suffix) {
     
     
@@ -128,7 +128,22 @@ const $compileToPHP = function($maskedCode, $prefix, $suffix) {
                     else if ($type === "push") { $rep = $args[0] + "[] = " + $args[1] + ""; }
                     else if ($type === "haskey") { $rep = "isset(" + $args[0] + "[" + $args[1] + "])"; }
                     else if ($type === "fromchar") { $rep = "mb_chr(" + $args[0] + ", \"UTF-8\")"; }
-                    else if ($type === "count") { $rep = "count(" + $args[0] + ")"; }
+else if ($type === "count") { $rep = "count(" + $args[0] + ")"; }
+                    else if ($type === "upper") { $rep = "mb_strtoupper(" + $args[0] + ", \"UTF-8\")"; }
+                    else if ($type === "lower") { $rep = "mb_strtolower(" + $args[0] + ", \"UTF-8\")"; }
+                    else if ($type === "trim") { $rep = "trim(" + $args[0] + ")"; }
+                    else if ($type === "split") { $rep = "explode(" + $args[1] + ", " + $args[0] + ")"; }
+                    else if ($type === "join") { $rep = "implode(" + $args[1] + ", " + $args[0] + ")"; }
+                    else if ($type === "slice") { $rep = "array_slice(" + $args[0] + ", " + $args[1] + ", " + $args[2] + ")"; }
+                    else if ($type === "toint") { $rep = "intval(" + $args[0] + ")"; }
+                    else if ($type === "tostr") { $rep = "strval(" + $args[0] + ")"; }
+                    else if ($type === "tofloat") { $rep = "floatval(" + $args[0] + ")"; }
+                    else if ($type === "bitand") { $rep = "(" + $args[0] + " & " + $args[1] + ")"; }
+                    else if ($type === "bitor") { $rep = "(" + $args[0] + " | " + $args[1] + ")"; }
+                    else if ($type === "bitxor") { $rep = "(" + $args[0] + " ^ " + $args[1] + ")"; }
+                    else if ($type === "bitnot") { $rep = "(~" + $args[0] + ")"; }
+                    else if ($type === "bitshiftl") { $rep = "(" + $args[0] + " << " + $args[1] + ")"; }
+                    else if ($type === "bitshiftr") { $rep = "(" + $args[0] + " >> " + $args[1] + ")"; }
                     
                     $result = $before + "" + $rep + "" + $after;
                 }
@@ -161,7 +176,11 @@ const $compileToPHP = function($maskedCode, $prefix, $suffix) {
     $transformed = $transformed.split( "Map.create(").join( "JSOL.dict(");
 
     $transformed = $transformed.split( "Regex.replace(").join( "$" + "mRegex[\"replace\"](");
-    $transformed = $transformed.split( "Regex.match(").join( "$" + "mRegex[\"match\"](");
+    
+	
+	
+	$transformed = $transformed.split( "Regex.match(").join( "$" + "mRegex[\"match\"](");
+    $transformed = $transformed.split( "Regex.test(").join( "$" + "mRegex[\"test\"](");
 
     $transformed = $processCall($transformed, "Str.sub(", "sub");
     $transformed = $processCall($transformed, "Str.len(", "len");
@@ -175,10 +194,25 @@ const $compileToPHP = function($maskedCode, $prefix, $suffix) {
     $transformed = $processCall($transformed, "Map.has(", "haskey");
     $transformed = $processCall($transformed, "JSOL.hasKey(", "haskey");
     $transformed = $processCall($transformed, "Str.fromChar(", "fromchar");
+    $transformed = $processCall($transformed, "Str.upper(", "upper");
+    $transformed = $processCall($transformed, "Str.lower(", "lower");
+    $transformed = $processCall($transformed, "Str.trim(", "trim");
+    $transformed = $processCall($transformed, "Str.split(", "split");
+    $transformed = $processCall($transformed, "Arr.join(", "join");
+    $transformed = $processCall($transformed, "Arr.slice(", "slice");
+    $transformed = $processCall($transformed, "Cast.toInt(", "toint");
+    $transformed = $processCall($transformed, "Cast.toStr(", "tostr");
+    $transformed = $processCall($transformed, "Cast.toFloat(", "tofloat");
+    $transformed = $processCall($transformed, "Bit.and(", "bitand");
+    $transformed = $processCall($transformed, "Bit.or(", "bitor");
+    $transformed = $processCall($transformed, "Bit.xor(", "bitxor");
+    $transformed = $processCall($transformed, "Bit.not(", "bitnot");
+    $transformed = $processCall($transformed, "Bit.shiftL(", "bitshiftl");
+    $transformed = $processCall($transformed, "Bit.shiftR(", "bitshiftr");
 
     $transformed = $transformed.split( "JSOL.").join( "JSOL::");
-    
-    // RESOLUCIÓN MATEMÁTICA DEFINITIVA PARA LA CONCATENACIÓN (Resiliente a V0.2 y V0.3 Lexers)
+
+
     $transformed = $regexReplace("(__JSOL_(TOKEN|STR|COM)_[0-9]+__)\\s*\\+", "$1 .", $transformed, "g");
     $transformed = $regexReplace("\\+\\s*(__JSOL_(TOKEN|STR|COM)_[0-9]+__)", ". $1", $transformed, "g");
 

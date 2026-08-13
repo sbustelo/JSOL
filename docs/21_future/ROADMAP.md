@@ -55,6 +55,7 @@ However, to support the C-like universe and the educational use-case, the core n
 2. **Priority 1 & 2 (Control Flow Strictness & Static Typing Prefixes):** Enforce '$s' (string), '$i' (index), '$q' (quantity), '$a' (array), '$m' (map), '$b' (boolean) strictly across all source variables.
 3. **Priority 3 (Helper Architecture):** Core vs. Reference vs. Extension packages.
 4. **Priority 5 & 6 (Host Orchestration Layer & Contract Model):** Formalize cross-target test runner infrastructure.
+5. **Priority 7 (Specification SSOT):** Extract the language domain API (namespaces and wrappers) from Markdown files into a centralized `jsol-spec.json` to act as a Single Source of Truth. This JSON will feed the compiler rules, dynamically generate the Markdown documentation, and power the interactive syntax-highlighting/autocomplete features of the REPL Interpreter.
 
 
 Everything below this line doesn't exist yet. This is backlog, not changelog.
@@ -239,4 +240,4 @@ TO DO:
 
 ---
 
-*JSOL v0.2 r. 2026-08-11, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.92 — 2026-08-13, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

@@ -1,4 +1,4 @@
-// @JSOL v0.2.91 - Self-Hosted JS Target Compiler (Pure JSOL)
+// @JSOL v0.2.92 - Self-Hosted JS Target Compiler (Pure JSOL)
 const $compileToJS = function($maskedCode, $prefix, $suffix) {
     
     
@@ -128,6 +128,21 @@ const $compileToJS = function($maskedCode, $prefix, $suffix) {
                     else if ($type === "push") { $rep = $args[0] + ".push(" + $args[1] + ")"; }
                     else if ($type === "haskey") { $rep = "Object.prototype.hasOwnProperty.call(" + $args[0] + ", " + $args[1] + ")"; }
                     else if ($type === "fromchar") { $rep = "String.fromCharCode(" + $args[0] + ")"; }
+                    else if ($type === "upper") { $rep = $args[0] + ".toUpperCase()"; }
+                    else if ($type === "lower") { $rep = $args[0] + ".toLowerCase()"; }
+                    else if ($type === "toint") { $rep = "parseInt(" + $args[0] + ", 10)"; }
+                    else if ($type === "tostr") { $rep = "String(" + $args[0] + ")"; }
+                    else if ($type === "slice") { $rep = $args[0] + ".slice(" + $args[1] + ", " + $args[2] + ")"; }
+                    else if ($type === "trim") { $rep = $args[0] + ".trim()"; }
+                    else if ($type === "split") { $rep = $args[0] + ".split(" + $args[1] + ")"; }
+                    else if ($type === "join") { $rep = $args[0] + ".join(" + $args[1] + ")"; }
+                    else if ($type === "tofloat") { $rep = "parseFloat(" + $args[0] + ")"; }
+                    else if ($type === "bitand") { $rep = "(" + $args[0] + " & " + $args[1] + ")"; }
+                    else if ($type === "bitor") { $rep = "(" + $args[0] + " | " + $args[1] + ")"; }
+                    else if ($type === "bitxor") { $rep = "(" + $args[0] + " ^ " + $args[1] + ")"; }
+                    else if ($type === "bitnot") { $rep = "(~" + $args[0] + ")"; }
+                    else if ($type === "bitshiftl") { $rep = "(" + $args[0] + " << " + $args[1] + ")"; }
+                    else if ($type === "bitshiftr") { $rep = "(" + $args[0] + " >> " + $args[1] + ")"; }
                     
                     $result = $before + "" + $rep + "" + $after;
                 }
@@ -145,8 +160,8 @@ const $compileToJS = function($maskedCode, $prefix, $suffix) {
 
     $transformed = $transformed.split( "Map.create(").join( "JSOL.dict(");
     
-    $transformed = $transformed.split( "Regex.replace(").join( "$" + "mRegex.replace(");
     $transformed = $transformed.split( "Regex.match(").join( "$" + "mRegex.match(");
+    $transformed = $transformed.split( "Regex.test(").join( "$" + "mRegex.test(");
 
     $transformed = $processCall($transformed, "Str.sub(", "sub");
     $transformed = $processCall($transformed, "Str.len(", "len");
@@ -160,6 +175,21 @@ const $compileToJS = function($maskedCode, $prefix, $suffix) {
     $transformed = $processCall($transformed, "Map.has(", "haskey");
     $transformed = $processCall($transformed, "JSOL.hasKey(", "haskey");
     $transformed = $processCall($transformed, "Str.fromChar(", "fromchar");
+    $transformed = $processCall($transformed, "Str.upper(", "upper");
+    $transformed = $processCall($transformed, "Str.lower(", "lower");
+    $transformed = $processCall($transformed, "Str.trim(", "trim");
+    $transformed = $processCall($transformed, "Str.split(", "split");
+    $transformed = $processCall($transformed, "Arr.join(", "join");
+    $transformed = $processCall($transformed, "Arr.slice(", "slice");
+    $transformed = $processCall($transformed, "Cast.toInt(", "toint");
+    $transformed = $processCall($transformed, "Cast.toStr(", "tostr");
+    $transformed = $processCall($transformed, "Cast.toFloat(", "tofloat");
+    $transformed = $processCall($transformed, "Bit.and(", "bitand");
+    $transformed = $processCall($transformed, "Bit.or(", "bitor");
+    $transformed = $processCall($transformed, "Bit.xor(", "bitxor");
+    $transformed = $processCall($transformed, "Bit.not(", "bitnot");
+    $transformed = $processCall($transformed, "Bit.shiftL(", "bitshiftl");
+    $transformed = $processCall($transformed, "Bit.shiftR(", "bitshiftr");
 
     const $finalOutput = $prefix + "" + $transformed + "" + $suffix;
     return $finalOutput;

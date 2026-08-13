@@ -1,51 +1,16 @@
-// JSOL Core Polyfill for Browser Execution
+// JSOL v0.2.92 Core Polyfill for Browser Execution
 window.JSOL = { 
     dict: function(...args) { let o={}; for(let i=0;i<args.length;i+=2) o[args[i]]=args[i+1]; return o; }, 
     use: function(){} 
-};
-window.Str = { 
-    len: s => s ? s.length : 0, 
-    sub: (s, a, b) => s ? s.substring(a, a+b) : '', 
-    char: (s, i) => s ? s.charCodeAt(i) : 0, 
-    fromChar: c => String.fromCharCode(c), 
-    indexOf: (h, n) => h ? h.indexOf(n) : -1,
-    replace: (s, a, b) => s ? s.split(a).join(b) : '',
-    lower: s => s ? String(s).toLowerCase() : '',
-    upper: s => s ? String(s).toUpperCase() : '',
-    trim: s => s ? String(s).trim() : '',
-    split: (s, d) => s ? String(s).split(d) : []
-};
-window.Arr = { 
-    count: a => a ? a.length : 0, 
-    push: (a, i) => { a.push(i); return a; },
-    join: (a, d) => Array.isArray(a) ? a.join(d) : '',
-    slice: (a, s, l) => Array.isArray(a) ? a.slice(s, s + l) : []
-};
-window.Map = { 
-    create: (...args) => window.JSOL.dict(...args), 
-    has: (o, k) => Object.prototype.hasOwnProperty.call(o, k),
-    keys: o => Object.keys(o)
-};
-window.Math = Math;
-window.Bit = {
-    and: (a, b) => a & b, 
-    or: (a, b) => a | b, 
-    xor: (a, b) => a ^ b,
-    not: a => ~a,
-    shiftL: (a, b) => a << b,
-    shiftR: (a, b) => a >> b
-};
-window.Cast = {
-    toInt: v => parseInt(v, 10),
-    toFloat: v => parseFloat(v),
-    toStr: v => String(v)
 };
 window.$mRegex = {
     replace: (p, r, s, f) => { const re = new RegExp(p, f); return s.replace(re, r); },
     match: (p, s, f) => { const re = new RegExp(p, f); const m = re.exec(s); return m ? { matched: true, groups: m } : { matched: false }; },
     test: (p, s, f) => { const re = new RegExp(p, f); return re.test(s); }
 };
-window.Regex = window.$mRegex;
+window.Regex = window.$mRegex; // Legacy bridge por precaución en memoria
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const metaNode = document.querySelector('[data-js-hook="metadata"]');

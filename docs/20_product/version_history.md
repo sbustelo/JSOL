@@ -1,11 +1,17 @@
 # JSOL Version History
 
+## v0.2.92 (2026-08-13)
+* Fixed a critical bug uncovered by the interpreter: JS and PHP compilers were not transpiling the full spec.
+* Included selfhost-verify.sh
+
 ## v0.2.91 (2026-08-12)
 Architectural stabilization of the self-hosted compiler and resolution of the regular expression engine technical debt.
 
 * Regex Domain Consolidation: Formalized Regex.match and Regex.replace as standard language APIs. This officially retires the need for isolated escape blocks (JSOL.JS and JSOL.PHP) for regex operations.
 * Resolution - Static Translation (AST-Free): Injected direct transpilation rules into js-compiler.jsol and php-compiler.jsol to convert Regex domain invocations to internal flat constants ($regexMatch and $regexReplace), bypassing the PHP Fatal error when attempting to convert Closures to Strings.
 * Resolution - Isomorphic Fixed Point (Code Point Parity): Resolved the Bootstrap Paradox using an Intermediate Node Generation. Mathematically validated the compiler, ensuring that Generation 3 of Node and PHP produce byte-by-byte identical logical outputs.
+* docs/ ordered by folders: `10 dev`, `20 product`, `21 future`, `30 tools`.
+* examples/ ordered by folders: `01-basics`, `02-finance`, `03-business-logic`, `04-validation`, `05-sorting-searching`, `06-string-algorithms`, `07-math-numeric`, `08-calendar-date`, `11-clrs`.
 * Interactive Visual REPL Interpreter (`interpreter/`) introduced.
 
 ## v0.2.90 (2026-08-11)
@@ -41,3 +47,7 @@ Initial Proof of Concept.
 * AST-Free Compilation: Created the first PHP-based regex transpiler (J0IsomorphicCompiler) utilizing token masking to safely translate JSOL to both PHP and JavaScript without heavy AST parsers.
 * The String Concatenation Fix: Resolved the type coercion ambiguity of the plus operator by introducing the `+""+` pattern and enforcing Template Literals, eliminating silent type bugs in PHP.
 * Environment Isolation: Created JSOL.JS and JSOL.PHP blocks to handle native engine asymmetries (like V8 exec versus PCRE preg_match) while maintaining a single source file.
+
+---
+
+*JSOL [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

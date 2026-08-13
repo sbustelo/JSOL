@@ -5,8 +5,18 @@
 
 **An isomorphic business-logic standard for zero-dependency ecosystems.**
 
-Version: v0.2.91 • 2026-08-12
+Version: v0.2.92 • 2026-08-13
 
+
+## Quick start
+
+```bash
+node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out"
+# or
+php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out"
+```
+
+Full setup, per distribution, in [docs/01_GETTING_STARTED.md](docs/01_GETTING_STARTED.md).
 
 ## What is JSOL?
 
@@ -28,7 +38,7 @@ JavaScript and PHP are the first proven targets. Extending this is part of the [
 
 JSOL was born out of a real requirement in [IPAX](https://icograma.com), a color-accessibility engine doing intensive math (OKLCH conversions, APCA/WCAG contrast, physiological vision modeling) that has to run instantly in the browser and be re-validated, with the exact same results, on the server. Hand-maintaining two parallel implementations guarantees drift and bugs. JSOL is the alternative to that: one file, two native targets, guaranteed parity.
 
-It was built inside **j0**, a zero-config, zero-binary-dependency PHP/JS framework. That constraint ruled out the standard industrial answers (see [docs/COMPARISON.md](docs/COMPARISON.md) for why Haxe, WebAssembly, and JSON-driven math were each considered and rejected). The answer that fit was a JS subset trivial enough to convert to other C-like languages with regular expressions and a small hand-written lexer.
+It was built inside **j0**, a zero-config, zero-binary-dependency PHP/JS framework. That constraint ruled out the standard industrial answers (see [docs/20_product/COMPARISON.md](docs/20_product/COMPARISON.md) for why Haxe, WebAssembly, and JSON-driven math were each considered and rejected). The answer that fit was a JS subset trivial enough to convert to other C-like languages with regular expressions and a small hand-written lexer.
 
 <img src="assets/mascot/jsol-mascot-full.png" width="280" alt="JSOL mascot, full body">
 
@@ -41,13 +51,13 @@ Four principles shape every rule in the specification. When two of them pull in 
 3. **Performance** — the compiled output should be no heavier and no slower than it has to be. This is where Zero Dead Code comes from: nothing gets shipped that a given file doesn't actually use.
 4. **Developer Experience** — writing, compiling, and debugging JSOL should be as frictionless as the constraints allow. This is where the AST-free compiler pipeline comes from (fast, small, easy to embed in an existing build, easy to reason about), and where Zero Runtime Dependencies comes from (no toolchain to install before you can start).
 
-Full detail, with the reasoning behind each derived rule, in [docs/LANGUAGE_SPEC.md](docs/LANGUAGE_SPEC.md) Section 1.
+Full detail, with the reasoning behind each derived rule, in [docs/02_LANGUAGE_SPEC_CURRENT.md](docs/02_LANGUAGE_SPEC_CURRENT.md) Section 1.
 
 ## Use Cases
 
 JSOL fits any scenario where the same logic has to run identically on two or more independently-implemented runtimes, or when a canonical, human-readable standard is required:
 
-1. **Executable Pseudocode**: A highly readable replacement for academic and documentation pseudocode. It allows developers to express algorithms (e.g., binary search, parsers, ciphers) clearly, designed to be directly compiled and executed across C-like languages as that support ships — see [docs/ROADMAP.md](docs/ROADMAP.md) for what's proven today versus what's still ahead.
+1. **Executable Pseudocode**: A highly readable replacement for academic and documentation pseudocode. It allows developers to express algorithms (e.g., binary search, parsers, ciphers) clearly, designed to be directly compiled and executed across C-like languages as that support ships — see [docs/21_future/ROADMAP.md](docs/21_future/ROADMAP.md) for what's proven today versus what's still ahead.
 2. **Computational Mathematics**: Engines like IPAX (color science, 2D physics, geometry) where the frontend needs instant feedback, and other implementations need to guarantee the exact same results given the same inputs.
 3. **E-commerce & Business Rules**: Tax calculations, commission tiers, and cart rules, ensuring what the client displays is mathematically identical to what the server bills, eliminating reconciliation sync issues.
 4. **Strict Validation**: Complex form rules, algorithmic checksums (Luhn, IBAN), and sanitization evaluated in real time on the client and re-verified byte-for-byte on the server.
@@ -73,36 +83,26 @@ JSOL's strictness makes it more expensive to write upfront than native code. For
 - Near zero learning curve — its core is a strict JavaScript subset.
 - Native IDE support (formatting, linting, autocomplete work out of the box).
 - The compiler fits in a few hundred lines of PHP or JS, no npm, no binaries on the server.
-- The compiler now compiles itself — see [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md).
+- The compiler compiles itself — see [docs/10_dev/SELF_HOSTING.md](docs/10_dev/SELF_HOSTING.md).
 
 **Tradeoffs**
 - Spartan syntactic discipline. The rules aren't suggestions.
 - No real static typing.
 - No modern JS conveniences: no functional array methods, no native async.
 
-## Quick start
-
-```bash
-node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out"
-# or
-php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out"
-```
-
-Full setup, per distribution, in [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md).
-
 ## Documentation
 
 | Doc | What's in it |
 |---|---|
-| [docs/DESIGN_PHILOSOPHY.md](docs/DESIGN_PHILOSOPHY.md) | Why the spec projects ahead of what's actually built |
-| [docs/LANGUAGE_SPEC.md](docs/LANGUAGE_SPEC.md) | The permitted grammar, the wrapper vocabulary, the rules |
-| [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | How to compile a `.jsol` file, per distribution |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Why each restriction exists, the performance case, costs included |
-| [docs/ADOPTION_ECONOMICS.md](docs/ADOPTION_ECONOMICS.md) | The ROI model: when the upfront constraints pay for themselves |
-| [docs/COMPARISON.md](docs/COMPARISON.md) | JSOL vs. Haxe, WebAssembly, JSON-driven math |
-| [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) | What it means that the compiler compiles itself |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | The vision, and everything still ahead |
-| [docs/JSOL_AI_INSTRUCTIONS.md](docs/JSOL_AI_INSTRUCTIONS.md) | System prompt for AI assistants generating or refactoring JSOL |
+| [docs/20_product/DESIGN_PHILOSOPHY.md](docs/20_product/DESIGN_PHILOSOPHY.md) | Why the spec projects ahead of what's actually built |
+| [docs/02_LANGUAGE_SPEC_CURRENT.md](docs/02_LANGUAGE_SPEC_CURRENT.md) | The permitted grammar, the wrapper vocabulary, the rules |
+| [docs/01_GETTING_STARTED.md](docs/01_GETTING_STARTED.md) | How to compile a `.jsol` file, per distribution |
+| [docs/10_dev/ARCHITECTURE.md](docs/10_dev/ARCHITECTURE.md) | Why each restriction exists, the performance case, costs included |
+| [docs/20_product/ADOPTION_ECONOMICS.md](docs/20_product/ADOPTION_ECONOMICS.md) | The ROI model: when the upfront constraints pay for themselves |
+| [docs/20_product/COMPARISON.md](docs/20_product/COMPARISON.md) | JSOL vs. Haxe, WebAssembly, JSON-driven math |
+| [docs/10_dev/SELF_HOSTING.md](docs/10_dev/SELF_HOSTING.md) | What it means that the compiler compiles itself |
+| [docs/21_future/ROADMAP.md](docs/21_future/ROADMAP.md) | The vision, and everything still ahead |
+| [docs/10_dev/JSOL_AI_INSTRUCTIONS.md](docs/10_dev/JSOL_AI_INSTRUCTIONS.md) | System prompt for AI assistants generating or refactoring JSOL |
 
 ## Examples
 

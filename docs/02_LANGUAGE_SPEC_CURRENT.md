@@ -111,12 +111,12 @@ The following are the complete, closed set of native-behavior wrappers. There is
 
 | Domain | Namespace | Primitive Methods |
 |---|---|---|
-| String | Str.* | Str.len($s), Str.sub($s, $start, $len), Str.indexOf($s, $needle), Str.replace($s, $search, $replace), Str.char($s, $idx), Str.fromChar($code), Str.upper($s), Str.lower($s) |
-| Array | Arr.* | Arr.count($a), Arr.push($a, $item), Arr.pop($a), Arr.shift($a), Arr.slice($a, $start, $end), Arr.indexOf($a, $item) |
-| Hash Map | Map.* | Map.create("k1", $v1, ...), Map.has($m, $key), Map.keys($m) |
+| String | Str.* | Str.len($s), Str.sub($s, $start, $len), Str.indexOf($s, $needle), Str.replace($s, $search, $replace), Str.char($s, $idx), Str.fromChar($code), Str.upper($s), Str.lower($s), Str.trim($s), Str.split($s, $d) |
+| Array | Arr.* | Arr.count($a), Arr.push($a, $item), Arr.pop($a), Arr.shift($a), Arr.slice($a, $start, $end), Arr.indexOf($a, $item), Arr.join($a, $d) |
+| Hash Map | Map.* | Map.create('k1', $v1, ...), Map.has($m, $key), Map.keys($m) |
 | Math | Math.* | Math.floor($n), Math.abs($n), Math.pow($b, $e), Math.min($a, $b), Math.max($a, $b), Math.round($n) |
 | Bitwise | Bit.* | Bit.and($a, $b), Bit.or($a, $b), Bit.xor($a, $b), Bit.not($a), Bit.shiftL($a, $b), Bit.shiftR($a, $b) |
-| Cast | Cast.* | Cast.toStr($val), Cast.toInt($val) |
+| Cast | Cast.* | Cast.toStr($val), Cast.toInt($val), Cast.toFloat($val) |
 | Regex | Regex.* | Regex.match($pat, $str, $flags), Regex.replace($pat, $rep, $str, $flags), Regex.test($pat, $str, $flags) |
 
 #### Type Prefix Matrix — locked for v0.3
@@ -328,4 +328,4 @@ This table is a derived summary of Section 2. If something here contradicts Sect
 
 ---
 
-*JSOL v0.2.90 — 2026-08-11, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.92 — 2026-08-13, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

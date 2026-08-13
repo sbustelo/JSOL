@@ -25,7 +25,7 @@ Produces `./out/my-file.js` and `./out/my-file.php`. Every compile emits both ta
 php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out"
 ```
 
-Same output, same two files. Node and PHP hosts are verified to produce byte-identical output from the same `.jsol` source (see [SELF_HOSTING.md](SELF_HOSTING.md)), so it doesn't matter which one you use day to day.
+Same output, same two files. Node and PHP hosts are verified to produce byte-identical output from the same `.jsol` source (see [10_dev/SELF_HOSTING.md](10_dev/SELF_HOSTING.md)), so it doesn't matter which one you use day to day.
 
 ## Compiling multiple files
 
@@ -56,7 +56,6 @@ node index.js --source="php-compiler.jsol" --out-dir="."
 
 After changing anything here, re-run the fixed-point check described in [SELF_HOSTING.md](SELF_HOSTING.md) before trusting the result: compile the compiler with itself twice in a row, on both hosts, and diff. If generation N+1 and generation N+2 aren't identical, something in the change broke isomorphism, and that's worth knowing before it ships.
 
-
 ---
 
-*JSOL v0.2.90 — 2026-08-11, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.92 — 2026-08-13, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

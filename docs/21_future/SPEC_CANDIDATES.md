@@ -35,6 +35,10 @@ section at the bottom with the outcome.
   ("here is the idiom for a copy"), not a missing-primitive problem.
 - **Status:** PENDING REVIEW
 
+---
+
+## Resolved
+
 ### `Str.split($s, $delimiter)`
 
 - **First encountered in:** `examples/06-string-algorithms/reverse-word-order.jsol.js`
@@ -52,14 +56,8 @@ section at the bottom with the outcome.
   `Str.sub` / `Str.char`.
 - **Initial verdict (2026-08-13):** Lean **accept**. High reuse value,
   category is "missing fundamental," not "missing convenience."
-- **Status:** PENDING REVIEW
+- **Status:** RESOLVED (v0.2.92). Included in both JS and PHP compilers as a native transpilation rule to handle argument signature asymmetry (`s.split(d)` vs `explode(d, s)`).
 
 ---
 
-## Resolved
-
-*(none yet)*
-
----
-
-*JSOL v0.2.91 — 2026-08-13, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.92 — 2026-08-13, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
