@@ -8,19 +8,25 @@ declare(strict_types=1);
 
 $interpreterCoreDir = dirname(__DIR__); // Points to /interpreter
 $compilerPath = null;
-$searchDir = $runDir; // Inherited from interpreter.php
 
 // 1. Locate the JSOL Compiler index to find its directory
-for ($i = 0; $i < 6; $i++) {
-    if (file_exists($searchDir . '/jsol-compiler-php/index.php')) {
-        $compilerPath = $searchDir . '/jsol-compiler-php/index.php';
-        break;
+// Check A: Self-contained mode (compiler is bundled inside the interpreter directory)
+if (file_exists($interpreterCoreDir . '/jsol-compiler-php/index.php')) {
+    $compilerPath = $interpreterCoreDir . '/jsol-compiler-php/index.php';
+} else {
+    // Check B: Standard mode (search upwards from the current execution directory)
+    $searchDir = $runDir; // Inherited from interpreter.php
+    for ($i = 0; $i < 6; $i++) {
+        if (file_exists($searchDir . '/jsol-compiler-php/index.php')) {
+            $compilerPath = $searchDir . '/jsol-compiler-php/index.php';
+            break;
+        }
+        $searchDir = dirname($searchDir);
     }
-    $searchDir = dirname($searchDir);
 }
 
 if ($compilerPath === null) {
-    die("FATAL: Cannot locate jsol-compiler-php/index.php in the project tree.");
+    die("FATAL: Cannot locate jsol-compiler-php/index.php in the project tree or inside the interpreter directory.");
 }
 
 $compilerDir = dirname($compilerPath);

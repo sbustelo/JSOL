@@ -1,88 +1,88 @@
 <?php
-// @JSOL v0.2.90 - Self-Hosted Compiler Lexer Module (regex-free)
-$maskSourceCode = function($sourceCode) {
-    $tokens = [];
-    $result = "";
-    $tokenIndex = 0;
-    $len = mb_strlen($sourceCode, "UTF-8");
+// @JSOL v0.2.93 - Self-Hosted Compiler Lexer Module (regex-free)
+$mMaskSourceCode = function($sSourceCode) {
+    $aTokens = [];
+    $sResult = "";
+    $iTokenIndex = 0;
+    $iLen = mb_strlen($sSourceCode, "UTF-8");
     $i = 0;
 
-    while ($i < $len) {
-        $c = mb_substr($sourceCode,  $i,  1, "UTF-8");
+    while ($i < $iLen) {
+        $sC = mb_substr($sSourceCode,  $i,  1, "UTF-8");
 
-        if ($c === "\"" || $c === "'" || $c === "`") {
-            $quoteChar = $c;
-            $start = $i;
+        if ($sC === "\"" || $sC === "'" || $sC === "`") {
+            $sQuoteChar = $sC;
+            $iStart = $i;
             $i = $i + 1;
-            $scanning = true;
-            while ($i < $len && $scanning === true) {
-                $cc = mb_substr($sourceCode,  $i,  1, "UTF-8");
-                if ($cc === "\\") {
+            $bScanning = true;
+            while ($i < $iLen && $bScanning === true) {
+                $sCC = mb_substr($sSourceCode,  $i,  1, "UTF-8");
+                if ($sCC === "\\") {
                     $i = $i + 2;
-                } else if ($cc === $quoteChar) {
+                } else if ($sCC === $sQuoteChar) {
                     $i = $i + 1;
-                    $scanning = false;
+                    $bScanning = false;
                 } else {
                     $i = $i + 1;
                 }
             }
-            $value = mb_substr($sourceCode,  $start,  $i - $start, "UTF-8");
-            $key = "__JSOL_STR_" . "" . $tokenIndex . "" . "__";
-            $tokens[] =  JSOL::dict("key", $key, "value", $value);
-            $result = $result . "" . $key;
-            $tokenIndex = $tokenIndex + 1;
+            $sValue = mb_substr($sSourceCode,  $iStart,  $i - $iStart, "UTF-8");
+            $sKey = "__JSOL_STR_" . "" . $iTokenIndex . "" . "__";
+            $aTokens[] =  JSOL::dict("key", $sKey, "value", $sValue);
+            $sResult = $sResult . "" . $sKey;
+            $iTokenIndex = $iTokenIndex + 1;
 
-        } else if ($c === "/" && mb_substr($sourceCode,  $i,  2, "UTF-8") === "//") {
-            $start = $i;
-            $scanning = true;
-            while ($i < $len && $scanning === true) {
-                if (mb_substr($sourceCode,  $i,  1, "UTF-8") === "\n") {
-                    $scanning = false;
+        } else if ($sC === "/" && mb_substr($sSourceCode,  $i,  2, "UTF-8") === "//") {
+            $iStart = $i;
+            $bScanning = true;
+            while ($i < $iLen && $bScanning === true) {
+                if (mb_substr($sSourceCode,  $i,  1, "UTF-8") === "\n") {
+                    $bScanning = false;
                 } else {
                     $i = $i + 1;
                 }
             }
-            $value = mb_substr($sourceCode,  $start,  $i - $start, "UTF-8");
-            $key = "__JSOL_COM_" . "" . $tokenIndex . "" . "__";
-            $tokens[] =  JSOL::dict("key", $key, "value", $value);
-            $result = $result . "" . $key;
-            $tokenIndex = $tokenIndex + 1;
+            $sValue = mb_substr($sSourceCode,  $iStart,  $i - $iStart, "UTF-8");
+            $sKey = "__JSOL_COM_" . "" . $iTokenIndex . "" . "__";
+            $aTokens[] =  JSOL::dict("key", $sKey, "value", $sValue);
+            $sResult = $sResult . "" . $sKey;
+            $iTokenIndex = $iTokenIndex + 1;
 
-        } else if ($c === "/" && mb_substr($sourceCode,  $i,  2, "UTF-8") === "/*") {
-            $start = $i;
+        } else if ($sC === "/" && mb_substr($sSourceCode,  $i,  2, "UTF-8") === "/*") {
+            $iStart = $i;
             $i = $i + 2;
-            $scanning = true;
-            while ($i < $len && $scanning === true) {
-                if (mb_substr($sourceCode,  $i,  2, "UTF-8") === "*/") {
+            $bScanning = true;
+            while ($i < $iLen && $bScanning === true) {
+                if (mb_substr($sSourceCode,  $i,  2, "UTF-8") === "*/") {
                     $i = $i + 2;
-                    $scanning = false;
+                    $bScanning = false;
                 } else {
                     $i = $i + 1;
                 }
             }
-            $value = mb_substr($sourceCode,  $start,  $i - $start, "UTF-8");
-            $key = "__JSOL_COM_" . "" . $tokenIndex . "" . "__";
-            $tokens[] =  JSOL::dict("key", $key, "value", $value);
-            $result = $result . "" . $key;
-            $tokenIndex = $tokenIndex + 1;
+            $sValue = mb_substr($sSourceCode,  $iStart,  $i - $iStart, "UTF-8");
+            $sKey = "__JSOL_COM_" . "" . $iTokenIndex . "" . "__";
+            $aTokens[] =  JSOL::dict("key", $sKey, "value", $sValue);
+            $sResult = $sResult . "" . $sKey;
+            $iTokenIndex = $iTokenIndex + 1;
 
         } else {
-            $result = $result . "" . $c;
+            $sResult = $sResult . "" . $sC;
             $i = $i + 1;
         }
     }
 
-    return JSOL::dict("maskedCode", $result, "tokens", $tokens);
+    return JSOL::dict("maskedCode", $sResult, "tokens", $aTokens);
 };
 
-$unmaskSourceCode = function($maskedCode, $tokens) {
-    $restoredCode = $maskedCode;
-    $tokenCount = count($tokens);
-    for ($i = 0; $i < $tokenCount; $i = $i + 1) {
-        $token = $tokens[$i];
-        $key = $token["key"];
-        $val = $token["value"];
-        $restoredCode = str_replace( $key,  $val, $restoredCode);
+$sUnmaskSourceCode = function($sMaskedCode, $aTokens) {
+    $sRestoredCode = $sMaskedCode;
+    $iTokenCount = count($aTokens);
+    for ($i = 0; $i < $iTokenCount; $i = $i + 1) {
+        $mToken = $aTokens[$i];
+        $sKey = $mToken["key"];
+        $sVal = $mToken["value"];
+        $sRestoredCode = str_replace( $sKey,  $sVal, $sRestoredCode);
     }
-    return $restoredCode;
+    return $sRestoredCode;
 };

@@ -45,6 +45,7 @@ When analyzing or refactoring code for JSOL, simulate execution in both **V8 (Ja
 4. **Implicit truthiness divergence**: `"0"` and `[]` are truthy in JS, falsy in PHP. Never use implicit truthiness (`if ($x)`). Use explicit comparisons ('Str.len($str) > 0', 'Arr.count($arr) > 0', '$x === null').
 5. **Array mutation semantics**: JS arrays/objects pass by reference; PHP arrays pass by value (copy-on-write). Do not write logic that relies on a callee mutating a caller's array.
 6. **String Concatenation:** Never use bare '+' for string concatenation. Use template literals or the '+ "" +' pattern.
+7. **The Regex Catch-22:** The internal pure-JSOL Regex Engine (Thompson VM) deliberately exposes its functions as '$mRegexMatch' and '$sRegexReplace'. You are strictly forbidden from attempting to refactor these to the public 'Regex.*' namespaces inside the compiler source. Doing so causes a recursive collision in the AST-free compiler and breaks frontend polyfills. Leave the internal regex prefixes alone.
 
 ---
 

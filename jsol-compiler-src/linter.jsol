@@ -1,81 +1,85 @@
-// @JSOL v0.2.90 - Self-Hosted Compiler Linter Module (regex-free)
-const $isWordChar = function($ch) {
-    if ($ch === "") { return false; }
-    const $code = Str.char($ch, 0);
-    if ($code >= 48 && $code <= 57) { return true; }
-    if ($code >= 65 && $code <= 90) { return true; }
-    if ($code >= 97 && $code <= 122) { return true; }
-    if ($code === 95) { return true; }
+// @JSOL v0.2.93 - Self-Hosted Compiler Linter Module (regex-free)
+const $bIsWordChar = function($sCh) {
+    if ($sCh === "") { return false; }
+    const $iCode = Str.char($sCh, 0);
+    if ($iCode >= 48 && $iCode <= 57) { return true; }
+    if ($iCode >= 65 && $iCode <= 90) { return true; }
+    if ($iCode >= 97 && $iCode <= 122) { return true; }
+    if ($iCode === 95) { return true; }
     return false;
 };
 
-const $auditPragma = function($sourceCode) {
-    const $errors = [];
-    let $hasPragma = false;
-    const $len = Str.len($sourceCode);
+const $mAuditPragma = function($sSourceCode) {
+    const $aErrors = [];
+    let $bHasPragma = false;
+    const $iLen = Str.len($sSourceCode);
 
     let $i = 0;
-    let $skipping = true;
-    while ($i < $len && $skipping === true) {
-        const $c = Str.sub($sourceCode, $i, 1);
-        if ($c === " " || $c === "\t" || $c === "\n" || $c === "\r") {
+    let $bSkipping = true;
+    while ($i < $iLen && $bSkipping === true) {
+        const $sC = Str.sub($sSourceCode, $i, 1);
+        if ($sC === " " || $sC === "\t" || $sC === "\n" || $sC === "\r") {
             $i = $i + 1;
         } else {
-            $skipping = false;
+            $bSkipping = false;
         }
     }
 
-    if (Str.sub($sourceCode, $i, 2) === "//") {
-        let $lineEnd = $i;
-        let $scanning = true;
-        while ($lineEnd < $len && $scanning === true) {
-            if (Str.sub($sourceCode, $lineEnd, 1) === "\n") {
-                $scanning = false;
+    if (Str.sub($sSourceCode, $i, 2) === "//") {
+        let $iLineEnd = $i;
+        let $bScanning = true;
+        while ($iLineEnd < $iLen && $bScanning === true) {
+            if (Str.sub($sSourceCode, $iLineEnd, 1) === "\n") {
+                $bScanning = false;
             } else {
-                $lineEnd = $lineEnd + 1;
+                $iLineEnd = $iLineEnd + 1;
             }
         }
-        const $firstLine = Str.sub($sourceCode, $i, $lineEnd - $i);
-        if (Str.indexOf($firstLine, "JSOL") !== -1) {
-            $hasPragma = true;
+        const $sFirstLine = Str.sub($sSourceCode, $i, $iLineEnd - $i);
+        if (Str.indexOf($sFirstLine, "@JSOL") !== -1 || Str.indexOf($sFirstLine, "// JSOL") !== -1) {
+            $bHasPragma = true;
         }
     }
 
-    if ($hasPragma === false) {
-        Arr.push($errors, "Fatal: Missing MANDATORY @JSOL pragma on Line 1.");
+    if ($bHasPragma === false) {
+        Arr.push($aErrors, "Fatal: Missing MANDATORY @JSOL pragma on Line 1.");
     }
-    return Map.create("valid", Arr.count($errors) === 0, "errors", $errors);
+    return Map.create("valid", Arr.count($aErrors) === 0, "errors", $aErrors);
 };
 
-const $auditForbiddenPatterns = function($maskedCode) {
-    const $errors = [];
+const $mAuditForbiddenPatterns = function($sMaskedCode) {
+    const $aErrors = [];
 
-    const $functionalMethods = [".map(", ".filter(", ".reduce(", ".forEach(", ".find("];
-    let $hasFunctionalMethods = false;
-    const $fmCount = Arr.count($functionalMethods);
-    for (let $fm = 0; $fm < $fmCount; $fm = $fm + 1) {
-        if (Str.indexOf($maskedCode, $functionalMethods[$fm]) !== -1) {
-            $hasFunctionalMethods = true;
+    const $aFunctionalMethods = [".map(", ".filter(", ".reduce(", ".forEach(", ".find("];
+    let $bHasFunctionalMethods = false;
+    const $iFmCount = Arr.count($aFunctionalMethods);
+    for (let $iFm = 0; $iFm < $iFmCount; $iFm = $iFm + 1) {
+        if (Str.indexOf($sMaskedCode, $aFunctionalMethods[$iFm]) !== -1) {
+            $bHasFunctionalMethods = true;
         }
     }
-    if ($hasFunctionalMethods === true) {
-        Arr.push($errors, "Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.");
+    if ($bHasFunctionalMethods === true) {
+        Arr.push($aErrors, "Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.");
     }
 
-    let $hasLengthProperty = false;
-    const $mLen = Str.len($maskedCode);
-    for (let $p = 0; $p < $mLen; $p = $p + 1) {
-        if (Str.sub($maskedCode, $p, 7) === ".length") {
-            const $nextChar = Str.sub($maskedCode, $p + 7, 1);
-            if ($isWordChar($nextChar) === false) {
-                $hasLengthProperty = true;
+    let $bHasLengthProperty = false;
+    const $iMLen = Str.len($sMaskedCode);
+    for (let $iP = 0; $iP < $iMLen; $iP = $iP + 1) {
+        if (Str.sub($sMaskedCode, $iP, 7) === ".length") {
+            const $sNextChar = Str.sub($sMaskedCode, $iP + 7, 1);
+            if ($bIsWordChar($sNextChar) === false) {
+                $bHasLengthProperty = true;
                 break;
             }
         }
     }
-    if ($hasLengthProperty === true) {
-        Arr.push($errors, "Linter Error: Accessing .length is FORBIDDEN. Use Arr.count() for arrays or Str.len() for strings.");
+    if ($bHasLengthProperty === true) {
+        Arr.push($aErrors, "Linter Error: Accessing .length is FORBIDDEN. Use Arr.count() for arrays or Str.len() for strings.");
     }
 
-    return Map.create("valid", Arr.count($errors) === 0, "errors", $errors);
+    if (Str.indexOf($sMaskedCode, "with (") !== -1 || Str.indexOf($sMaskedCode, "with(") !== -1) {
+        Arr.push($aErrors, "Linter Error: The 'with' statement is FORBIDDEN.");
+    }
+
+    return Map.create("valid", Arr.count($aErrors) === 0, "errors", $aErrors);
 };

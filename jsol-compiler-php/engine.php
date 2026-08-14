@@ -1,65 +1,63 @@
 <?php
-// @JSOL v0.2.0 - Self-Hosted Engine Orchestrator
-$resolveWrappers = function($targetsConfig, $cliTargetFlag, $cliPrefixOverride, $cliSuffixOverride) {
-    $prefix = "";
-    $suffix = "";
-    if (mb_strlen($cliPrefixOverride, "UTF-8") > 0 || mb_strlen($cliSuffixOverride, "UTF-8") > 0) {
-        return JSOL::dict("prefix", $cliPrefixOverride, "suffix", $cliSuffixOverride);
+// @JSOL v0.2.93 - Self-Hosted Engine Orchestrator
+$mResolveWrappers = function($mTargetsConfig, $sCliTargetFlag, $sCliPrefixOverride, $sCliSuffixOverride) {
+    $sPrefix = "";
+    $sSuffix = "";
+    if (mb_strlen($sCliPrefixOverride, "UTF-8") > 0 || mb_strlen($sCliSuffixOverride, "UTF-8") > 0) {
+        return JSOL::dict("prefix", $sCliPrefixOverride, "suffix", $sCliSuffixOverride);
     }
-    if (mb_strlen($cliTargetFlag, "UTF-8") > 0) {
-        if ($targetsConfig["targets"] !== null && $targetsConfig["targets"][$cliTargetFlag] !== null) {
-            $targetObj = $targetsConfig["targets"][$cliTargetFlag];
-            return JSOL::dict("prefix", $targetObj["prefix"], "suffix", $targetObj["suffix"]);
+    if (mb_strlen($sCliTargetFlag, "UTF-8") > 0) {
+        if ($mTargetsConfig["targets"] !== null && $mTargetsConfig["targets"][$sCliTargetFlag] !== null) {
+            $mTargetObj = $mTargetsConfig["targets"][$sCliTargetFlag];
+            return JSOL::dict("prefix", $mTargetObj["prefix"], "suffix", $mTargetObj["suffix"]);
         }
     }
-    $defaultPointer = $targetsConfig["default"];
-    if ($defaultPointer !== null && mb_strlen($defaultPointer, "UTF-8") > 0) {
-        if ($targetsConfig["targets"] !== null && $targetsConfig["targets"][$defaultPointer] !== null) {
-            $defaultObj = $targetsConfig["targets"][$defaultPointer];
-            return JSOL::dict("prefix", $defaultObj["prefix"], "suffix", $defaultObj["suffix"]);
+    $sDefaultPointer = $mTargetsConfig["default"];
+    if ($sDefaultPointer !== null && mb_strlen($sDefaultPointer, "UTF-8") > 0) {
+        if ($mTargetsConfig["targets"] !== null && $mTargetsConfig["targets"][$sDefaultPointer] !== null) {
+            $mDefaultObj = $mTargetsConfig["targets"][$sDefaultPointer];
+            return JSOL::dict("prefix", $mDefaultObj["prefix"], "suffix", $mDefaultObj["suffix"]);
         }
     }
     return JSOL::dict("prefix", "", "suffix", "");
 };
 
-$executeCompilationPipeline = function($sourceCode, $targetsConfig, $cliOptions) use ($maskSourceCode, $unmaskSourceCode, $auditPragma, $auditForbiddenPatterns, $compileToJS, $compileToPHP, $resolveWrappers) {
+$mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOptions) use ($mMaskSourceCode, $sUnmaskSourceCode, $mAuditPragma, $mAuditForbiddenPatterns, $sCompileToJS, $sCompileToPHP, $mResolveWrappers) {
 
 
-    $pragmaResult = $auditPragma($sourceCode);
-    if ($pragmaResult["valid"] === false) {
-        return JSOL::dict("success", false, "errors", $pragmaResult["errors"]);
+    $mPragmaResult = $mAuditPragma($sSourceCode);
+    if ($mPragmaResult["valid"] === false) {
+        return JSOL::dict("success", false, "errors", $mPragmaResult["errors"]);
     }
 
-    $maskedData = $maskSourceCode($sourceCode);
-    $maskedCode = $maskedData["maskedCode"];
-    $tokens = $maskedData["tokens"];
+    $mMaskedData = $mMaskSourceCode($sSourceCode);
+    $sMaskedCode = $mMaskedData["maskedCode"];
+    $aTokens = $mMaskedData["tokens"];
 
-
-
-    $patternResult = $auditForbiddenPatterns($maskedCode);
-    if ($patternResult["valid"] === false) {
-        return JSOL::dict("success", false, "errors", $patternResult["errors"]);
+    $mPatternResult = $mAuditForbiddenPatterns($sMaskedCode);
+    if ($mPatternResult["valid"] === false) {
+        return JSOL::dict("success", false, "errors", $mPatternResult["errors"]);
     }
 
-    $jsTargetFlag = $cliOptions["jsTarget"];
-    $jsPrefixArg = $cliOptions["jsPrefix"];
-    $jsSuffixArg = $cliOptions["jsSuffix"];
-    $jsWrappers = $resolveWrappers($targetsConfig["js"], $jsTargetFlag, $jsPrefixArg, $jsSuffixArg);
+    $sJsTargetFlag = $mCliOptions["jsTarget"];
+    $sJsPrefixArg = $mCliOptions["jsPrefix"];
+    $sJsSuffixArg = $mCliOptions["jsSuffix"];
+    $mJsWrappers = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
 
-    $phpTargetFlag = $cliOptions["phpTarget"];
-    $phpPrefixArg = $cliOptions["phpPrefix"];
-    $phpSuffixArg = $cliOptions["phpSuffix"];
-    $phpWrappers = $resolveWrappers($targetsConfig["php"], $phpTargetFlag, $phpPrefixArg, $phpSuffixArg);
+    $sPhpTargetFlag = $mCliOptions["phpTarget"];
+    $sPhpPrefixArg = $mCliOptions["phpPrefix"];
+    $sPhpSuffixArg = $mCliOptions["phpSuffix"];
+    $mPhpWrappers = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
 
-    $compiledJS = $compileToJS($maskedCode, $jsWrappers["prefix"], $jsWrappers["suffix"]);
-    $compiledPHP = $compileToPHP($maskedCode, $phpWrappers["prefix"], $phpWrappers["suffix"]);
+    $sCompiledJS = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"]);
+    $sCompiledPHP = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"]);
 
-    $finalJS = $unmaskSourceCode($compiledJS, $tokens);
-    $finalPHP = $unmaskSourceCode($compiledPHP, $tokens);
+    $sFinalJS = $sUnmaskSourceCode($sCompiledJS, $aTokens);
+    $sFinalPHP = $sUnmaskSourceCode($sCompiledPHP, $aTokens);
 
     return JSOL::dict(
         "success", true,
-        "js", $finalJS,
-        "php", $finalPHP
+        "js", $sFinalJS,
+        "php", $sFinalPHP
     );
 };

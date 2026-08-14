@@ -1,6 +1,7 @@
 <?php
 /**
  * JSOL CLI Host Runner (PHP) - Isolated Files Architecture
+ * v0.2.93
  */
 
 declare(strict_types=1);
@@ -19,6 +20,10 @@ class JSOL {
     public static function use(...$args) {}
     public static function strIndexOf($haystack, $needle) {
         $r = strpos($haystack, $needle);
+        return $r === false ? -1 : $r;
+    }
+    public static function arrIndexOf($arr, $item) {
+        $r = array_search($item, $arr, true);
         return $r === false ? -1 : $r;
     }
 }
@@ -62,8 +67,14 @@ foreach ($parts as $part) {
     require_once $path;
 }
 
-// 2. Parse CLI Arguments using Compiled JSOL Module
-$cliOptions = $parseRawCliArgs($argv);
+// 2. Environment SAPI Check - Isolate CLI from Web
+if (php_sapi_name() !== 'cli') {
+    require __DIR__ . '/ui.php';
+    exit;
+}
+
+// 3. Parse CLI Arguments using Compiled JSOL Module
+$cliOptions = $mParseRawCliArgs($argv);
 $sourcePath = strlen($cliOptions['source']) > 0 ? $cliOptions['source'] : dirname(__DIR__) . '/example/sample.jsol.js';
 
 if (!file_exists($sourcePath)) {
@@ -71,21 +82,21 @@ if (!file_exists($sourcePath)) {
     exit(1);
 }
 
-// 3. Read Raw Targets Config & Normalize via Compiled JSOL Module
+// 4. Read Raw Targets Config & Normalize via Compiled JSOL Module
 $targetsJsonPath = __DIR__ . '/targets.json';
 $rawConfig = file_exists($targetsJsonPath) ? json_decode(file_get_contents($targetsJsonPath), true) : null;
-$targetsConfig = $normalizeTargetsConfig($rawConfig);
+$targetsConfig = $mNormalizeTargetsConfig($rawConfig);
 
-// 4. Read Source & Execute JSOL Engine Pipeline
+// 5. Read Source & Execute JSOL Engine Pipeline
 $sourceCode = file_get_contents($sourcePath);
-$result = $executeCompilationPipeline($sourceCode, $targetsConfig, $cliOptions);
+$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOptions);
 
 if ($result['success'] === false) {
     fwrite(STDERR, "Compilation Failed with errors:\n" . implode("\n", $result['errors']) . "\n");
     exit(1);
 }
 
-// 5. Pure I/O Disk Write - Stripping dual extension
+// 6. Pure I/O Disk Write - Stripping dual extension
 $outDir = strlen($cliOptions['outDir']) > 0 ? $cliOptions['outDir'] : dirname($sourcePath);
 $baseName = preg_replace('/\.jsol(\.js)?$/', '', basename($sourcePath));
 
@@ -95,11 +106,7 @@ $targetPhpFile = $outDir . '/' . $baseName . '.php';
 file_put_contents($targetJsFile, $result['js']);
 file_put_contents($targetPhpFile, $result['php']);
 
-// SAPI Check for CLI vs Browser output
-$isCli = (php_sapi_name() === 'cli');
-$nl = $isCli ? "\n" : "<br>\n";
-
-echo "JSOL Compilation Success:{$nl}";
-echo " -> JS:  {$targetJsFile}{$nl}";
-echo " -> PHP: {$targetPhpFile}{$nl}";
+echo "JSOL Compilation Success:\n";
+echo " -> JS:  {$targetJsFile}\n";
+echo " -> PHP: {$targetPhpFile}\n";
 ?>

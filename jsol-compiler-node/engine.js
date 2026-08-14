@@ -1,64 +1,62 @@
-// @JSOL v0.2.0 - Self-Hosted Engine Orchestrator
-const $resolveWrappers = function($targetsConfig, $cliTargetFlag, $cliPrefixOverride, $cliSuffixOverride) {
-    let $prefix = "";
-    let $suffix = "";
-    if ($cliPrefixOverride.length > 0 || $cliSuffixOverride.length > 0) {
-        return JSOL.dict("prefix", $cliPrefixOverride, "suffix", $cliSuffixOverride);
+// @JSOL v0.2.93 - Self-Hosted Engine Orchestrator
+const $mResolveWrappers = function($mTargetsConfig, $sCliTargetFlag, $sCliPrefixOverride, $sCliSuffixOverride) {
+    let $sPrefix = "";
+    let $sSuffix = "";
+    if ($sCliPrefixOverride.length > 0 || $sCliSuffixOverride.length > 0) {
+        return JSOL.dict("prefix", $sCliPrefixOverride, "suffix", $sCliSuffixOverride);
     }
-    if ($cliTargetFlag.length > 0) {
-        if ($targetsConfig["targets"] !== null && $targetsConfig["targets"][$cliTargetFlag] !== null) {
-            const $targetObj = $targetsConfig["targets"][$cliTargetFlag];
-            return JSOL.dict("prefix", $targetObj["prefix"], "suffix", $targetObj["suffix"]);
+    if ($sCliTargetFlag.length > 0) {
+        if ($mTargetsConfig["targets"] !== null && $mTargetsConfig["targets"][$sCliTargetFlag] !== null) {
+            const $mTargetObj = $mTargetsConfig["targets"][$sCliTargetFlag];
+            return JSOL.dict("prefix", $mTargetObj["prefix"], "suffix", $mTargetObj["suffix"]);
         }
     }
-    const $defaultPointer = $targetsConfig["default"];
-    if ($defaultPointer !== null && $defaultPointer.length > 0) {
-        if ($targetsConfig["targets"] !== null && $targetsConfig["targets"][$defaultPointer] !== null) {
-            const $defaultObj = $targetsConfig["targets"][$defaultPointer];
-            return JSOL.dict("prefix", $defaultObj["prefix"], "suffix", $defaultObj["suffix"]);
+    const $sDefaultPointer = $mTargetsConfig["default"];
+    if ($sDefaultPointer !== null && $sDefaultPointer.length > 0) {
+        if ($mTargetsConfig["targets"] !== null && $mTargetsConfig["targets"][$sDefaultPointer] !== null) {
+            const $mDefaultObj = $mTargetsConfig["targets"][$sDefaultPointer];
+            return JSOL.dict("prefix", $mDefaultObj["prefix"], "suffix", $mDefaultObj["suffix"]);
         }
     }
     return JSOL.dict("prefix", "", "suffix", "");
 };
 
-const $executeCompilationPipeline = function($sourceCode, $targetsConfig, $cliOptions) {
+const $mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOptions) {
     
 
-    const $pragmaResult = $auditPragma($sourceCode);
-    if ($pragmaResult["valid"] === false) {
-        return JSOL.dict("success", false, "errors", $pragmaResult["errors"]);
+    const $mPragmaResult = $mAuditPragma($sSourceCode);
+    if ($mPragmaResult["valid"] === false) {
+        return JSOL.dict("success", false, "errors", $mPragmaResult["errors"]);
     }
 
-    const $maskedData = $maskSourceCode($sourceCode);
-    const $maskedCode = $maskedData["maskedCode"];
-    const $tokens = $maskedData["tokens"];
+    const $mMaskedData = $mMaskSourceCode($sSourceCode);
+    const $sMaskedCode = $mMaskedData["maskedCode"];
+    const $aTokens = $mMaskedData["tokens"];
 
-
-
-    const $patternResult = $auditForbiddenPatterns($maskedCode);
-    if ($patternResult["valid"] === false) {
-        return JSOL.dict("success", false, "errors", $patternResult["errors"]);
+    const $mPatternResult = $mAuditForbiddenPatterns($sMaskedCode);
+    if ($mPatternResult["valid"] === false) {
+        return JSOL.dict("success", false, "errors", $mPatternResult["errors"]);
     }
 
-    const $jsTargetFlag = $cliOptions["jsTarget"];
-    const $jsPrefixArg = $cliOptions["jsPrefix"];
-    const $jsSuffixArg = $cliOptions["jsSuffix"];
-    const $jsWrappers = $resolveWrappers($targetsConfig["js"], $jsTargetFlag, $jsPrefixArg, $jsSuffixArg);
+    const $sJsTargetFlag = $mCliOptions["jsTarget"];
+    const $sJsPrefixArg = $mCliOptions["jsPrefix"];
+    const $sJsSuffixArg = $mCliOptions["jsSuffix"];
+    const $mJsWrappers = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
 
-    const $phpTargetFlag = $cliOptions["phpTarget"];
-    const $phpPrefixArg = $cliOptions["phpPrefix"];
-    const $phpSuffixArg = $cliOptions["phpSuffix"];
-    const $phpWrappers = $resolveWrappers($targetsConfig["php"], $phpTargetFlag, $phpPrefixArg, $phpSuffixArg);
+    const $sPhpTargetFlag = $mCliOptions["phpTarget"];
+    const $sPhpPrefixArg = $mCliOptions["phpPrefix"];
+    const $sPhpSuffixArg = $mCliOptions["phpSuffix"];
+    const $mPhpWrappers = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
 
-    const $compiledJS = $compileToJS($maskedCode, $jsWrappers["prefix"], $jsWrappers["suffix"]);
-    const $compiledPHP = $compileToPHP($maskedCode, $phpWrappers["prefix"], $phpWrappers["suffix"]);
+    const $sCompiledJS = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"]);
+    const $sCompiledPHP = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"]);
 
-    const $finalJS = $unmaskSourceCode($compiledJS, $tokens);
-    const $finalPHP = $unmaskSourceCode($compiledPHP, $tokens);
+    const $sFinalJS = $sUnmaskSourceCode($sCompiledJS, $aTokens);
+    const $sFinalPHP = $sUnmaskSourceCode($sCompiledPHP, $aTokens);
 
     return JSOL.dict(
         "success", true,
-        "js", $finalJS,
-        "php", $finalPHP
+        "js", $sFinalJS,
+        "php", $sFinalPHP
     );
 };

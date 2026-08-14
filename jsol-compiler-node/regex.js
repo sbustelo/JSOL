@@ -1,504 +1,504 @@
-// @JSOL v0.2.91 - Pure JSOL Regex Engine (Thompson VM)
+// @JSOL v0.2.93 - Pure JSOL Regex Engine (Thompson VM)
 
-const $parseAtom = function($pat, $i, $n, $gc, $fns) {
-    const $c = $pat.substring( $i, ( $i) + ( 1));
-    if ($c === "(") {
+const $mParseAtom = function($sPat, $i, $iN, $iGc, $mFns) {
+    const $sC = $sPat.substring( $i, ( $i) + ( 1));
+    if ($sC === "(") {
         $i = $i + 1;
-        $gc = $gc + 1;
-        const $idx = $gc;
-        const $pAltFn = $fns["parseAlt"];
-        let $r = $pAltFn($pat, $i, $n, $gc, $fns);
-        const $body = $r["node"];
-        $i = $r["i"];
-        $gc = $r["groupCount"];
+        $iGc = $iGc + 1;
+        const $iIdx = $iGc;
+        const $fPAltFn = $mFns["parseAlt"];
+        let $mR = $fPAltFn($sPat, $i, $iN, $iGc, $mFns);
+        const $mBody = $mR["node"];
+        $i = $mR["i"];
+        $iGc = $mR["groupCount"];
         $i = $i + 1;
-        return JSOL.dict("node", JSOL.dict("type", "group", "index", $idx, "body", $body), "i", $i, "groupCount", $gc);
+        return JSOL.dict("node", JSOL.dict("type", "group", "index", $iIdx, "body", $mBody), "i", $i, "groupCount", $iGc);
     }
-    if ($c === "[") {
+    if ($sC === "[") {
         $i = $i + 1;
-        let $negate = false;
-        if ($i < $n && $pat.substring( $i, ( $i) + ( 1)) === "^") {
-            $negate = true;
+        let $bNegate = false;
+        if ($i < $iN && $sPat.substring( $i, ( $i) + ( 1)) === "^") {
+            $bNegate = true;
             $i = $i + 1;
         }
-        let $ranges = [];
-        let $singles = [];
-        let $first = true;
-        while ($i < $n && ($pat.substring( $i, ( $i) + ( 1)) !== "]" || $first)) {
-            $first = false;
-            let $ch = $pat.substring( $i, ( $i) + ( 1));
-            let $isShorthand = false;
-            if ($ch === "\\") {
+        let $aRanges = [];
+        let $aSingles = [];
+        let $bFirst = true;
+        while ($i < $iN && ($sPat.substring( $i, ( $i) + ( 1)) !== "]" || $bFirst)) {
+            $bFirst = false;
+            let $sCh = $sPat.substring( $i, ( $i) + ( 1));
+            let $bIsShorthand = false;
+            if ($sCh === "\\") {
                 $i = $i + 1;
-                const $e = $pat.substring( $i, ( $i) + ( 1));
-                if ($e === "d") {
-                    const $r09 = ["0", "9"]; $ranges.push( $r09);
-                    $isShorthand = true;
+                const $sE = $sPat.substring( $i, ( $i) + ( 1));
+                if ($sE === "d") {
+                    const $aR09 = ["0", "9"]; $aRanges.push( $aR09);
+                    $bIsShorthand = true;
                     $i = $i + 1;
-                } else if ($e === "w") {
-                    const $raz = ["a", "z"]; $ranges.push( $raz);
-                    const $rAZ = ["A", "Z"]; $ranges.push( $rAZ);
-                    const $r09w = ["0", "9"]; $ranges.push( $r09w);
-                    $singles.push( "_");
-                    $isShorthand = true;
+                } else if ($sE === "w") {
+                    const $aRaz = ["a", "z"]; $aRanges.push( $aRaz);
+                    const $aRAZ = ["A", "Z"]; $aRanges.push( $aRAZ);
+                    const $aR09w = ["0", "9"]; $aRanges.push( $aR09w);
+                    $aSingles.push( "_");
+                    $bIsShorthand = true;
                     $i = $i + 1;
-                } else if ($e === "s") {
-                    $singles.push( " "); $singles.push( "\t"); $singles.push( "\n"); $singles.push( "\r");
-                    $isShorthand = true;
+                } else if ($sE === "s") {
+                    $aSingles.push( " "); $aSingles.push( "\t"); $aSingles.push( "\n"); $aSingles.push( "\r");
+                    $bIsShorthand = true;
                     $i = $i + 1;
                 } else {
-                    $ch = $e;
+                    $sCh = $sE;
                     $i = $i + 1;
                 }
             } else {
                 $i = $i + 1;
             }
-            if ($isShorthand === true) { continue; }
-            if ($i < $n && $pat.substring( $i, ( $i) + ( 1)) === "-" && $i + 1 < $n && $pat.substring( $i + 1, ( $i + 1) + ( 1)) !== "]") {
+            if ($bIsShorthand === true) { continue; }
+            if ($i < $iN && $sPat.substring( $i, ( $i) + ( 1)) === "-" && $i + 1 < $iN && $sPat.substring( $i + 1, ( $i + 1) + ( 1)) !== "]") {
                 $i = $i + 1;
-                let $ch2 = $pat.substring( $i, ( $i) + ( 1));
-                if ($ch2 === "\\") {
+                let $sCh2 = $sPat.substring( $i, ( $i) + ( 1));
+                if ($sCh2 === "\\") {
                     $i = $i + 1;
-                    $ch2 = $pat.substring( $i, ( $i) + ( 1));
+                    $sCh2 = $sPat.substring( $i, ( $i) + ( 1));
                     $i = $i + 1;
                 } else {
                     $i = $i + 1;
                 }
-                const $rng = [$ch, $ch2];
-                $ranges.push( $rng);
+                const $aRng = [$sCh, $sCh2];
+                $aRanges.push( $aRng);
             } else {
-                $singles.push( $ch);
+                $aSingles.push( $sCh);
             }
         }
         $i = $i + 1;
-        return JSOL.dict("node", JSOL.dict("type", "class", "negate", $negate, "ranges", $ranges, "singles", $singles), "i", $i, "groupCount", $gc);
+        return JSOL.dict("node", JSOL.dict("type", "class", "negate", $bNegate, "ranges", $aRanges, "singles", $aSingles), "i", $i, "groupCount", $iGc);
     }
-    if ($c === ".") {
+    if ($sC === ".") {
         $i = $i + 1;
-        return JSOL.dict("node", JSOL.dict("type", "any"), "i", $i, "groupCount", $gc);
+        return JSOL.dict("node", JSOL.dict("type", "any"), "i", $i, "groupCount", $iGc);
     }
-    if ($c === "^") {
+    if ($sC === "^") {
         $i = $i + 1;
-        return JSOL.dict("node", JSOL.dict("type", "anchorStart"), "i", $i, "groupCount", $gc);
+        return JSOL.dict("node", JSOL.dict("type", "anchorStart"), "i", $i, "groupCount", $iGc);
     }
-    if ($c === "$") {
+    if ($sC === "$") {
         $i = $i + 1;
-        return JSOL.dict("node", JSOL.dict("type", "anchorEnd"), "i", $i, "groupCount", $gc);
+        return JSOL.dict("node", JSOL.dict("type", "anchorEnd"), "i", $i, "groupCount", $iGc);
     }
-    if ($c === "\\") {
+    if ($sC === "\\") {
         $i = $i + 1;
-        const $e = $pat.substring( $i, ( $i) + ( 1));
+        const $sE = $sPat.substring( $i, ( $i) + ( 1));
         $i = $i + 1;
-        if ($e === "d") { const $rd = [["0", "9"]]; return JSOL.dict("node", JSOL.dict("type", "class", "negate", false, "ranges", $rd, "singles", []), "i", $i, "groupCount", $gc); }
-        if ($e === "w") { const $rw = [["a", "z"], ["A", "Z"], ["0", "9"]]; const $sw = ["_"]; return JSOL.dict("node", JSOL.dict("type", "class", "negate", false, "ranges", $rw, "singles", $sw), "i", $i, "groupCount", $gc); }
-        if ($e === "s") { const $ss = [" ", "\t", "\n", "\r"]; return JSOL.dict("node", JSOL.dict("type", "class", "negate", false, "ranges", [], "singles", $ss), "i", $i, "groupCount", $gc); }
-        return JSOL.dict("node", JSOL.dict("type", "char", "value", $e), "i", $i, "groupCount", $gc);
+        if ($sE === "d") { const $aRd = [["0", "9"]]; return JSOL.dict("node", JSOL.dict("type", "class", "negate", false, "ranges", $aRd, "singles", []), "i", $i, "groupCount", $iGc); }
+        if ($sE === "w") { const $aRw = [["a", "z"], ["A", "Z"], ["0", "9"]]; const $aSw = ["_"]; return JSOL.dict("node", JSOL.dict("type", "class", "negate", false, "ranges", $aRw, "singles", $aSw), "i", $i, "groupCount", $iGc); }
+        if ($sE === "s") { const $aSs = [" ", "\t", "\n", "\r"]; return JSOL.dict("node", JSOL.dict("type", "class", "negate", false, "ranges", [], "singles", $aSs), "i", $i, "groupCount", $iGc); }
+        return JSOL.dict("node", JSOL.dict("type", "char", "value", $sE), "i", $i, "groupCount", $iGc);
     }
     $i = $i + 1;
-    return JSOL.dict("node", JSOL.dict("type", "char", "value", $c), "i", $i, "groupCount", $gc);
+    return JSOL.dict("node", JSOL.dict("type", "char", "value", $sC), "i", $i, "groupCount", $iGc);
 };
 
-const $parseQuantified = function($pat, $i, $n, $gc, $fns) {
-    const $paFn = $fns["parseAtom"];
-    let $r = $paFn($pat, $i, $n, $gc, $fns);
-    let $atom = $r["node"];
-    $i = $r["i"];
-    $gc = $r["groupCount"];
+const $mParseQuantified = function($sPat, $i, $iN, $iGc, $mFns) {
+    const $fPaFn = $mFns["parseAtom"];
+    let $mR = $fPaFn($sPat, $i, $iN, $iGc, $mFns);
+    let $mAtom = $mR["node"];
+    $i = $mR["i"];
+    $iGc = $mR["groupCount"];
 
-    while ($i < $n) {
-        const $c = $pat.substring( $i, ( $i) + ( 1));
-        if ($c === "*") {
+    while ($i < $iN) {
+        const $sC = $sPat.substring( $i, ( $i) + ( 1));
+        if ($sC === "*") {
             $i = $i + 1;
-            let $lazy = false;
-            if ($i < $n && $pat.substring( $i, ( $i) + ( 1)) === "?") { $lazy = true; $i = $i + 1; }
-            $atom = JSOL.dict("type", "rep", "min", 0, "max", 999999, "lazy", $lazy, "body", $atom);
-        } else if ($c === "+") {
+            let $bLazy = false;
+            if ($i < $iN && $sPat.substring( $i, ( $i) + ( 1)) === "?") { $bLazy = true; $i = $i + 1; }
+            $mAtom = JSOL.dict("type", "rep", "min", 0, "max", 999999, "lazy", $bLazy, "body", $mAtom);
+        } else if ($sC === "+") {
             $i = $i + 1;
-            let $lazy = false;
-            if ($i < $n && $pat.substring( $i, ( $i) + ( 1)) === "?") { $lazy = true; $i = $i + 1; }
-            $atom = JSOL.dict("type", "rep", "min", 1, "max", 999999, "lazy", $lazy, "body", $atom);
-        } else if ($c === "?") {
+            let $bLazy = false;
+            if ($i < $iN && $sPat.substring( $i, ( $i) + ( 1)) === "?") { $bLazy = true; $i = $i + 1; }
+            $mAtom = JSOL.dict("type", "rep", "min", 1, "max", 999999, "lazy", $bLazy, "body", $mAtom);
+        } else if ($sC === "?") {
             $i = $i + 1;
-            let $lazy = false;
-            if ($i < $n && $pat.substring( $i, ( $i) + ( 1)) === "?") { $lazy = true; $i = $i + 1; }
-            $atom = JSOL.dict("type", "rep", "min", 0, "max", 1, "lazy", $lazy, "body", $atom);
+            let $bLazy = false;
+            if ($i < $iN && $sPat.substring( $i, ( $i) + ( 1)) === "?") { $bLazy = true; $i = $i + 1; }
+            $mAtom = JSOL.dict("type", "rep", "min", 0, "max", 1, "lazy", $bLazy, "body", $mAtom);
         } else {
             break;
         }
     }
-    return JSOL.dict("node", $atom, "i", $i, "groupCount", $gc);
+    return JSOL.dict("node", $mAtom, "i", $i, "groupCount", $iGc);
 };
 
-const $parseConcat = function($pat, $i, $n, $gc, $fns) {
-    let $parts = [];
-    const $pqFn = $fns["parseQuantified"];
-    while ($i < $n && $pat.substring( $i, ( $i) + ( 1)) !== "|" && $pat.substring( $i, ( $i) + ( 1)) !== ")") {
-        let $r = $pqFn($pat, $i, $n, $gc, $fns);
-        $parts.push( $r["node"]);
-        $i = $r["i"];
-        $gc = $r["groupCount"];
+const $mParseConcat = function($sPat, $i, $iN, $iGc, $mFns) {
+    let $aParts = [];
+    const $fPqFn = $mFns["parseQuantified"];
+    while ($i < $iN && $sPat.substring( $i, ( $i) + ( 1)) !== "|" && $sPat.substring( $i, ( $i) + ( 1)) !== ")") {
+        let $mR = $fPqFn($sPat, $i, $iN, $iGc, $mFns);
+        $aParts.push( $mR["node"]);
+        $i = $mR["i"];
+        $iGc = $mR["groupCount"];
     }
-    return JSOL.dict("node", JSOL.dict("type", "concat", "parts", $parts), "i", $i, "groupCount", $gc);
+    return JSOL.dict("node", JSOL.dict("type", "concat", "parts", $aParts), "i", $i, "groupCount", $iGc);
 };
 
-const $parseAlt = function($pat, $i, $n, $gc, $fns) {
-    let $options = [];
-    const $pcFn = $fns["parseConcat"];
-    let $r1 = $pcFn($pat, $i, $n, $gc, $fns);
-    $options.push( $r1["node"]);
-    $i = $r1["i"];
-    $gc = $r1["groupCount"];
+const $mParseAlt = function($sPat, $i, $iN, $iGc, $mFns) {
+    let $aOptions = [];
+    const $fPcFn = $mFns["parseConcat"];
+    let $mR1 = $fPcFn($sPat, $i, $iN, $iGc, $mFns);
+    $aOptions.push( $mR1["node"]);
+    $i = $mR1["i"];
+    $iGc = $mR1["groupCount"];
 
-    while ($i < $n && $pat.substring( $i, ( $i) + ( 1)) === "|") {
+    while ($i < $iN && $sPat.substring( $i, ( $i) + ( 1)) === "|") {
         $i = $i + 1;
-        let $r2 = $pcFn($pat, $i, $n, $gc, $fns);
-        $options.push( $r2["node"]);
-        $i = $r2["i"];
-        $gc = $r2["groupCount"];
+        let $mR2 = $fPcFn($sPat, $i, $iN, $iGc, $mFns);
+        $aOptions.push( $mR2["node"]);
+        $i = $mR2["i"];
+        $iGc = $mR2["groupCount"];
     }
-    if ($options.length === 1) { return JSOL.dict("node", $options[0], "i", $i, "groupCount", $gc); }
-    return JSOL.dict("node", JSOL.dict("type", "alt", "options", $options), "i", $i, "groupCount", $gc);
+    if ($aOptions.length === 1) { return JSOL.dict("node", $aOptions[0], "i", $i, "groupCount", $iGc); }
+    return JSOL.dict("node", JSOL.dict("type", "alt", "options", $aOptions), "i", $i, "groupCount", $iGc);
 };
 
-const $parsePattern = function($pat) {
+const $mParsePattern = function($sPat) {
     
-    const $fns = JSOL.dict(
-        "parseAlt", $parseAlt,
-        "parseConcat", $parseConcat,
-        "parseQuantified", $parseQuantified,
-        "parseAtom", $parseAtom
+    const $mFns = JSOL.dict(
+        "parseAlt", $mParseAlt,
+        "parseConcat", $mParseConcat,
+        "parseQuantified", $mParseQuantified,
+        "parseAtom", $mParseAtom
     );
-    const $n = $pat.length;
-    const $r = $parseAlt($pat, 0, $n, 0, $fns);
-    return JSOL.dict("tree", $r["node"], "groupCount", $r["groupCount"]);
+    const $iN = $sPat.length;
+    const $mR = $mParseAlt($sPat, 0, $iN, 0, $mFns);
+    return JSOL.dict("tree", $mR["node"], "groupCount", $mR["groupCount"]);
 };
 
-const $gen = function($n, $prog, $selfFn) {
-    const $type = $n["type"];
-    if ($type === "concat") {
-        const $parts = $n["parts"];
-        const $pCount = $parts.length;
-        for (let $p = 0; $p < $pCount; $p = $p + 1) { 
-            $prog = $selfFn($parts[$p], $prog, $selfFn); 
+const $fGen = function($mN, $aProg, $fSelfFn) {
+    const $sType = $mN["type"];
+    if ($sType === "concat") {
+        const $aParts = $mN["parts"];
+        const $iPCount = $aParts.length;
+        for (let $iP = 0; $iP < $iPCount; $iP = $iP + 1) { 
+            $aProg = $fSelfFn($aParts[$iP], $aProg, $fSelfFn); 
         }
-    } else if ($type === "alt") {
-        const $options = $n["options"];
-        const $oCount = $options.length;
-        let $jmpEnds = [];
-        for (let $idx = 0; $idx < $oCount; $idx = $idx + 1) {
-            if ($idx < $oCount - 1) {
-                const $splitPc = $prog.length;
-                $prog.push( JSOL.dict("op", "SPLIT", "x", 0, "y", 0));
-                const $x = $prog.length;
-                $prog = $selfFn($options[$idx], $prog, $selfFn);
-                const $jmpPc = $prog.length;
-                $prog.push( JSOL.dict("op", "JMP", "to", 0));
-                $jmpEnds.push( $jmpPc);
-                $prog[$splitPc]["x"] = $x;
-                $prog[$splitPc]["y"] = $prog.length;
+    } else if ($sType === "alt") {
+        const $aOptions = $mN["options"];
+        const $iOCount = $aOptions.length;
+        let $aJmpEnds = [];
+        for (let $iIdx = 0; $iIdx < $iOCount; $iIdx = $iIdx + 1) {
+            if ($iIdx < $iOCount - 1) {
+                const $iSplitPc = $aProg.length;
+                $aProg.push( JSOL.dict("op", "SPLIT", "x", 0, "y", 0));
+                const $iX = $aProg.length;
+                $aProg = $fSelfFn($aOptions[$iIdx], $aProg, $fSelfFn);
+                const $iJmpPc = $aProg.length;
+                $aProg.push( JSOL.dict("op", "JMP", "to", 0));
+                $aJmpEnds.push( $iJmpPc);
+                $aProg[$iSplitPc]["x"] = $iX;
+                $aProg[$iSplitPc]["y"] = $aProg.length;
             } else {
-                $prog = $selfFn($options[$idx], $prog, $selfFn);
+                $aProg = $fSelfFn($aOptions[$iIdx], $aProg, $fSelfFn);
             }
         }
-        const $jCount = $jmpEnds.length;
-        for (let $j = 0; $j < $jCount; $j = $j + 1) {
-            $prog[$jmpEnds[$j]]["to"] = $prog.length;
+        const $iJCount = $aJmpEnds.length;
+        for (let $iJ = 0; $iJ < $iJCount; $iJ = $iJ + 1) {
+            $aProg[$aJmpEnds[$iJ]]["to"] = $aProg.length;
         }
-    } else if ($type === "rep") {
-        const $min = $n["min"];
-        const $max = $n["max"];
-        const $lazy = $n["lazy"];
-        for (let $c = 0; $c < $min; $c = $c + 1) { 
-            $prog = $selfFn($n["body"], $prog, $selfFn); 
+    } else if ($sType === "rep") {
+        const $iMin = $mN["min"];
+        const $iMax = $mN["max"];
+        const $bLazy = $mN["lazy"];
+        for (let $iC = 0; $iC < $iMin; $iC = $iC + 1) { 
+            $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn); 
         }
-        if ($max === 999999) {
-            const $splitPc = $prog.length;
-            $prog.push( JSOL.dict("op", "SPLIT", "x", 0, "y", 0));
-            const $bodyStart = $prog.length;
-            $prog = $selfFn($n["body"], $prog, $selfFn);
-            $prog.push( JSOL.dict("op", "JMP", "to", $splitPc));
-            if ($lazy === true) {
-                $prog[$splitPc]["x"] = $prog.length;
-                $prog[$splitPc]["y"] = $bodyStart;
+        if ($iMax === 999999) {
+            const $iSplitPc = $aProg.length;
+            $aProg.push( JSOL.dict("op", "SPLIT", "x", 0, "y", 0));
+            const $iBodyStart = $aProg.length;
+            $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
+            $aProg.push( JSOL.dict("op", "JMP", "to", $iSplitPc));
+            if ($bLazy === true) {
+                $aProg[$iSplitPc]["x"] = $aProg.length;
+                $aProg[$iSplitPc]["y"] = $iBodyStart;
             } else {
-                $prog[$splitPc]["x"] = $bodyStart;
-                $prog[$splitPc]["y"] = $prog.length;
+                $aProg[$iSplitPc]["x"] = $iBodyStart;
+                $aProg[$iSplitPc]["y"] = $aProg.length;
             }
         } else {
-            const $optional = $max - $min;
-            for (let $c = 0; $c < $optional; $c = $c + 1) {
-                const $splitPc = $prog.length;
-                $prog.push( JSOL.dict("op", "SPLIT", "x", 0, "y", 0));
-                const $bodyStart = $prog.length;
-                $prog = $selfFn($n["body"], $prog, $selfFn);
-                if ($lazy === true) {
-                    $prog[$splitPc]["x"] = $prog.length;
-                    $prog[$splitPc]["y"] = $bodyStart;
+            const $iOptional = $iMax - $iMin;
+            for (let $iC = 0; $iC < $iOptional; $iC = $iC + 1) {
+                const $iSplitPc = $aProg.length;
+                $aProg.push( JSOL.dict("op", "SPLIT", "x", 0, "y", 0));
+                const $iBodyStart = $aProg.length;
+                $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
+                if ($bLazy === true) {
+                    $aProg[$iSplitPc]["x"] = $aProg.length;
+                    $aProg[$iSplitPc]["y"] = $iBodyStart;
                 } else {
-                    $prog[$splitPc]["x"] = $bodyStart;
-                    $prog[$splitPc]["y"] = $prog.length;
+                    $aProg[$iSplitPc]["x"] = $iBodyStart;
+                    $aProg[$iSplitPc]["y"] = $aProg.length;
                 }
             }
         }
-    } else if ($type === "group") {
-        $prog.push( JSOL.dict("op", "SAVE", "slot", $n["index"] * 2));
-        $prog = $selfFn($n["body"], $prog, $selfFn);
-        $prog.push( JSOL.dict("op", "SAVE", "slot", $n["index"] * 2 + 1));
-    } else if ($type === "char") {
-        $prog.push( JSOL.dict("op", "CHAR", "value", $n["value"]));
-    } else if ($type === "any") {
-        $prog.push( JSOL.dict("op", "ANY"));
-    } else if ($type === "class") {
-        $prog.push( JSOL.dict("op", "CLASS", "negate", $n["negate"], "ranges", $n["ranges"], "singles", $n["singles"]));
-    } else if ($type === "anchorStart") {
-        $prog.push( JSOL.dict("op", "BOL"));
-    } else if ($type === "anchorEnd") {
-        $prog.push( JSOL.dict("op", "EOL"));
+    } else if ($sType === "group") {
+        $aProg.push( JSOL.dict("op", "SAVE", "slot", $mN["index"] * 2));
+        $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
+        $aProg.push( JSOL.dict("op", "SAVE", "slot", $mN["index"] * 2 + 1));
+    } else if ($sType === "char") {
+        $aProg.push( JSOL.dict("op", "CHAR", "value", $mN["value"]));
+    } else if ($sType === "any") {
+        $aProg.push( JSOL.dict("op", "ANY"));
+    } else if ($sType === "class") {
+        $aProg.push( JSOL.dict("op", "CLASS", "negate", $mN["negate"], "ranges", $mN["ranges"], "singles", $mN["singles"]));
+    } else if ($sType === "anchorStart") {
+        $aProg.push( JSOL.dict("op", "BOL"));
+    } else if ($sType === "anchorEnd") {
+        $aProg.push( JSOL.dict("op", "EOL"));
     }
-    return $prog;
+    return $aProg;
 };
 
-const $compileRegex = function($node, $groupCount) {
+const $aCompileRegex = function($mNode, $iGroupCount) {
     
-    let $prog = [];
-    $prog.push( JSOL.dict("op", "SAVE", "slot", 0));
-    $prog = $gen($node, $prog, $gen);
-    $prog.push( JSOL.dict("op", "SAVE", "slot", 1));
-    $prog.push( JSOL.dict("op", "MATCH"));
-    return $prog;
+    let $aProg = [];
+    $aProg.push( JSOL.dict("op", "SAVE", "slot", 0));
+    $aProg = $fGen($mNode, $aProg, $fGen);
+    $aProg.push( JSOL.dict("op", "SAVE", "slot", 1));
+    $aProg.push( JSOL.dict("op", "MATCH"));
+    return $aProg;
 };
 
-const $toLower = function($ch) {
-    const $code = $ch.charCodeAt( 0);
-    if ($code >= 65 && $code <= 90) { return String.fromCharCode($code + 32); }
-    return $ch;
+const $sToLower = function($sCh) {
+    const $iCode = $sCh.charCodeAt( 0);
+    if ($iCode >= 65 && $iCode <= 90) { return String.fromCharCode($iCode + 32); }
+    return $sCh;
 };
 
-const $charMatches = function($instr, $ch, $ci) {
+const $bCharMatches = function($mInstr, $sCh, $bCi) {
     
-    let $inSet = false;
-    const $chComp = $ci === true ? $toLower($ch) : $ch;
-    const $cCode = $chComp.charCodeAt( 0);
+    let $bInSet = false;
+    const $sChComp = $bCi === true ? $sToLower($sCh) : $sCh;
+    const $iCCode = $sChComp.charCodeAt( 0);
 
-    const $singles = $instr["singles"];
-    const $sCount = $singles.length;
-    for (let $i = 0; $i < $sCount; $i = $i + 1) {
-        const $s = $singles[$i];
-        const $sComp = $ci === true ? $toLower($s) : $s;
-        if ($sComp === $chComp) { $inSet = true; }
-    }
-
-    const $ranges = $instr["ranges"];
-    const $rCount = $ranges.length;
-    for (let $i = 0; $i < $rCount; $i = $i + 1) {
-        const $r = $ranges[$i];
-        const $a = $ci === true ? $toLower($r[0]) : $r[0];
-        const $b = $ci === true ? $toLower($r[1]) : $r[1];
-        const $aCode = $a.charCodeAt( 0);
-        const $bCode = $b.charCodeAt( 0);
-        if ($cCode >= $aCode && $cCode <= $bCode) { $inSet = true; }
+    const $aSingles = $mInstr["singles"];
+    const $iSCount = $aSingles.length;
+    for (let $i = 0; $i < $iSCount; $i = $i + 1) {
+        const $sS = $aSingles[$i];
+        const $sSComp = $bCi === true ? $sToLower($sS) : $sS;
+        if ($sSComp === $sChComp) { $bInSet = true; }
     }
 
-    if ($instr["negate"] === true) { return !$inSet; }
-    return $inSet;
+    const $aRanges = $mInstr["ranges"];
+    const $iRCount = $aRanges.length;
+    for (let $i = 0; $i < $iRCount; $i = $i + 1) {
+        const $aR = $aRanges[$i];
+        const $sA = $bCi === true ? $sToLower($aR[0]) : $aR[0];
+        const $sB = $bCi === true ? $sToLower($aR[1]) : $aR[1];
+        const $iACode = $sA.charCodeAt( 0);
+        const $iBCode = $sB.charCodeAt( 0);
+        if ($iCCode >= $iACode && $iCCode <= $iBCode) { $bInSet = true; }
+    }
+
+    if ($mInstr["negate"] === true) { return !$bInSet; }
+    return $bInSet;
 };
 
-const $runRegex = function($prog, $str, $ci, $groupCount, $startSp) {
+const $mRunRegex = function($aProg, $sStr, $bCi, $iGroupCount, $iStartSp) {
     
-    const $n = $str.length;
-    let $pc = 0;
-    let $sp = $startSp;
-    let $saves = [];
-    const $savesLen = ($groupCount + 1) * 2;
-    for (let $i = 0; $i < $savesLen; $i = $i + 1) { $saves.push( -1); }
+    const $iN = $sStr.length;
+    let $iPc = 0;
+    let $iSp = $iStartSp;
+    let $aSaves = [];
+    const $iSavesLen = ($iGroupCount + 1) * 2;
+    for (let $i = 0; $i < $iSavesLen; $i = $i + 1) { $aSaves.push( -1); }
 
-    const $stack = [];
-    let $stackPtr = 0;
+    const $aStack = [];
+    let $iStackPtr = 0;
 
-    let $running = true;
-    let $matched = false;
+    let $bRunning = true;
+    let $bMatched = false;
 
-    while ($running === true) {
-        const $instr = $prog[$pc];
-        let $ok = true;
-        const $op = $instr["op"];
+    while ($bRunning === true) {
+        const $mInstr = $aProg[$iPc];
+        let $bOk = true;
+        const $sOp = $mInstr["op"];
 
-        if ($op === "CHAR") {
-            if ($sp < $n) {
-                const $ch = $str.substring( $sp, ( $sp) + ( 1));
-                const $val = $instr["value"];
-                const $match = $ci === true ? ($toLower($ch) === $toLower($val)) : ($ch === $val);
-                if ($match === true) { $sp = $sp + 1; $pc = $pc + 1; } else { $ok = false; }
-            } else { $ok = false; }
-        } else if ($op === "ANY") {
-            if ($sp < $n) { $sp = $sp + 1; $pc = $pc + 1; } else { $ok = false; }
-        } else if ($op === "CLASS") {
-            if ($sp < $n) {
-                const $ch = $str.substring( $sp, ( $sp) + ( 1));
-                if ($charMatches($instr, $ch, $ci) === true) { $sp = $sp + 1; $pc = $pc + 1; } else { $ok = false; }
-            } else { $ok = false; }
-        } else if ($op === "BOL") {
-            if ($sp === 0) { $pc = $pc + 1; } else { $ok = false; }
-        } else if ($op === "EOL") {
-            if ($sp === $n) { $pc = $pc + 1; } else { $ok = false; }
-        } else if ($op === "JMP") {
-            $pc = $instr["to"];
-        } else if ($op === "SPLIT") {
-            const $savesCopy = [];
-            for (let $i = 0; $i < $savesLen; $i = $i + 1) { $savesCopy.push( $saves[$i]); }
-            const $frame = JSOL.dict("pc", $instr["y"], "sp", $sp, "saves", $savesCopy);
-            if ($stackPtr < $stack.length) { $stack[$stackPtr] = $frame; } else { $stack.push( $frame); }
-            $stackPtr = $stackPtr + 1;
+        if ($sOp === "CHAR") {
+            if ($iSp < $iN) {
+                const $sCh = $sStr.substring( $iSp, ( $iSp) + ( 1));
+                const $sVal = $mInstr["value"];
+                const $bMatch = $bCi === true ? ($sToLower($sCh) === $sToLower($sVal)) : ($sCh === $sVal);
+                if ($bMatch === true) { $iSp = $iSp + 1; $iPc = $iPc + 1; } else { $bOk = false; }
+            } else { $bOk = false; }
+        } else if ($sOp === "ANY") {
+            if ($iSp < $iN) { $iSp = $iSp + 1; $iPc = $iPc + 1; } else { $bOk = false; }
+        } else if ($sOp === "CLASS") {
+            if ($iSp < $iN) {
+                const $sCh = $sStr.substring( $iSp, ( $iSp) + ( 1));
+                if ($bCharMatches($mInstr, $sCh, $bCi) === true) { $iSp = $iSp + 1; $iPc = $iPc + 1; } else { $bOk = false; }
+            } else { $bOk = false; }
+        } else if ($sOp === "BOL") {
+            if ($iSp === 0) { $iPc = $iPc + 1; } else { $bOk = false; }
+        } else if ($sOp === "EOL") {
+            if ($iSp === $iN) { $iPc = $iPc + 1; } else { $bOk = false; }
+        } else if ($sOp === "JMP") {
+            $iPc = $mInstr["to"];
+        } else if ($sOp === "SPLIT") {
+            const $aSavesCopy = [];
+            for (let $i = 0; $i < $iSavesLen; $i = $i + 1) { $aSavesCopy.push( $aSaves[$i]); }
+            const $mFrame = JSOL.dict("pc", $mInstr["y"], "sp", $iSp, "saves", $aSavesCopy);
+            if ($iStackPtr < $aStack.length) { $aStack[$iStackPtr] = $mFrame; } else { $aStack.push( $mFrame); }
+            $iStackPtr = $iStackPtr + 1;
             
-            $pc = $instr["x"];
-        } else if ($op === "SAVE") {
-            $saves[$instr["slot"]] = $sp;
-            $pc = $pc + 1;
-        } else if ($op === "MATCH") {
-            $matched = true;
-            $running = false;
+            $iPc = $mInstr["x"];
+        } else if ($sOp === "SAVE") {
+            $aSaves[$mInstr["slot"]] = $iSp;
+            $iPc = $iPc + 1;
+        } else if ($sOp === "MATCH") {
+            $bMatched = true;
+            $bRunning = false;
         } else {
-            $ok = false;
+            $bOk = false;
         }
 
-        if ($running === true && $ok === false) {
-            if ($stackPtr === 0) { 
-                $running = false; 
+        if ($bRunning === true && $bOk === false) {
+            if ($iStackPtr === 0) { 
+                $bRunning = false; 
             } else {
-                $stackPtr = $stackPtr - 1;
-                const $f = $stack[$stackPtr];
-                $pc = $f["pc"];
-                $sp = $f["sp"];
-                $saves = $f["saves"];
+                $iStackPtr = $iStackPtr - 1;
+                const $mF = $aStack[$iStackPtr];
+                $iPc = $mF["pc"];
+                $iSp = $mF["sp"];
+                $aSaves = $mF["saves"];
             }
         }
     }
 
-    return JSOL.dict("matched", $matched, "saves", $saves);
+    return JSOL.dict("matched", $bMatched, "saves", $aSaves);
 };
 
-const $regexMatch = function($patternStr, $str, $flags) {
+const $mRegexMatch = function($sPatternStr, $sStr, $sFlags) {
     
-    let $ci = false;
-    let $global = false;
-    if ($flags.indexOf( "i") !== -1) { $ci = true; }
-    if ($flags.indexOf( "g") !== -1) { $global = true; }
+    let $bCi = false;
+    let $bGlobal = false;
+    if ($sFlags.indexOf( "i") !== -1) { $bCi = true; }
+    if ($sFlags.indexOf( "g") !== -1) { $bGlobal = true; }
 
-    const $parsed = $parsePattern($patternStr);
-    const $prog = $compileRegex($parsed["tree"], $parsed["groupCount"]);
-    const $groupCount = $parsed["groupCount"];
+    const $mParsed = $mParsePattern($sPatternStr);
+    const $aProg = $aCompileRegex($mParsed["tree"], $mParsed["groupCount"]);
+    const $iGroupCount = $mParsed["groupCount"];
 
-    const $n = $str.length;
-    for (let $start = 0; $start <= $n; $start = $start + 1) {
-        const $r = $runRegex($prog, $str, $ci, $groupCount, $start);
-        if ($r["matched"] === true) {
-            let $groups = [];
-            for (let $g = 0; $g <= $groupCount; $g = $g + 1) {
-                const $s = $r["saves"][$g * 2];
-                const $e = $r["saves"][$g * 2 + 1];
-                if ($s >= 0 && $e >= 0) {
-                    const $subG = $str.substring( $s, ( $s) + ( $e - $s));
-                    $groups.push( $subG);
+    const $iN = $sStr.length;
+    for (let $iStart = 0; $iStart <= $iN; $iStart = $iStart + 1) {
+        const $mR = $mRunRegex($aProg, $sStr, $bCi, $iGroupCount, $iStart);
+        if ($mR["matched"] === true) {
+            let $aGroups = [];
+            for (let $iG = 0; $iG <= $iGroupCount; $iG = $iG + 1) {
+                const $iS = $mR["saves"][$iG * 2];
+                const $iE = $mR["saves"][$iG * 2 + 1];
+                if ($iS >= 0 && $iE >= 0) {
+                    const $sSubG = $sStr.substring( $iS, ( $iS) + ( $iE - $iS));
+                    $aGroups.push( $sSubG);
                 } else {
-                    $groups.push( null);
+                    $aGroups.push( null);
                 }
             }
-            return JSOL.dict("matched", true, "groups", $groups, "index", $start, "length", $r["saves"][1] - $r["saves"][0]);
+            return JSOL.dict("matched", true, "groups", $aGroups, "index", $iStart, "length", $mR["saves"][1] - $mR["saves"][0]);
         }
     }
     return JSOL.dict("matched", false, "groups", [], "index", -1, "length", 0);
 };
 
-const $regexReplace = function($patternStr, $replacementStr, $str, $flags) {
+const $sRegexReplace = function($sPatternStr, $sReplacementStr, $sStr, $sFlags) {
     
-    let $ci = false;
-    let $global = false;
-    if ($flags.indexOf( "i") !== -1) { $ci = true; }
-    if ($flags.indexOf( "g") !== -1) { $global = true; }
+    let $bCi = false;
+    let $bGlobal = false;
+    if ($sFlags.indexOf( "i") !== -1) { $bCi = true; }
+    if ($sFlags.indexOf( "g") !== -1) { $bGlobal = true; }
 
-    const $parsed = $parsePattern($patternStr);
-    const $prog = $compileRegex($parsed["tree"], $parsed["groupCount"]);
-    const $groupCount = $parsed["groupCount"];
+    const $mParsed = $mParsePattern($sPatternStr);
+    const $aProg = $aCompileRegex($mParsed["tree"], $mParsed["groupCount"]);
+    const $iGroupCount = $mParsed["groupCount"];
 
-    let $result = "";
+    let $sResult = "";
     let $i = 0;
-    const $n = $str.length;
+    const $iN = $sStr.length;
 
-    while ($i <= $n) {
-        let $matchFound = false;
-        let $r = null;
-        let $matchIndex = $i;
+    while ($i <= $iN) {
+        let $bMatchFound = false;
+        let $mR = null;
+        let $iMatchIndex = $i;
         
-        for (let $start = $i; $start <= $n; $start = $start + 1) {
-            $r = $runRegex($prog, $str, $ci, $groupCount, $start);
-            if ($r["matched"] === true) {
-                $matchFound = true;
-                $matchIndex = $start;
+        for (let $iStart = $i; $iStart <= $iN; $iStart = $iStart + 1) {
+            $mR = $mRunRegex($aProg, $sStr, $bCi, $iGroupCount, $iStart);
+            if ($mR["matched"] === true) {
+                $bMatchFound = true;
+                $iMatchIndex = $iStart;
                 break;
             }
         }
 
-        if ($matchFound === true) {
-            const $matchStart = $r["saves"][0];
-            const $matchEnd = $r["saves"][1];
+        if ($bMatchFound === true) {
+            const $iMatchStart = $mR["saves"][0];
+            const $iMatchEnd = $mR["saves"][1];
 
-            const $subA = $str.substring( $i, ( $i) + ( $matchStart - $i));
-            $result = $result + "" + $subA;
+            const $sSubA = $sStr.substring( $i, ( $i) + ( $iMatchStart - $i));
+            $sResult = $sResult + "" + $sSubA;
 
-            let $repResult = "";
-            const $repLen = $replacementStr.length;
-            for (let $k = 0; $k < $repLen; $k = $k + 1) {
-                const $c = $replacementStr.substring( $k, ( $k) + ( 1));
-                if ($c === "$" && $k + 1 < $repLen) {
-                    const $nextC = $replacementStr.substring( $k + 1, ( $k + 1) + ( 1));
-                    const $code = $nextC.charCodeAt( 0);
-                    if ($code >= 48 && $code <= 57) { 
-                        const $gIdx = $code - 48;
-                        if ($gIdx <= $groupCount) {
-                            const $gs = $r["saves"][$gIdx * 2];
-                            const $ge = $r["saves"][$gIdx * 2 + 1];
-                            if ($gs >= 0 && $ge >= 0) {
-                                const $subB = $str.substring( $gs, ( $gs) + ( $ge - $gs));
-                                $repResult = $repResult + "" + $subB;
+            let $sRepResult = "";
+            const $iRepLen = $sReplacementStr.length;
+            for (let $iK = 0; $iK < $iRepLen; $iK = $iK + 1) {
+                const $sC = $sReplacementStr.substring( $iK, ( $iK) + ( 1));
+                if ($sC === "$" && $iK + 1 < $iRepLen) {
+                    const $sNextC = $sReplacementStr.substring( $iK + 1, ( $iK + 1) + ( 1));
+                    const $iCode = $sNextC.charCodeAt( 0);
+                    if ($iCode >= 48 && $iCode <= 57) { 
+                        const $iGIdx = $iCode - 48;
+                        if ($iGIdx <= $iGroupCount) {
+                            const $iGs = $mR["saves"][$iGIdx * 2];
+                            const $iGe = $mR["saves"][$iGIdx * 2 + 1];
+                            if ($iGs >= 0 && $iGe >= 0) {
+                                const $sSubB = $sStr.substring( $iGs, ( $iGs) + ( $iGe - $iGs));
+                                $sRepResult = $sRepResult + "" + $sSubB;
                             }
                         }
-                        $k = $k + 1;
+                        $iK = $iK + 1;
                     } else {
-                        $repResult = $repResult + "" + $c;
+                        $sRepResult = $sRepResult + "" + $sC;
                     }
                 } else {
-                    $repResult = $repResult + "" + $c;
+                    $sRepResult = $sRepResult + "" + $sC;
                 }
             }
 
-            $result = $result + "" + $repResult;
+            $sResult = $sResult + "" + $sRepResult;
             
-            if ($matchEnd === $matchIndex) {
-                if ($matchIndex < $n) {
-                    const $subC = $str.substring( $matchIndex, ( $matchIndex) + ( 1));
-                    $result = $result + "" + $subC;
+            if ($iMatchEnd === $iMatchIndex) {
+                if ($iMatchIndex < $iN) {
+                    const $sSubC = $sStr.substring( $iMatchIndex, ( $iMatchIndex) + ( 1));
+                    $sResult = $sResult + "" + $sSubC;
                 }
-                $i = $matchIndex + 1;
+                $i = $iMatchIndex + 1;
             } else {
-                $i = $matchEnd;
+                $i = $iMatchEnd;
             }
 
-            if ($global === false) {
-                const $subD = $str.substring( $i, ( $i) + ( $n - $i));
-                $result = $result + "" + $subD;
+            if ($bGlobal === false) {
+                const $sSubD = $sStr.substring( $i, ( $i) + ( $iN - $i));
+                $sResult = $sResult + "" + $sSubD;
                 break;
             }
         } else {
-            const $subE = $str.substring( $i, ( $i) + ( $n - $i));
-            $result = $result + "" + $subE;
+            const $sSubE = $sStr.substring( $i, ( $i) + ( $iN - $i));
+            $sResult = $sResult + "" + $sSubE;
             break;
         }
     }
 
-    return $result;
+    return $sResult;
 };
 
 const $mRegex = JSOL.dict(
-    "match", $regexMatch,
-    "replace", $regexReplace
+    "match", $mRegexMatch,
+    "replace", $sRegexReplace
 );

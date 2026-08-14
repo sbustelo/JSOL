@@ -6,7 +6,7 @@
 
 ## Language reference
 
-→ [`02_LANGUAGE_SPEC_CURRENT.md`](02_language_spec_current.md/) — The complete, authoritative specification of JSOL v0.2.91.
+→ [`02_LANGUAGE_SPEC_CURRENT.md`](02_language_spec_current.md/) — The complete, authoritative specification of JSOL v0.2.93.
 
 * * *
 
@@ -56,4 +56,4 @@
 
 ---
 
-*JSOL v0.2.92 — 2026-08-13, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

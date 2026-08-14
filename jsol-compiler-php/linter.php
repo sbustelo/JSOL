@@ -1,82 +1,86 @@
 <?php
-// @JSOL v0.2.90 - Self-Hosted Compiler Linter Module (regex-free)
-$isWordChar = function($ch) {
-    if ($ch === "") { return false; }
-    $code = mb_ord(mb_substr($ch,  0, 1, "UTF-8"));
-    if ($code >= 48 && $code <= 57) { return true; }
-    if ($code >= 65 && $code <= 90) { return true; }
-    if ($code >= 97 && $code <= 122) { return true; }
-    if ($code === 95) { return true; }
+// @JSOL v0.2.93 - Self-Hosted Compiler Linter Module (regex-free)
+$bIsWordChar = function($sCh) {
+    if ($sCh === "") { return false; }
+    $iCode = mb_ord(mb_substr($sCh,  0, 1, "UTF-8"));
+    if ($iCode >= 48 && $iCode <= 57) { return true; }
+    if ($iCode >= 65 && $iCode <= 90) { return true; }
+    if ($iCode >= 97 && $iCode <= 122) { return true; }
+    if ($iCode === 95) { return true; }
     return false;
 };
 
-$auditPragma = function($sourceCode) {
-    $errors = [];
-    $hasPragma = false;
-    $len = mb_strlen($sourceCode, "UTF-8");
+$mAuditPragma = function($sSourceCode) {
+    $aErrors = [];
+    $bHasPragma = false;
+    $iLen = mb_strlen($sSourceCode, "UTF-8");
 
     $i = 0;
-    $skipping = true;
-    while ($i < $len && $skipping === true) {
-        $c = mb_substr($sourceCode,  $i,  1, "UTF-8");
-        if ($c === " " || $c === "\t" || $c === "\n" || $c === "\r") {
+    $bSkipping = true;
+    while ($i < $iLen && $bSkipping === true) {
+        $sC = mb_substr($sSourceCode,  $i,  1, "UTF-8");
+        if ($sC === " " || $sC === "\t" || $sC === "\n" || $sC === "\r") {
             $i = $i + 1;
         } else {
-            $skipping = false;
+            $bSkipping = false;
         }
     }
 
-    if (mb_substr($sourceCode,  $i,  2, "UTF-8") === "//") {
-        $lineEnd = $i;
-        $scanning = true;
-        while ($lineEnd < $len && $scanning === true) {
-            if (mb_substr($sourceCode,  $lineEnd,  1, "UTF-8") === "\n") {
-                $scanning = false;
+    if (mb_substr($sSourceCode,  $i,  2, "UTF-8") === "//") {
+        $iLineEnd = $i;
+        $bScanning = true;
+        while ($iLineEnd < $iLen && $bScanning === true) {
+            if (mb_substr($sSourceCode,  $iLineEnd,  1, "UTF-8") === "\n") {
+                $bScanning = false;
             } else {
-                $lineEnd = $lineEnd + 1;
+                $iLineEnd = $iLineEnd + 1;
             }
         }
-        $firstLine = mb_substr($sourceCode,  $i,  $lineEnd - $i, "UTF-8");
-        if (JSOL::strIndexOf($firstLine,  "JSOL") !== -1) {
-            $hasPragma = true;
+        $sFirstLine = mb_substr($sSourceCode,  $i,  $iLineEnd - $i, "UTF-8");
+        if (JSOL::strIndexOf($sFirstLine,  "@JSOL") !== -1 || JSOL::strIndexOf($sFirstLine,  "// JSOL") !== -1) {
+            $bHasPragma = true;
         }
     }
 
-    if ($hasPragma === false) {
-        $errors[] =  "Fatal: Missing MANDATORY @JSOL pragma on Line 1.";
+    if ($bHasPragma === false) {
+        $aErrors[] =  "Fatal: Missing MANDATORY @JSOL pragma on Line 1.";
     }
-    return JSOL::dict("valid", count($errors) === 0, "errors", $errors);
+    return JSOL::dict("valid", count($aErrors) === 0, "errors", $aErrors);
 };
 
-$auditForbiddenPatterns = function($maskedCode) {
-    $errors = [];
+$mAuditForbiddenPatterns = function($sMaskedCode) {
+    $aErrors = [];
 
-    $functionalMethods = [".map(", ".filter(", ".reduce(", ".forEach(", ".find("];
-    $hasFunctionalMethods = false;
-    $fmCount = count($functionalMethods);
-    for ($fm = 0; $fm < $fmCount; $fm = $fm + 1) {
-        if (JSOL::strIndexOf($maskedCode,  $functionalMethods[$fm]) !== -1) {
-            $hasFunctionalMethods = true;
+    $aFunctionalMethods = [".map(", ".filter(", ".reduce(", ".forEach(", ".find("];
+    $bHasFunctionalMethods = false;
+    $iFmCount = count($aFunctionalMethods);
+    for ($iFm = 0; $iFm < $iFmCount; $iFm = $iFm + 1) {
+        if (JSOL::strIndexOf($sMaskedCode,  $aFunctionalMethods[$iFm]) !== -1) {
+            $bHasFunctionalMethods = true;
         }
     }
-    if ($hasFunctionalMethods === true) {
-        $errors[] =  "Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.";
+    if ($bHasFunctionalMethods === true) {
+        $aErrors[] =  "Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.";
     }
 
-    $hasLengthProperty = false;
-    $mLen = mb_strlen($maskedCode, "UTF-8");
-    for ($p = 0; $p < $mLen; $p = $p + 1) {
-        if (mb_substr($maskedCode,  $p,  7, "UTF-8") === ".length") {
-            $nextChar = mb_substr($maskedCode,  $p + 7,  1, "UTF-8");
-            if ($isWordChar($nextChar) === false) {
-                $hasLengthProperty = true;
+    $bHasLengthProperty = false;
+    $iMLen = mb_strlen($sMaskedCode, "UTF-8");
+    for ($iP = 0; $iP < $iMLen; $iP = $iP + 1) {
+        if (mb_substr($sMaskedCode,  $iP,  7, "UTF-8") === ".length") {
+            $sNextChar = mb_substr($sMaskedCode,  $iP + 7,  1, "UTF-8");
+            if ($bIsWordChar($sNextChar) === false) {
+                $bHasLengthProperty = true;
                 break;
             }
         }
     }
-    if ($hasLengthProperty === true) {
-        $errors[] =  "Linter Error: Accessing .length is FORBIDDEN. Use Arr.count() for arrays or Str.len() for strings.";
+    if ($bHasLengthProperty === true) {
+        $aErrors[] =  "Linter Error: Accessing .length is FORBIDDEN. Use Arr.count() for arrays or Str.len() for strings.";
     }
 
-    return JSOL::dict("valid", count($errors) === 0, "errors", $errors);
+    if (JSOL::strIndexOf($sMaskedCode,  "with (") !== -1 || JSOL::strIndexOf($sMaskedCode,  "with(") !== -1) {
+        $aErrors[] =  "Linter Error: The 'with' statement is FORBIDDEN.";
+    }
+
+    return JSOL::dict("valid", count($aErrors) === 0, "errors", $aErrors);
 };

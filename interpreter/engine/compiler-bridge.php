@@ -16,6 +16,10 @@ if (!class_exists('JSOL')) {
             $r = strpos($haystack, $needle);
             return $r === false ? -1 : $r;
         }
+        public static function arrIndexOf($arr, $item) {
+            $r = array_search($item, $arr, true);
+            return $r === false ? -1 : $r;
+        }
     }
 }
 if (!class_exists('Str')) {
@@ -40,8 +44,6 @@ if (!class_exists('Map')) {
         public static function has($obj, $key) { return isset($obj[$key]); }
     }
 }
-
-
 
 
 function parseJsolMetadata(string $filePath): array {
@@ -87,9 +89,6 @@ function parseJsolMetadata(string $filePath): array {
 }
 
 
-
-
-
 function compileJsolInMemory(string $sourcePath, string $compilerDir, string $outDir, array $metadata): array {
     // Load all compiler parts into the current function scope
     $parts = [
@@ -104,8 +103,8 @@ function compileJsolInMemory(string $sourcePath, string $compilerDir, string $ou
 
     $sourceCode = file_get_contents($sourcePath);
     
-    // $normalizeTargetsConfig and $executeCompilationPipeline are now available in this scope
-    $targetsConfig = $normalizeTargetsConfig(null);
+    // $mNormalizeTargetsConfig and $mExecuteCompilationPipeline are now available in this scope
+    $targetsConfig = $mNormalizeTargetsConfig(null);
     
     // Export the compiled function explicitly to the browser's window object
     $jsSuffix = "";
@@ -118,7 +117,7 @@ function compileJsolInMemory(string $sourcePath, string $compilerDir, string $ou
         'phpTarget' => '', 'phpPrefix' => '', 'phpSuffix' => ''
     ];
 
-    $result = $executeCompilationPipeline($sourceCode, $targetsConfig, $cliOpts);
+    $result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOpts);
 
     $baseName = preg_replace('/\.jsol(\.js)?$/', '', basename($sourcePath));
     $compiledJsFilename = $baseName . '.js';

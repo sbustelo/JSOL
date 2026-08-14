@@ -3,6 +3,20 @@ window.JSOL = {
     dict: function(...args) { let o={}; for(let i=0;i<args.length;i+=2) o[args[i]]=args[i+1]; return o; }, 
     use: function(){} 
 };
+window.Arr = {
+    count: function(a) { return a.length; },
+    push: function(a, i) { a.push(i); return a; },
+    pop: function(a) { return a.pop(); },
+    shift: function(a) { return a.shift(); },
+    indexOf: function(a, i) { return a.indexOf(i); },
+    join: function(a, d) { return a.join(d); },
+    slice: function(a, s, e) { return a.slice(s, e); }
+};
+window.Map = {
+    create: function(...args) { return window.JSOL.dict(...args); },
+    has: function(obj, key) { return Object.prototype.hasOwnProperty.call(obj, key); },
+    keys: function(obj) { return Object.keys(obj); }
+};
 window.$mRegex = {
     replace: (p, r, s, f) => { const re = new RegExp(p, f); return s.replace(re, r); },
     match: (p, s, f) => { const re = new RegExp(p, f); const m = re.exec(s); return m ? { matched: true, groups: m } : { matched: false }; },

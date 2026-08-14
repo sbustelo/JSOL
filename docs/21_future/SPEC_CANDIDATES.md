@@ -21,6 +21,37 @@ section at the bottom with the outcome.
 
 ## Pending
 
+### Custom type prefixes: minimum length as the disambiguation rule
+
+- **First encountered in:** evaluating proper support of hex numbers and
+  CSS-legal color syntax (`#rrggbb`, `rgb()`, `hsl()`, `oklch()`, etc.) as
+  first-class values for color-science examples, and revising the decisions for JSOL-X's `$p` (percentage) prefix proposal.
+- **Proposal:** the kernel/core type prefixes (`$s`, `$q`, `$n`, `$i`,
+  `$b`, `$a`, `$m`, ...) can stay as short as 1 character, exactly as today.
+  Any *custom* type prefix — one that is not part of the kernel — must be
+  at least 3 characters, without clashing with the core types (`$numeric` would pass against `$number`; `$num` would not) . `$c` was reserved/ambiguous (color? currency?
+  circle?); `$cur` / `$currency`, `$col` / `$color` are not, and cannot collide with a kernel
+  prefix. Same reasoning fixes `$g` for angle (already close to `$a` as short for `arr`/`array`): `$ang` / `$angle` has no such collision.
+- **Framing:** JSOL-X's `$p` (percentage) stops being a special case bolted onto the language for Excel's sake, and becomes one *flavor* of custom type among others (a color-science flavor, a future finance flavor, etc.), all governed by the same length rule.
+- **Open problem this does not solve on its own:** the rule prevents
+  custom-vs-kernel collisions, but not custom-vs-custom collisions across
+  independently developed flavors (e.g. two different domains both wanting
+  `$ang` for unrelated things). A solution would be a single registry of
+  reserved custom prefixes, documented in one place, the same "single
+  source of truth" problem already flagged for the docs in general.
+- **Design tension:** low. This is a naming/lexer convention, not a new
+  runtime capability by itself, but it has real operational weight because
+  type prefixes already drive REPL/contract input coercion (see the
+  digit-sum.jsol.js $s-vs-$q bug in the language's own commit history) —
+  so a future `$color`/`$angle` custom type needs its own coercion and
+  (for the interpreter) its own parsing/rendering logic, not just a name.
+  Related: see `INTERPRETER_BACKLOG.md`, "Custom Data Types" section.
+- **Initial verdict (2026-08-13):** Lean **accept** the length rule itself.
+  Still needs the registry mechanism designed before any real custom type
+  ships.
+- **Status:** PENDING REVIEW
+
+
 ### `Arr.copy($a)`
 
 - **First encountered in:** `examples/05-sorting-searching/bubble-sort.jsol.js`, `insertion-sort.jsol.js`

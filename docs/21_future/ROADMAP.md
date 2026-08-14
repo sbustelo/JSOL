@@ -44,18 +44,25 @@ Level 1 wrappers require no runtime verification because the guarantee comes fro
 
 However, to support the C-like universe and the educational use-case, the core needs structural shifts.
 
+
+## Next Steps (Path to v0.3.0)
+
+* **Refactor 'Regex.*' Domain Namespace (Technical Debt):** Transition 'regex.jsol' functions ('$regexMatch', '$regexReplace') from bare global functions into the formal 'Regex.*' domain namespace ('Regex.match', 'Regex.replace', 'Regex.test') to eliminate global scope pollution and unify with 'Str.*'/'Arr.*'. (See 'docs/PENDING_IMPROVEMENTS.md').
+* **Priority 3 (Helper Architecture):** Core vs. Reference vs. Extension packages.
+* **Priority 6 (Contract Model):** Formalize cross-target test runner infrastructure.
+* **Priority 7 (Specification SSOT):** Extract the language domain API (namespaces and wrappers) from Markdown files into a centralized `jsol-spec.json` to act as a Single Source of Truth. This JSON will feed the compiler rules, dynamically generate the Markdown documentation, and power the interactive syntax-highlighting/autocomplete features of the REPL Interpreter.
+
+### Completed in v0.2.93:
+* Priority 1 & 2 (Control Flow Strictness & Static Typing Prefixes): Enforce '$s' (string), '$i' (index), '$q' (quantity), '$a' (array), '$m' (map), '$b' (boolean) strictly across all source variables.
+* Priority 2 (Static Typing Prefixes): Enforced '$s' (string), '$i' (index), '$q' (quantity), '$a' (array), '$m' (map), '$b' (boolean) strictly across all compiler source variables. DONE.
+* Priority 5 (Host Orchestration Layer): Formalized environment detection in index.js (Node vs Browser) and index.php (CLI vs Web SAPI). Added ui.php. DONE.
+* JSOL-C Memory Stubs: JSOL.set and JSOL.unset added to compiler rewriting rules as managed no-ops. DONE.
+
+
 ### Completed in v0.2.90:
 - **Priority 0 (Academic Wrapper Redesign):** Core domain namespaces ('Str.*', 'Arr.*', 'Map.*', 'Math.*', 'Bit.*', 'Cast.*') fully integrated and active across the compiler source.
 - **Priority 4 (Pure JSOL Regex Reference Engine):** Integrated Thompson VM ('regex.jsol') written in 100% pure JSOL. Eliminates environment isolation closures ('JSOL.JS' / 'JSOL.PHP') from the compiler, achieving full self-hosting purity.
 - **Fixed-Point Convergence:** Verified byte-for-byte convergence across Node.js and PHP hosts.
-
-## Next Steps (Path to v0.3.0)
-
-1. **Refactor 'Regex.*' Domain Namespace (Technical Debt):** Transition 'regex.jsol' functions ('$regexMatch', '$regexReplace') from bare global functions into the formal 'Regex.*' domain namespace ('Regex.match', 'Regex.replace', 'Regex.test') to eliminate global scope pollution and unify with 'Str.*'/'Arr.*'. (See 'docs/PENDING_IMPROVEMENTS.md').
-2. **Priority 1 & 2 (Control Flow Strictness & Static Typing Prefixes):** Enforce '$s' (string), '$i' (index), '$q' (quantity), '$a' (array), '$m' (map), '$b' (boolean) strictly across all source variables.
-3. **Priority 3 (Helper Architecture):** Core vs. Reference vs. Extension packages.
-4. **Priority 5 & 6 (Host Orchestration Layer & Contract Model):** Formalize cross-target test runner infrastructure.
-5. **Priority 7 (Specification SSOT):** Extract the language domain API (namespaces and wrappers) from Markdown files into a centralized `jsol-spec.json` to act as a Single Source of Truth. This JSON will feed the compiler rules, dynamically generate the Markdown documentation, and power the interactive syntax-highlighting/autocomplete features of the REPL Interpreter.
 
 
 Everything below this line doesn't exist yet. This is backlog, not changelog.
@@ -157,6 +164,8 @@ A candidate strategy: the ultimate source of truth is JS/PHP helpers. JSOL-autho
 Currently, JSOL relies on host-environment regex engines (V8 vs. PCRE), which causes asymmetry. To solve this, developers currently use `JSOL.JS` and `JSOL.PHP` dual-blocks.
 
 **The Goal:** The compiler must eventually compile itself _purely_, without any environment-isolation closures. If the compiler contains `JSOL.PHP`, it cannot compile itself to C++ or Go.
+
+* Note on Regex Catch-22: The internal Thompson VM functions deliberately use the prefixes '$mRegexMatch' and '$sRegexReplace' rather than the public 'Regex.match' namespace. Attempting to force the self-hosted compiler to parse its own namespace generates infinite recursion in the AST-free translation rules and breaks host environment polyfills. This is a closed architectural decision; it must not be 'fixed' or refactored."
 
 ### The reference/fast-track split (the "math coprocessor" pattern)
 

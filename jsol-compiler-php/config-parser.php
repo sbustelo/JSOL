@@ -1,24 +1,24 @@
 <?php
-// @JSOL v0.2.90 - Targets Configuration Normalizer
-$normalizeTargetsConfig = function($rawConfig) {
-    $jsConfig = JSOL::dict("default", "", "targets", JSOL::dict());
-    $phpConfig = JSOL::dict("default", "", "targets", JSOL::dict());
-    if ($rawConfig === null) {
-        return JSOL::dict("js", $jsConfig, "php", $phpConfig);
+// @JSOL v0.2.93 - Targets Configuration Normalizer
+$mNormalizeTargetsConfig = function($mRawConfig) {
+    $mJsConfig = JSOL::dict("default", "", "targets", JSOL::dict());
+    $mPhpConfig = JSOL::dict("default", "", "targets", JSOL::dict());
+    if ($mRawConfig === null) {
+        return JSOL::dict("js", $mJsConfig, "php", $mPhpConfig);
     }
-    if (isset($rawConfig[ "js"])) {
-        $jsConfig["default"] = $rawConfig["js"]["default"] || "";
-        $jsConfig["targets"] = $rawConfig["js"]["targets"] || JSOL::dict();
+    if (isset($mRawConfig[ "js"])) {
+        $mJsConfig["default"] = $mRawConfig["js"]["default"] || "";
+        $mJsConfig["targets"] = $mRawConfig["js"]["targets"] || JSOL::dict();
     }
-    if (isset($rawConfig[ "php"])) {
-        $phpConfig["default"] = $rawConfig["php"]["default"] || "";
-        $phpConfig["targets"] = $rawConfig["php"]["targets"] || JSOL::dict();
+    if (isset($mRawConfig[ "php"])) {
+        $mPhpConfig["default"] = $mRawConfig["php"]["default"] || "";
+        $mPhpConfig["targets"] = $mRawConfig["php"]["targets"] || JSOL::dict();
     }
-    if (isset($rawConfig[ "default"]) && isset($rawConfig[ "targets"])) {
-        $jsConfig["default"] = $rawConfig["default"];
-        $phpConfig["default"] = $rawConfig["default"];
-        $jsConfig["targets"] = $rawConfig["targets"];
-        $phpConfig["targets"] = $rawConfig["targets"];
+    if (isset($mRawConfig[ "default"]) && isset($mRawConfig[ "targets"])) {
+        $mJsConfig["default"] = $mRawConfig["default"];
+        $mPhpConfig["default"] = $mRawConfig["default"];
+        $mJsConfig["targets"] = $mRawConfig["targets"];
+        $mPhpConfig["targets"] = $mRawConfig["targets"];
     }
-    return JSOL::dict("js", $jsConfig, "php", $phpConfig);
+    return JSOL::dict("js", $mJsConfig, "php", $mPhpConfig);
 };

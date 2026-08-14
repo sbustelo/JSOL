@@ -5,7 +5,7 @@
 
 **An isomorphic business-logic standard for zero-dependency ecosystems.**
 
-Version: v0.2.92 • 2026-08-13
+Version: v0.2.93 • 2026-08-14
 
 
 ## Quick start
