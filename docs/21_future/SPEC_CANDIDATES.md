@@ -52,6 +52,32 @@ section at the bottom with the outcome.
 - **Status:** PENDING REVIEW
 
 
+### `Math.sin` / `Math.cos` / `Math.atan2` (trigonometric functions)
+
+- **First encountered in:** attempting `examples/09-color-science/oklch-to-rgb.jsol.js`
+  and `rgb-to-oklch.jsol.js`, both abandoned because of this gap.
+- **Current workaround:** none. `Math.pow($x, 0.5)` stands in for square
+  root (already used in `01-basics/prime-check.jsol.js`), but no
+  combination of `floor / abs / pow / min / max / round` can produce sine,
+  cosine, or `atan2`. This is unlike every other entry in this file: those
+  had an honest, if sometimes verbose, way to express the same result with
+  existing primitives. This one genuinely cannot be done.
+- **Design tension:** low on the "does JSOL need trig" question — any
+  serious color-science, geometry, or signal-processing domain needs it,
+  and OKLCH specifically (the color space this project already leans on
+  for IPAX) is unreachable without it. The real design question is
+  narrower: whether these map 1:1 to the target languages' native
+  functions (`Math.sin`/`Math.cos` in JS, `sin()`/`cos()` in PHP — same
+  shape as the existing `floor`/`abs`/`pow` mappings) or need their own
+  wrapper considerations (e.g. `atan2`'s two-argument form, PHP's
+  `atan2($y, $x)` matches JS `Math.atan2($y, $x)` argument order exactly,
+  so this should be as direct as the rest of `Math.*`).
+- **Initial verdict (2026-08-13):** Lean **accept**, this one is not
+  really optional. Blocks: OKLCH-RGB conversion (IPAX), and by extension
+  the "Custom Data Types" / color declarations further up this file.
+- **Status:** PENDING REVIEW
+
+
 ### `Arr.copy($a)`
 
 - **First encountered in:** `examples/05-sorting-searching/bubble-sort.jsol.js`, `insertion-sort.jsol.js`

@@ -18,6 +18,9 @@ php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out"
 
 Full setup, per distribution, in [docs/01_GETTING_STARTED.md](docs/01_GETTING_STARTED.md).
 
+**Live demo:** https://jsol.bustelo.com.ar/ — try the interactive REPL and explore the example library.
+
+
 ## What is JSOL?
 
 Over a decade ago, Douglas Crockford took JavaScript, amputated all executable code from it, and gave us **JSON**: the de facto standard for transporting *data*.
@@ -28,7 +31,8 @@ JSOL lets you write complex mathematical and procedural rules once, run them nat
 
 JavaScript and PHP are the first proven targets. Extending this is part of the [vision and call for support](docs/ROADMAP.md).
 
-## What's New in v0.2.91
+## What's New (v0.2.9 series)
+
 - Pure JSOL Thompson VM Regex Engine integrated.
 - Domain namespaces ('Str.*', 'Arr.*', 'Map.*', 'Math.*', 'Bit.*', 'Cast.*') active.
 - Fixed-point convergence verified across JS and PHP hosts.

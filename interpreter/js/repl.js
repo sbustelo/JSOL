@@ -4,13 +4,13 @@ window.JSOL = {
     use: function(){} 
 };
 window.Arr = {
-    count: function(a) { return a.length; },
-    push: function(a, i) { a.push(i); return a; },
-    pop: function(a) { return a.pop(); },
-    shift: function(a) { return a.shift(); },
-    indexOf: function(a, i) { return a.indexOf(i); },
-    join: function(a, d) { return a.join(d); },
-    slice: function(a, s, e) { return a.slice(s, e); }
+    count: function(a) { return a ? a.length : 0; },
+    push: function(a, i) { if (a) a.push(i); return a; },
+    pop: function(a) { return a ? a.pop() : null; },
+    shift: function(a) { return a ? a.shift() : null; },
+    indexOf: function(a, i) { return a ? a.indexOf(i) : -1; },
+    join: function(a, d) { return a ? a.join(d) : ""; },
+    slice: function(a, s, e) { return a ? a.slice(s, e) : []; }
 };
 window.Map = {
     create: function(...args) { return window.JSOL.dict(...args); },
@@ -22,11 +22,21 @@ window.$mRegex = {
     match: (p, s, f) => { const re = new RegExp(p, f); const m = re.exec(s); return m ? { matched: true, groups: m } : { matched: false }; },
     test: (p, s, f) => { const re = new RegExp(p, f); return re.test(s); }
 };
-window.Regex = window.$mRegex; // Legacy bridge por precaución en memoria
-
-
+window.Regex = window.$mRegex;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. Persistir y Restaurar la Posición de Scroll de la Barra Lateral
+    const sidebar = document.querySelector('.jsol-repl-sidebar');
+    if (sidebar) {
+        const savedScroll = sessionStorage.getItem('jsol_sidebar_scroll');
+        if (savedScroll !== null) {
+            sidebar.scrollTop = parseInt(savedScroll, 10);
+        }
+        sidebar.addEventListener('scroll', () => {
+            sessionStorage.setItem('jsol_sidebar_scroll', sidebar.scrollTop);
+        });
+    }
+
     const metaNode = document.querySelector('[data-js-hook="metadata"]');
     if (!metaNode) return;
 
@@ -44,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-	// SSOT: Read the function's return signature directly from the source code
+    // SSOT: Read the function's return signature directly from the source code
     let outputCols = ['_result'];
     const fnStr = window[funcName].toString();
     const dictMatch = fnStr.match(/return\s+(?:window\.)?JSOL\.dict\(([\s\S]*?)\);?/);
@@ -156,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 3. Initialize Data Rows
-	if (contractCases.length > 0) {
+    if (contractCases.length > 0) {
         contractCases.forEach(c => {
             const inData = (c && typeof c === 'object' && c.in) ? c.in : c;
             buildRow(inData);

@@ -1,17 +1,46 @@
-:root {
+/* Default / Light Theme */
+:root, 
+[data-theme="light"] {
+    --jsol-bg: #f4f5f7;
+    --jsol-surface: #ffffff;
+    --jsol-text: #333333;
+    --jsol-text-muted: #777777;
+    --jsol-accent: #2b7bc4;
+    --jsol-accent-input: #e6a200;
+    --jsol-input-bg: #fffbdd;
+    --jsol-input-text: #000000;
+    --jsol-border: #cccccc;
+    --jsol-success: #28a745;
+    --jsol-error: #dc3545;
+    --jsol-error-bg: #ffe6e6;
+    --jsol-error-text: #cc0000;
+    --jsol-dim: rgba(0, 0, 0, 0.04);
+    --jsol-dim-strong: rgba(0, 0, 0, 0.08);
+    --jsol-border-dim: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme (Nestable on any container) */
+[data-theme="dark"] {
     --jsol-bg: #1e1e1e;
     --jsol-surface: #2d2d2d;
     --jsol-text: #e0e0e0;
     --jsol-text-muted: #888888;
     --jsol-accent: #4a90e2;
+    --jsol-accent-input: #f1c40f;
     --jsol-input-bg: #fffbdd;
     --jsol-input-text: #000000;
     --jsol-border: #444444;
     --jsol-success: #50c878;
     --jsol-error: #ff4c4c;
+    --jsol-error-bg: #3b1515;
+    --jsol-error-text: #ffcccc;
+    --jsol-dim: rgba(0, 0, 0, 0.2);
+    --jsol-dim-strong: rgba(0, 0, 0, 0.3);
+    --jsol-border-dim: rgba(255, 255, 255, 0.1);
 }
 
-body {
+/* Base Wrapper - Replaces old body styles for portability */
+.jsol-repl-container {
     margin: 0;
     padding: 0;
     font-family: system-ui, -apple-system, sans-serif;
@@ -20,6 +49,11 @@ body {
     display: flex;
     height: 100vh;
     overflow: hidden;
+
+    /* Aislamiento estricto contra contaminación de cascada desde el framework j0ui */
+    --j0ui-text-main: var(--jsol-text);
+    --j0ui-text-muted: var(--jsol-text-muted);
+    --j0ui-text-accent: var(--jsol-accent);
 }
 
 .jsol-repl-sidebar {
@@ -28,6 +62,7 @@ body {
     border-right: 1px solid var(--jsol-border);
     overflow-y: auto;
     padding: 1rem;
+    box-sizing: border-box;
 }
 
 .jsol-repl-file-list {
@@ -58,13 +93,18 @@ body {
     font-weight: bold;
 }
 
+.jsol-repl-mobile-select {
+    display: none;
+}
+
 .jsol-repl-main {
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
+    box-sizing: border-box;
 }
 
-..jsol-repl-table-wrap {
+.jsol-repl-table-wrap {
     background: var(--jsol-surface);
     border: 1px solid var(--jsol-border);
     border-radius: 6px;
@@ -98,12 +138,12 @@ body {
 }
 
 .jsol-repl-btn-add kbd {
-    background: rgba(0,0,0,0.3);
+    background: var(--jsol-dim-strong);
     padding: 0.15rem 0.35rem;
     border-radius: 3px;
     font-family: monospace;
     font-size: 0.75rem;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid var(--jsol-border-dim);
 }
 
 .jsol-repl-grid {
@@ -120,7 +160,7 @@ body {
 }
 
 .jsol-repl-grid th {
-    background: rgba(0,0,0,0.2);
+    background: var(--jsol-dim);
     font-size: 0.85rem;
     font-family: monospace;
 }
@@ -132,7 +172,7 @@ body {
 }
 
 .jsol-repl-grid th[data-type="input"] {
-    border-top: 3px solid #f1c40f;
+    border-top: 3px solid var(--jsol-accent-input);
 }
 
 .jsol-repl-grid th[data-type="output"] {
@@ -167,32 +207,112 @@ body {
 }
 
 .jsol-repl-output[data-error="true"] {
-    background-color: #3b1515;
-    color: #ffcccc;
+    background-color: var(--jsol-error-bg);
+    color: var(--jsol-error-text);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     border: 1px solid var(--jsol-error);
     font-size: 0.85rem;
 }
 
+.jsol-repl-details {
+    margin-top: 1.5rem;
+    background: var(--jsol-dim);
+    border: 1px solid var(--jsol-border);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+}
+
+.jsol-repl-summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-family: monospace;
+    color: var(--jsol-accent);
+    user-select: none;
+    padding: 0.5rem 0;
+    outline: none;
+}
 
 .jsol-repl-docs {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: rgba(0,0,0,0.2);
-    border-left: 4px solid var(--jsol-border);
+    margin-top: 0.5rem;
+    padding: 1rem;
+    background: var(--jsol-surface);
+    border-left: 4px solid var(--jsol-accent);
     border-radius: 4px;
     white-space: pre-wrap;
     font-family: monospace;
-    color: var(--jsol-text-muted);
+    color: var(--jsol-text);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.jsol-repl-source-code {
+    margin-top: 0.5rem;
+    padding: 1rem;
+    background: var(--jsol-surface);
+    border: 1px solid var(--jsol-border);
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--jsol-text);
+    overflow-x: auto;
 }
 
 .jsol-repl-error-log {
-    background: #331111;
+    background: var(--jsol-error-bg);
     border: 1px solid var(--jsol-error);
-    color: #ffcccc;
+    color: var(--jsol-error-text);
     padding: 1rem;
     margin-top: 1rem;
     font-family: monospace;
     white-space: pre-wrap;
+}
+
+/* Reglas de Adaptación Responsive (Mobile) */
+@media (max-width: 768px) {
+    .jsol-repl-container {
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .jsol-repl-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--jsol-border);
+        padding: 0.5rem 0.75rem;
+        overflow-y: visible;
+        flex-shrink: 0;
+    }
+
+    /* Especificidad quíntuple para aplastar la regla general .j0 ul de j0-base.css sin usar !important */
+    body.j0 .jsol-repl-container .jsol-repl-sidebar h3,
+    body.j0 .jsol-repl-container .jsol-repl-sidebar .jsol-repl-desktop-list,
+    .j0 .jsol-repl-container .jsol-repl-sidebar .jsol-repl-desktop-list {
+        display: none;
+    }
+
+    .jsol-repl-mobile-select {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        background: var(--jsol-surface);
+        color: var(--jsol-text);
+        border: 1px solid var(--jsol-border);
+        border-radius: 4px;
+        font-size: 0.85rem;
+        box-sizing: border-box;
+    }
+
+    .jsol-repl-main {
+        padding: 0.75rem;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .jsol-repl-table-wrap {
+        overflow-x: auto;
+    }
 }

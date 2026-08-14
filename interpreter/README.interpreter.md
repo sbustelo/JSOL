@@ -4,6 +4,9 @@ This directory contains the interactive visual interpreter for JSOL.
 
 <img src="../assets/interpreter/repl-luhn-example.png" width="100%" alt="JSOL REPL Interpreter">
 
+**Live demo:** https://jsol.bustelo.com.ar/
+
+
 ## What is it?
 `interpreter.php` scans its current directory looking for `.jsol` files, compiles them into a configurable output directory (`_jsol-bin` by default), and displays an interface to dynamically interact with JSOL logic without needing to integrate it into a host app.
 
@@ -33,4 +36,4 @@ The REPL parses two optional `/** ... */` comment blocks above the main function
 
 ---
 
-*JSOL v0.2.91 — 2026-08-12, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

@@ -1,6 +1,10 @@
 # Interactive Visual REPL
 
-To run these examples quickly and interactively, you can use the JSOL interpreter.
+**Live demo:** https://jsol.bustelo.com.ar/ — all examples are preloaded and interactive.
+
+* * *
+
+To run these examples quickly and interactively on your localhost PHP server, you can use the JSOL interpreter.
 
 <img src="../assets/interpreter/repl-luhn-example.png" width="100%" alt="JSOL REPL Interpreter">
 
@@ -12,4 +16,4 @@ The REPL will scan the subdirectories, parse the metadata of the .jsol files, an
 
 ---
 
-*JSOL v0.2.91 — 2026-08-12, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
