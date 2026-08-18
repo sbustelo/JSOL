@@ -46,4 +46,4 @@ The goal isn't to guarantee the future arrives. It's to make sure that in the un
 
 ---
 
-*This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content has been reviewed for technical accuracy and adherence to project constraints.*
+*This document was produced with systematic AI co-piloting as described in [AI_ENGINEERING_METHODOLOGY.md](../10_dev/AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content has been reviewed for technical accuracy and adherence to project constraints.*

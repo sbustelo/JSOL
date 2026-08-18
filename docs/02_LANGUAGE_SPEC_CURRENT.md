@@ -328,4 +328,4 @@ This table is a derived summary of Section 2. If something here contradicts Sect
 
 ---
 
-*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*

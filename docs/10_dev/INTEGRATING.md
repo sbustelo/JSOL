@@ -1,4 +1,4 @@
-# Integration JSOL into your Buil Chain
+# Integration JSOL into your Build Chain
 
 This document explains how to integrate the JSOL compiler within your own infrastructure, framework, or deployment pipeline (CI/CD), allowing `.jsol`/`.jsol.js` files to be transpiled automatically only when needed.
 

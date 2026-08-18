@@ -557,4 +557,4 @@ If the answer is consistently yes, this becomes a foundational direction for the
 
 * * *
 
-_JSOL v0.2.93 — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](https://../LICENSE)_
+_JSOL v0.2.93 — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)_

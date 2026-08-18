@@ -31,7 +31,7 @@ Extract formulas into JSON: `{"sum": "a + b"}`.
 
 ## The tradeoff JSOL makes
 
-Every alternative above buys generality (arbitrary language targets, arbitrary control flow, arbitrary performance ceiling) at the cost of either a toolchain or expressiveness. JSOL buys the opposite: it gives up expressiveness (no functional methods, no async, no OOP) and keeps zero toolchain, by restricting itself to exactly the subset that a regex-based transpiler can move safely between JS and PHP. See [docs/LANGUAGE_SPEC.md](LANGUAGE_SPEC.md) for what that subset actually is, and [docs/ARCHITECTURE.md](ARCHITECTURE.md) for what that restriction costs and buys at the engine level.
+Every alternative above buys generality (arbitrary language targets, arbitrary control flow, arbitrary performance ceiling) at the cost of either a toolchain or expressiveness. JSOL buys the opposite: it gives up expressiveness (no functional methods, no async, no OOP) and keeps zero toolchain, by restricting itself to exactly the subset that a regex-based transpiler can move safely between JS and PHP. See [docs/LANGUAGE_SPEC.md](../02_LANGUAGE_SPEC_CURRENT.md) for what that subset actually is, and [docs/ARCHITECTURE.md](../10_dev/ARCHITECTURE.md) for what that restriction costs and buys at the engine level.
 
 ---
 

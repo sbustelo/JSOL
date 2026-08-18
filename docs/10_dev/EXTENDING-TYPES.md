@@ -176,7 +176,7 @@ const $sFormatted \= Date.format($dDueDate, "YYYY-MM-DD");
 
 **Status:** Reserved. Definition not started.
 
-**Why it exists:** Angles have units (degrees, radians, sexagesimal degrees-minutes-seconds) and periodic semantics (360° = 0°). Mixing degrees and radians silently is a classic bug in geometry code. This type would allow sexagecimal math (degrees-minutes-seconds).
+**Why it exists:** Angles have units (degrees, radians, sexagesimal degrees-minutes-seconds) and periodic semantics (360° = 0°). Mixing degrees and radians silently is a classic bug in geometry code. This type would allow sexagesimal math (degrees-minutes-seconds).
 
 **Relevance to IPAX:** Color science uses angles extensively (hue in HSL/HSV/OKLCH is an angle).
 
@@ -287,8 +287,8 @@ Types that exist in one or more target languages but are **deliberately excluded
 
 * * *
 
-_This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](ai_engineering_methodology.md/)._
+_This document was produced with systematic AI co-piloting as described in [AI_ENGINEERING_METHODOLOGY.md](AI_ENGINEERING_METHODOLOGY.md)._
 
 * * *
 
-_JSOL v0.2.x — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](https://../LICENSE)_
+*JSOL v0.2.x — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

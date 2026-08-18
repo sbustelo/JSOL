@@ -54,8 +54,8 @@ cd jsol-compiler-src
 node index.js --source="php-compiler.jsol" --out-dir="."
 ```
 
-After changing anything here, re-run the fixed-point check described in [SELF_HOSTING.md](SELF_HOSTING.md) before trusting the result: compile the compiler with itself twice in a row, on both hosts, and diff. If generation N+1 and generation N+2 aren't identical, something in the change broke isomorphism, and that's worth knowing before it ships.
+After changing anything here, re-run the fixed-point check described in [10_dev/SELF_HOSTING.md](10_dev/SELF_HOSTING.md) before trusting the result: compile the compiler with itself twice in a row, on both hosts, and diff. If generation N+1 and generation N+2 aren't identical, something in the change broke isomorphism, and that's worth knowing before it ships.
 
 ---
 
-*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*

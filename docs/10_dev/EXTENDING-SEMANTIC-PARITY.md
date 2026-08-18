@@ -59,7 +59,7 @@ Entries marked **\[verified\]** were confirmed by executing real code in a sandb
 
 When transpiling `$qTotal / $qCantidad` to Go or C#, the result silently changes from `3.5` to `3`. This is not a rounding bug — it is a semantic type change.
 
-**Proposed Resolution:** `/` between `$q` operands could be prohibited, giving users unambiguos methods instead: `Math.div($a, $b)` produces `$n` (float division, all targets). `Math.idiv($a, $b)` produces `$q` (truncated toward zero, all targets).
+**Proposed Resolution:** `/` between `$q` operands could be prohibited, giving users unambiguous methods instead: `Math.div($a, $b)` produces `$n` (float division, all targets). `Math.idiv($a, $b)` produces `$q` (truncated toward zero, all targets).
 
 **Status:** Unresolved. **Risk: 5**
 
@@ -1663,8 +1663,8 @@ The goal is not perfection but the **systematic reduction of unknown risk**.
 
 ### On AI Co-Piloting
 
-This document was produced with systematic AI co-piloting as described in [`AI_ENGINEERING_METHODOLOGY.md`](https://ai_engineering_methodology.md/). AI was used for architectural stress-testing, cross-model validation, and drafting; all content is being reviewed for technical accuracy and adherence to project constraints.
+This document was produced with systematic AI co-piloting as described in [AI_ENGINEERING_METHODOLOGY.md](AI_ENGINEERING_METHODOLOGY.md). AI was used for architectural stress-testing, cross-model validation, and drafting; all content is being reviewed for technical accuracy and adherence to project constraints.
 
 * * *
 
-_JSOL v0.2.93 — 2026-08-17, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)_
+_JSOL v0.2.93 — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)_

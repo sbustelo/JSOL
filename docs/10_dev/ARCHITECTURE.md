@@ -1,6 +1,6 @@
 # Architecture: Why the Restrictions Pay For Themselves
 
-JSOL's grammar (see [LANGUAGE_SPEC.md](LANGUAGE_SPEC.md)) reads as a list of prohibitions. It isn't arbitrary austerity. Each restriction has a measurable engine-level consequence, and honestly, not all of those consequences are gains. This document lays out both sides.
+JSOL's grammar (see [LANGUAGE_SPEC.md](../02_LANGUAGE_SPEC_CURRENT.md)) reads as a list of prohibitions. It isn't arbitrary austerity. Each restriction has a measurable engine-level consequence, and honestly, not all of those consequences are gains. This document lays out both sides.
 
 ## Gains
 

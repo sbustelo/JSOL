@@ -217,3 +217,7 @@ This table lists every divergence identified across multiple rounds of AI evalua
 * * *
 
 _Risk 5 = silently wrong business results possible in JS/PHP today with current compilers. Risk 1 = requires exotic target, specific build flags, or theoretical scenario._
+
+* * *
+
+_JSOL v0.2.93 — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)_

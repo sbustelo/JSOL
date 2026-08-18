@@ -2,11 +2,11 @@
 
 ## For new users
 
-→ [`01_GETTING_STARTED.md`](01_getting_started.md/) — How to install, compile, and run your first `.jsol` file.
+→ [`01_GETTING_STARTED.md`](01_getting_started.md) — How to install, compile, and run your first `.jsol` file.
 
 ## Language reference
 
-→ [`02_LANGUAGE_SPEC_CURRENT.md`](02_language_spec_current.md/) — The complete, authoritative specification of JSOL v0.2.93.
+→ [`02_LANGUAGE_SPEC_CURRENT.md`](02_language_spec_current.md) — The complete, authoritative specification of JSOL v0.2.93.
 
 * * *
 
@@ -15,10 +15,15 @@
 | File | What it covers |
 | --- | --- |
 | `ARCHITECTURE.md` | Why the grammar restrictions exist, and what they cost/gain at the engine level. |
-| `EXTENDING.md` | Adding new language targets (Python, C#, Go, C, etc.). Feasibility analysis. |
-| `SELF_HOSTING.md` | The compiler compiles itself. Fixed-point verification runbook. |
-| `AI_ENGINEERING_METHODOLOGY.md` | How we use AI (Perkele Protocol, multi-model validation, air-gap). |
+| `INTEGRATING.md` | How to integrate the JSOL compiler within your own infrastructure, framework, or deployment pipeline (CI/CD). |
 | `JSOL_AI_INSTRUCTIONS.md` | The system prompt used for AI-assisted JSOL development. |
+| `EXTENDING.md` | Structural feasibility of new language targets: syntax, closures, memory models, AST-free pipeline rationale. |
+| `EXTENDING-TYPES.md` | Type system expansion beyond current JSON natives. |
+| `EXTENDING-SEMANTIC-PARITY.md` | Semantic divergences across target languages that threaten Deterministic Parity. The full catalog with proposed resolutions. |
+| `EXTENDING-SEMANTIC-PARITY-table.md` | Compact one-line-per-divergence reference for AI-assisted gap analysis. Companion to the full parity doc. |
+| `SELF_HOSTING.md` | The compiler compiles itself. Fixed-point verification runbook. |
+| `AI_ENGINEERING_METHODOLOGY.md` | How AI is used to develop JSOL: multi-model triangulation, air-gap control, verification protocols. |
+
 
 * * *
 
@@ -29,7 +34,7 @@
 | `DESIGN_PHILOSOPHY.md` | Why decisions are made: projecting the spec one release ahead. |
 | `ADOPTION_ECONOMICS.md` | When JSOL pays off: the formula and decision table. |
 | `COMPARISON.md` | JSOL vs Haxe, WebAssembly, JSON-driven math. |
-| `version_history.md` | Changelog from v0.1 to v0.2.91. |
+| `version_history.md` | Changelog from v0.1 |
 
 * * *
 
@@ -42,13 +47,15 @@
 | `SPEC_CANDIDATES.md` | Proposed new methods (`Arr.copy`, `Str.split`) — pending decisions. |
 | `JSOL-X_vision/` | Excel compilation vision (pre-spec). Nothing implemented. |
 
+
 * * *
 
 ## 30 tools/ — Tools built around JSOL
 
 | File | What it covers |
 | --- | --- |
-| `INTERPRETER_BACKLOG.md` | Product notes for the PHP interpreter/table UI (more Excel than VS Code). |
+| `INTERPRETER_BACKLOG.md` | Product notes for the interpreter/editor. |
+
 
 * * *
 
@@ -56,4 +63,4 @@
 
 ---
 
-*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.93 — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
