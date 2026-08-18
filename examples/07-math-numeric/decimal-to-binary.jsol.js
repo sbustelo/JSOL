@@ -1,26 +1,26 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Converts a non-negative integer $qN to its binary representation, using
- * repeated division by 2: the remainder of each division (0 or 1) is the
- * next binary digit, produced from least significant to most significant,
- * so the digits are collected in reverse order and flipped at the end.
- *
- * @param {integer} $qN - Non-negative integer.
- * @returns {string} - Binary representation of $qN, no leading zeros
- *   (except the input 0, which returns "0").
- */
+ @description
+ Converts a non-negative integer $qN to its binary representation, using
+ repeated division by 2: the remainder of each division (0 or 1) is the
+ next binary digit, produced from least significant to most significant,
+ so the digits are collected in reverse order and flipped at the end.
+
+@param {integer} $qN - Non-negative integer.
+@returns {string} - Binary representation of $qN, no leading zeros
+   (except the input 0, which returns "0").
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$qN": 13 },
- *     { "$qN": 0 }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$qN": 13 },
+     { "$qN": 0 }
+   ]
+ }
+*/
 
 const $sDecimalToBinary = function($qN) {
     if ($qN === 0) {

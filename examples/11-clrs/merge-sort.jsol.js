@@ -1,33 +1,32 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Sorts an array of numbers into ascending order using merge sort (CLRS
- * chapter 2): split the array in half, recursively sort each half, then
- * merge the two sorted halves back together in a single linear pass. The
- * merge step does the actual work; since each half arrives already
- * sorted, merging just means repeatedly taking the smaller of the two
- * current front elements.
- *
- * O(n log n) in every case, unlike bubble-sort.jsol.js or
- * insertion-sort.jsol.js (05-sorting-searching), which degrade to O(n^2)
- * on unfavorable input. The trade-off is space: merge sort needs O(n)
- * extra memory for the merged output, where those two sort in place.
- *
- * @param {array<number>} $aValues - Numbers to sort.
- * @returns {array<number>} - A new array with the same numbers in ascending order.
- */
+ @description
+ Sorts an array of numbers into ascending order using merge sort (CLRS
+ chapter 2): split the array in half, recursively sort each half, then
+ merge the two sorted halves back together in a single linear pass. The
+ merge step does the actual work; since each half arrives already
+ sorted, merging just means repeatedly taking the smaller of the two
+ current front elements.
+  O(n log n) in every case, unlike bubble-sort.jsol.js or
+ insertion-sort.jsol.js (05-sorting-searching), which degrade to O(n^2)
+ on unfavorable input. The trade-off is space: merge sort needs O(n)
+ extra memory for the merged output, where those two sort in place.
+
+@param {array<number>} $aValues - Numbers to sort.
+@returns {array<number>} - A new array with the same numbers in ascending order.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$aValues": [5, 2, 9, 1, 5, 6] },
- *     { "$aValues": [1] },
- *     { "$aValues": [] }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$aValues": [5, 2, 9, 1, 5, 6] },
+     { "$aValues": [1] },
+     { "$aValues": [] }
+   ]
+ }
+*/
 
 const $aMergeSortedHalves = function($aLeft, $aRight) {
     const $aMerged = [];

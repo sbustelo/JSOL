@@ -1,63 +1,63 @@
 // @JSOL v0.2.93
 
 /**
- * @description
- * A complete validation suite that tests every primitive domain method specified in JSOL v0.3.
- * Designed using a conservative IF-ELSE routing pattern. This structure is used exclusively 
- * to test the successful execution of the core domain primitives without introducing unverified 
- * control flow mechanisms. A separate file (.switch.jsol.js) handles strict switch testing.
- * Each method is evaluated in isolation as a separate row in the JSOL REPL Interpreter, 
- * preventing a single unimplemented function from crashing the entire test suite.
- *
- * @param {string} $sMethod - The name of the method to evaluate.
- * @returns {string} - The stringified result of the evaluation.
- */
+ @description
+ A complete validation suite that tests every primitive domain method specified in JSOL v0.3.
+ Designed using a conservative IF-ELSE routing pattern. This structure is used exclusively 
+ to test the successful execution of the core domain primitives without introducing unverified 
+ control flow mechanisms. A separate file (.switch.jsol.js) handles strict switch testing.
+ Each method is evaluated in isolation as a separate row in the JSOL REPL Interpreter, 
+ preventing a single unimplemented function from crashing the entire test suite.
+
+@param {string} $sMethod - The name of the method to evaluate.
+@returns {string} - The stringified result of the evaluation.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sMethod": "Str.len" },
- *     { "$sMethod": "Str.sub" },
- *     { "$sMethod": "Str.indexOf" },
- *     { "$sMethod": "Str.replace" },
- *     { "$sMethod": "Str.char" },
- *     { "$sMethod": "Str.fromChar" },
- *     { "$sMethod": "Str.upper" },
- *     { "$sMethod": "Str.lower" },
- *     { "$sMethod": "Str.trim" },
- *     { "$sMethod": "Str.split" },
- *     { "$sMethod": "Arr.count" },
- *     { "$sMethod": "Arr.push" },
- *     { "$sMethod": "Arr.pop" },
- *     { "$sMethod": "Arr.shift" },
- *     { "$sMethod": "Arr.slice" },
- *     { "$sMethod": "Arr.indexOf" },
- *     { "$sMethod": "Arr.join" },
- *     { "$sMethod": "Map.create" },
- *     { "$sMethod": "Map.has" },
- *     { "$sMethod": "Map.keys" },
- *     { "$sMethod": "Math.floor" },
- *     { "$sMethod": "Math.abs" },
- *     { "$sMethod": "Math.pow" },
- *     { "$sMethod": "Math.min" },
- *     { "$sMethod": "Math.max" },
- *     { "$sMethod": "Math.round" },
- *     { "$sMethod": "Bit.and" },
- *     { "$sMethod": "Bit.or" },
- *     { "$sMethod": "Bit.xor" },
- *     { "$sMethod": "Bit.not" },
- *     { "$sMethod": "Bit.shiftL" },
- *     { "$sMethod": "Bit.shiftR" },
- *     { "$sMethod": "Cast.toStr" },
- *     { "$sMethod": "Cast.toInt" },
- *     { "$sMethod": "Cast.toFloat" },
- *     { "$sMethod": "Regex.match" },
- *     { "$sMethod": "Regex.replace" },
- *     { "$sMethod": "Regex.test" }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sMethod": "Str.len" },
+     { "$sMethod": "Str.sub" },
+     { "$sMethod": "Str.indexOf" },
+     { "$sMethod": "Str.replace" },
+     { "$sMethod": "Str.char" },
+     { "$sMethod": "Str.fromChar" },
+     { "$sMethod": "Str.upper" },
+     { "$sMethod": "Str.lower" },
+     { "$sMethod": "Str.trim" },
+     { "$sMethod": "Str.split" },
+     { "$sMethod": "Arr.count" },
+     { "$sMethod": "Arr.push" },
+     { "$sMethod": "Arr.pop" },
+     { "$sMethod": "Arr.shift" },
+     { "$sMethod": "Arr.slice" },
+     { "$sMethod": "Arr.indexOf" },
+     { "$sMethod": "Arr.join" },
+     { "$sMethod": "Map.create" },
+     { "$sMethod": "Map.has" },
+     { "$sMethod": "Map.keys" },
+     { "$sMethod": "Math.floor" },
+     { "$sMethod": "Math.abs" },
+     { "$sMethod": "Math.pow" },
+     { "$sMethod": "Math.min" },
+     { "$sMethod": "Math.max" },
+     { "$sMethod": "Math.round" },
+     { "$sMethod": "Bit.and" },
+     { "$sMethod": "Bit.or" },
+     { "$sMethod": "Bit.xor" },
+     { "$sMethod": "Bit.not" },
+     { "$sMethod": "Bit.shiftL" },
+     { "$sMethod": "Bit.shiftR" },
+     { "$sMethod": "Cast.toStr" },
+     { "$sMethod": "Cast.toInt" },
+     { "$sMethod": "Cast.toFloat" },
+     { "$sMethod": "Regex.match" },
+     { "$sMethod": "Regex.replace" },
+     { "$sMethod": "Regex.test" }
+   ]
+ }
+*/
 
 const $sTestPrimitive = function($sMethod) {
     if ($sMethod === "Str.len") { return Cast.toStr(Str.len("abc")); }

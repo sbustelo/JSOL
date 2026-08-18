@@ -1,35 +1,33 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Sorts an array of numbers into ascending order using heapsort (CLRS
- * chapter 6): treats the array as a binary heap using standard implicit
- * indexing (a node at index i has children at 2i+1 and 2i+2), builds a
- * max-heap out of the whole array, then repeatedly swaps the root (the
- * current largest value) with the last unsorted element and re-heapifies
- * the shrinking heap.
- *
- * No pointers or node objects needed: the parent/child relationship is
- * entirely arithmetic on array indices, which is why heapsort is one of
- * the few classic tree-based algorithms that translates directly into
- * JSOL's array-only data model.
- *
- * O(n log n) in every case, and unlike merge-sort.jsol.js, sorts in place
- * with no extra array needed.
- *
- * @param {array<number>} $aValues - Numbers to sort.
- * @returns {array<number>} - A new array with the same numbers in ascending order.
- */
+ @description
+ Sorts an array of numbers into ascending order using heapsort (CLRS
+ chapter 6): treats the array as a binary heap using standard implicit
+ indexing (a node at index i has children at 2i+1 and 2i+2), builds a
+ max-heap out of the whole array, then repeatedly swaps the root (the
+ current largest value) with the last unsorted element and re-heapifies
+ the shrinking heap.
+  No pointers or node objects needed: the parent/child relationship is
+ entirely arithmetic on array indices, which is why heapsort is one of
+ the few classic tree-based algorithms that translates directly into
+ JSOL's array-only data model.
+  O(n log n) in every case, and unlike merge-sort.jsol.js, sorts in place
+ with no extra array needed.
+
+@param {array<number>} $aValues - Numbers to sort.
+@returns {array<number>} - A new array with the same numbers in ascending order.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$aValues": [5, 2, 9, 1, 5, 6] },
- *     { "$aValues": [] }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$aValues": [5, 2, 9, 1, 5, 6] },
+     { "$aValues": [] }
+   ]
+ }
+*/
 
 const $aSiftDown = function($aValues, $qHeapSize, $qRoot) {
     let $qLargest = $qRoot;

@@ -1,28 +1,28 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Formats a number with a thousands separator inserted every 3 digits of
- * the integer part, e.g. 1234567.5 with "," -> "1,234,567.50". Built as a
- * manual right-to-left string walk over the integer digits: this is the
- * same "insert a marker every N characters" pattern behind most number
- * formatting routines, spelled out instead of hidden behind a library call.
- *
- * @param {number} $nAmount - The number to format. May be negative.
- * @param {string} $sSeparator - Character inserted between thousands groups (e.g. ",").
- * @returns {string} - The formatted number, always with exactly 2 decimal places.
- */
+ @description
+ Formats a number with a thousands separator inserted every 3 digits of
+ the integer part, e.g. 1234567.5 with "," -> "1,234,567.50". Built as a
+ manual right-to-left string walk over the integer digits: this is the
+ same "insert a marker every N characters" pattern behind most number
+ formatting routines, spelled out instead of hidden behind a library call.
+
+@param {number} $nAmount - The number to format. May be negative.
+@param {string} $sSeparator - Character inserted between thousands groups (e.g. ",").
+@returns {string} - The formatted number, always with exactly 2 decimal places.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$nAmount": 1234567.5, "$sSeparator": "," },
- *     { "$nAmount": -980, "$sSeparator": "." },
- *     { "$nAmount": 42, "$sSeparator": "," }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$nAmount": 1234567.5, "$sSeparator": "," },
+     { "$nAmount": -980, "$sSeparator": "." },
+     { "$nAmount": 42, "$sSeparator": "," }
+   ]
+ }
+*/
 
 const $sFormatThousands = function($nAmount, $sSeparator) {
     let $bNegative = false;

@@ -1,28 +1,28 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Converts $sTitle into a URL-friendly slug: lowercases it, replaces every
- * run of one or more non-alphanumeric characters with a single hyphen,
- * and trims any leading or trailing hyphen left over. Unlike
- * phone-number-normalizer.jsol.js (filtering to a fixed character set,
- * doable with a plain scan), collapsing variable-length runs of unwanted
- * characters into a single separator is a problem regex is actually
- * suited for, which is why this example uses Regex.*.
- *
- * @param {string} $sTitle - Any text, e.g. a blog post title.
- * @returns {string} - Lowercase, hyphen-separated slug.
- */
+ @description
+ Converts $sTitle into a URL-friendly slug: lowercases it, replaces every
+ run of one or more non-alphanumeric characters with a single hyphen,
+ and trims any leading or trailing hyphen left over. Unlike
+ phone-number-normalizer.jsol.js (filtering to a fixed character set,
+ doable with a plain scan), collapsing variable-length runs of unwanted
+ characters into a single separator is a problem regex is actually
+ suited for, which is why this example uses Regex.*.
+
+@param {string} $sTitle - Any text, e.g. a blog post title.
+@returns {string} - Lowercase, hyphen-separated slug.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sTitle": "  Hello, World!! Ready?  " },
- *     { "$sTitle": "JSOL: JavaScript Source Of Logic" }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sTitle": "  Hello, World!! Ready?  " },
+     { "$sTitle": "JSOL: JavaScript Source Of Logic" }
+   ]
+ }
+*/
 
 // @UNVERIFIED-PARITY: Regex.replace compiles to each target's native regex
 // engine ("fast" mode), not the pure-JSOL Thompson NFA engine. This

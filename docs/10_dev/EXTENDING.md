@@ -2,6 +2,11 @@
 
 This is an architectural sketch, not a roadmap commitment. JSOL today targets JavaScript and PHP because its lightweight, AST-free transpilation pipeline was built for dynamic C-family languages sharing very close scope semantics. Whether this pipeline generalizes to other languages depends on how closely a target matches JSOL's assumed grammar and runtime model.
 
+This document addresses *structural* feasibility: can the compiler emit syntactically valid, semantically equivalent code for a given target? A companion document, **[EXTENDING-SEMANTIC-PARITY.md](EXTENDING-SEMANTIC-PARITY.md)**, addresses the *semantic* barriers: divergences in runtime behavior across languages — numeric rounding, Unicode indexing, map ordering, JSON serialization, error semantics — that can silently break JSOL's **Deterministic Parity** guarantee even when the generated code compiles cleanly.
+
+Before a new target is declared supported, both documents must be consulted: this one asks *"can we compile to it?"*, the other asks *"will it behave identically?"*
+
+
 ## Architectural Rationale: Why an AST-Free Pipeline?
 
 One of the central design decisions in JSOL is its avoidance of an Abstract Syntax Tree (AST) in favor of a regex-based lexical transformation pipeline. This choice is deliberate and driven by the following considerations:
@@ -152,4 +157,4 @@ _This document was produced with systematic AI co-piloting as described in [`AI_
 
 ---
 
-*JSOL v0.2.90 — 2026-08-12, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.93 — 2026-08-17, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

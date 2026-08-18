@@ -1,31 +1,30 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Checks whether $sPassword meets a common strength policy: at least 8
- * characters, and at least one uppercase letter, one lowercase letter, one
- * digit, and one symbol (any character that is not a letter or digit).
- * Walks the string once, tracking which requirements have been satisfied
- * so far, instead of four separate passes.
- *
- * Implemented with Str.* and manual ASCII range checks rather than
- * Regex.*: this keeps the example free of the fast/safe regex parity
- * question entirely, the same choice made in luhn-validator.jsol.js.
- *
- * @param {string} $sPassword - The password to check.
- * @returns {boolean} - True if every requirement is met.
- */
+ @description
+ Checks whether $sPassword meets a common strength policy: at least 8
+ characters, and at least one uppercase letter, one lowercase letter, one
+ digit, and one symbol (any character that is not a letter or digit).
+ Walks the string once, tracking which requirements have been satisfied
+ so far, instead of four separate passes.
+  Implemented with Str.* and manual ASCII range checks rather than
+ Regex.*: this keeps the example free of the fast/safe regex parity
+ question entirely, the same choice made in luhn-validator.jsol.js.
+
+@param {string} $sPassword - The password to check.
+@returns {boolean} - True if every requirement is met.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sPassword": "Kambrica2026!" },
- *     { "$sPassword": "weakpass" },
- *     { "$sPassword": "SHORT1!" }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sPassword": "Kambrica2026!" },
+     { "$sPassword": "weakpass" },
+     { "$sPassword": "SHORT1!" }
+   ]
+ }
+*/
 
 const $bValidateStrongPassword = function($sPassword) {
     const $iLen = Str.len($sPassword);

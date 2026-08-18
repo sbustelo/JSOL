@@ -1,30 +1,29 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Converts a positive integer $qN (1-3999) to its Roman numeral
- * representation. Walks a table of value/symbol pairs from largest to
- * smallest, including the "subtractive" pairs (900 -> "CM", 400 -> "CD",
- * etc.), repeatedly subtracting the largest value that still fits and
- * appending its symbol — the same process a Roman scribe would follow.
- *
- * 3999 is the practical upper bound: Roman numerals have no standard
- * symbol for 4000 or beyond without notation conventions (an overline
- * meaning "times 1000") outside the scope of this example.
- *
- * @param {integer} $qN - Integer from 1 to 3999.
- * @returns {string} - The Roman numeral representation of $qN.
- */
+ @description
+ Converts a positive integer $qN (1-3999) to its Roman numeral
+ representation. Walks a table of value/symbol pairs from largest to
+ smallest, including the "subtractive" pairs (900 -> "CM", 400 -> "CD",
+ etc.), repeatedly subtracting the largest value that still fits and
+ appending its symbol — the same process a Roman scribe would follow.
+  3999 is the practical upper bound: Roman numerals have no standard
+ symbol for 4000 or beyond without notation conventions (an overline
+ meaning "times 1000") outside the scope of this example.
+
+@param {integer} $qN - Integer from 1 to 3999.
+@returns {string} - The Roman numeral representation of $qN.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$qN": 1994 },
- *     { "$qN": 58 }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$qN": 1994 },
+     { "$qN": 58 }
+   ]
+ }
+*/
 
 const $sToRomanNumeral = function($qN) {
     // Parallel arrays: $aValues[$i] pairs with $aSymbols[$i]. Includes the

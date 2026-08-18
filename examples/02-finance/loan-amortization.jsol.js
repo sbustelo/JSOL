@@ -1,30 +1,29 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Builds a fixed-installment loan amortization schedule (the "French
- * system"): every period pays the same total installment, but the split
- * between interest and principal shifts over time — interest shrinks as the
- * outstanding balance shrinks, principal grows to compensate.
- *
- * Fixed installment formula: A = P * r / (1 - (1+r)^-n), where P is the
- * loan amount, r is the periodic interest rate, and n is the number of
- * periods.
- *
- * @param {number} $nLoanAmount - Amount borrowed.
- * @param {number} $nPeriodicRate - Interest rate per period, as a decimal.
- * @param {integer} $qPeriods - Number of installments.
- * @returns {array<Map>} - One entry per period: period, interest, principal, balance.
- */
+ @description
+ Builds a fixed-installment loan amortization schedule (the "French
+ system"): every period pays the same total installment, but the split
+ between interest and principal shifts over time — interest shrinks as the
+ outstanding balance shrinks, principal grows to compensate.
+  Fixed installment formula: A = P * r / (1 - (1+r)^-n), where P is the
+ loan amount, r is the periodic interest rate, and n is the number of
+ periods.
+
+@param {number} $nLoanAmount - Amount borrowed.
+@param {number} $nPeriodicRate - Interest rate per period, as a decimal.
+@param {integer} $qPeriods - Number of installments.
+@returns {array<Map>} - One entry per period: period, interest, principal, balance.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$nLoanAmount": 10000, "$nPeriodicRate": 0.01, "$qPeriods": 6 }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$nLoanAmount": 10000, "$nPeriodicRate": 0.01, "$qPeriods": 6 }
+   ]
+ }
+*/
 
 const $aAmortizationSchedule = function($nLoanAmount, $nPeriodicRate, $qPeriods) {
     // Fixed installment amount, constant across every period.

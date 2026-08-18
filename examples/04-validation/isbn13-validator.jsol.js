@@ -1,25 +1,25 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Validates an ISBN-13 using its weighted checksum: each of the first 12
- * digits is multiplied by an alternating weight of 1 and 3 (1,3,1,3,...),
- * the products are summed, and the 13th digit (the check digit) must bring
- * the total to a multiple of 10.
- *
- * @param {string} $sIsbn - ISBN-13, may contain dashes.
- * @returns {boolean} - True if $sIsbn passes the ISBN-13 checksum.
- */
+ @description
+ Validates an ISBN-13 using its weighted checksum: each of the first 12
+ digits is multiplied by an alternating weight of 1 and 3 (1,3,1,3,...),
+ the products are summed, and the 13th digit (the check digit) must bring
+ the total to a multiple of 10.
+
+@param {string} $sIsbn - ISBN-13, may contain dashes.
+@returns {boolean} - True if $sIsbn passes the ISBN-13 checksum.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sIsbn": "978-0-13-468599-1" },
- *     { "$sIsbn": "978-0-13-468599-2" }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sIsbn": "978-0-13-468599-1" },
+     { "$sIsbn": "978-0-13-468599-2" }
+   ]
+ }
+*/
 
 const $bValidateIsbn13 = function($sIsbn) {
     // Step 1: keep only ASCII digits (same manual walk as luhn-validator.jsol.js).

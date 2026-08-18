@@ -1,6 +1,8 @@
 <?php declare(strict_types=1); ?>
+
+
 <aside class="jsol-repl-sidebar">
-    <h3>JSOL Files</h3>
+    <h3 >JSOL Files</h3>
 
     <!-- Selector desplegable para dispositivos móviles -->
     <select class="jsol-repl-mobile-select" data-js-hook="repl-mobile-select" onchange="if(this.value) window.location.href=this.value;">
@@ -8,7 +10,7 @@
             <?php 
                 $isSelected = ($file === $selectedFile) ? 'selected' : ''; 
             ?>
-            <option value="?file=<?= urlencode($file) ?>#interpreter" <?= $isSelected ?>>
+            <option value="?file=<?= urlencode($file) ?>#repl" <?= $isSelected ?>>
                 <?= htmlspecialchars($file) ?>
             </option>
         <?php endforeach; ?>
@@ -22,7 +24,7 @@
                 $relativePath = $file;
             ?>
             <li>
-                <a href="?file=<?= urlencode($file) ?>#interpreter" class="jsol-repl-link" data-active="<?= $isActive ?>" data-js-hook="repl-file-link">
+                <a href="?file=<?= urlencode($file) ?>#repl" class="jsol-repl-link" data-active="<?= $isActive ?>" data-js-hook="repl-file-link">
                     <?= htmlspecialchars($relativePath) ?>
                 </a>
             </li>
@@ -30,7 +32,8 @@
     </ul>
 </aside>
 
-<main class="jsol-repl-main">
+<main class="jsol-repl-main" id="repl">
+	
     <?php if ($selectedFile && $metadata['funcName']): ?>
         <h2>Function: <code><?= htmlspecialchars($metadata['funcName']) ?></code></h2>
         

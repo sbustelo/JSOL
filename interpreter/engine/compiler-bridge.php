@@ -101,7 +101,7 @@ function parseJsolMetadata(string $filePath): array {
     $metadata['sourceCode'] = $sourceCode;
     
     // Extract @contract block
-    if (preg_match('/\/\*\*\s*\n\s*\*\s*@contract\s*\n(.*?)\*\//s', $sourceCode, $matches)) {
+if (preg_match('/\/\*\*[\s\*]*@contract\s*\n(.*?)\*\//s', $sourceCode, $matches)) {
         $jsonStr = preg_replace('/^\s*\*\s?/m', '', $matches[1]);
         $parsedJson = json_decode($jsonStr, true);
         if (json_last_error() === JSON_ERROR_NONE && isset($parsedJson['cases'])) {

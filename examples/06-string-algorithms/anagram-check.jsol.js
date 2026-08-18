@@ -1,32 +1,31 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Checks whether $sTextA and $sTextB are anagrams of each other: same
- * letters, same counts, any order. Compares lowercase letters a-z only
- * (spaces and punctuation are ignored); building a 26-slot frequency table
- * for each string and comparing them is equivalent to comparing sorted
- * versions of both strings, without needing a sort at all.
- *
- * Uses a fixed-size array as the frequency table rather than a Map: Map in
- * JSOL has no way to increment an existing key's value, only Map.create,
- * Map.has, and Map.keys, so a mutable counter needs Arr instead, indexed by
- * (char code - 'a' code).
- *
- * @param {string} $sTextA - First string.
- * @param {string} $sTextB - Second string.
- * @returns {boolean} - True if both strings are anagrams of each other.
- */
+ @description
+ Checks whether $sTextA and $sTextB are anagrams of each other: same
+ letters, same counts, any order. Compares lowercase letters a-z only
+ (spaces and punctuation are ignored); building a 26-slot frequency table
+ for each string and comparing them is equivalent to comparing sorted
+ versions of both strings, without needing a sort at all.
+  Uses a fixed-size array as the frequency table rather than a Map: Map in
+ JSOL has no way to increment an existing key's value, only Map.create,
+ Map.has, and Map.keys, so a mutable counter needs Arr instead, indexed by
+ (char code - 'a' code).
+
+@param {string} $sTextA - First string.
+@param {string} $sTextB - Second string.
+@returns {boolean} - True if both strings are anagrams of each other.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sTextA": "listen", "$sTextB": "silent" },
- *     { "$sTextA": "hello", "$sTextB": "world" }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sTextA": "listen", "$sTextB": "silent" },
+     { "$sTextA": "hello", "$sTextB": "world" }
+   ]
+ }
+*/
 
 const $bIsAnagram = function($sTextA, $sTextB) {
     const $sLowerA = Str.lower($sTextA);

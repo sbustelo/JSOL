@@ -25,7 +25,10 @@
     --jsol-surface: #2d2d2d;
     --jsol-text: #e0e0e0;
     --jsol-text-muted: #888888;
-    --jsol-accent: #4a90e2;
+
+    /* --jsol-accent: #4a90e2; */
+	    --jsol-accent: oklch(0.75 0.23 250 / 1);
+
     --jsol-accent-input: #f1c40f;
     --jsol-input-bg: #fffbdd;
     --jsol-input-text: #000000;
@@ -39,7 +42,6 @@
     --jsol-border-dim: rgba(255, 255, 255, 0.1);
 }
 
-/* Base Wrapper - Replaces old body styles for portability */
 .jsol-repl-container {
     margin: 0;
     padding: 0;
@@ -47,13 +49,22 @@
     background: var(--jsol-bg);
     color: var(--jsol-text);
     display: flex;
-    height: 100vh;
+    height: 100%; /* Fluido para poder ser embebido y llenar cualquier contenedor */
     overflow: hidden;
-
     /* Aislamiento estricto contra contaminación de cascada desde el framework j0ui */
     --j0ui-text-main: var(--jsol-text);
     --j0ui-text-muted: var(--jsol-text-muted);
     --j0ui-text-accent: var(--jsol-accent);
+}
+
+/* Regla exclusiva para Standalone: Si el container es el <body>, toma el viewport exacto (fix iOS Mobile Safari 100vh) */
+body.jsol-repl-container {
+    height: 100dvh;
+    width: 100vw;
+}
+
+.jsol-repl-container H2 code{
+	background-color:var(--jsol-surface);
 }
 
 .jsol-repl-sidebar {
@@ -273,8 +284,7 @@
 @media (max-width: 768px) {
     .jsol-repl-container {
         flex-direction: column;
-        height: 100%;
-        overflow: hidden;
+        /* Se delega la altura al contenedor padre o al body.jsol-repl-container */
     }
 
     .jsol-repl-sidebar {
@@ -286,10 +296,9 @@
         flex-shrink: 0;
     }
 
-    /* Especificidad quíntuple para aplastar la regla general .j0 ul de j0-base.css sin usar !important */
-    body.j0 .jsol-repl-container .jsol-repl-sidebar h3,
-    body.j0 .jsol-repl-container .jsol-repl-sidebar .jsol-repl-desktop-list,
-    .j0 .jsol-repl-container .jsol-repl-sidebar .jsol-repl-desktop-list {
+    /* Especificidad estructural limpia (0,2,2) para ocultar las listas tanto en standalone como embebido, venciendo cascadas externas */
+    .jsol-repl-container .jsol-repl-sidebar h3,
+    .jsol-repl-container .jsol-repl-sidebar ul.jsol-repl-desktop-list {
         display: none;
     }
 

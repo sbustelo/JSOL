@@ -1,28 +1,28 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Computes shipping cost from a destination zone and package weight. Each
- * zone has its own base handling cost and per-kilogram rate, mirroring how
- * most carriers actually price shipments: a flat cost plus a weight-based
- * charge, varying by distance zone, rather than one formula applied
- * uniformly everywhere.
- *
- * @param {string} $sZone - Shipping zone: "local", "national", or "international".
- * @param {number} $nWeightKg - Package weight in kilograms.
- * @returns {number} - Total shipping cost.
- */
+ @description
+ Computes shipping cost from a destination zone and package weight. Each
+ zone has its own base handling cost and per-kilogram rate, mirroring how
+ most carriers actually price shipments: a flat cost plus a weight-based
+ charge, varying by distance zone, rather than one formula applied
+ uniformly everywhere.
+
+@param {string} $sZone - Shipping zone: "local", "national", or "international".
+@param {number} $nWeightKg - Package weight in kilograms.
+@returns {number} - Total shipping cost.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sZone": "local", "$nWeightKg": 2 },
- *     { "$sZone": "national", "$nWeightKg": 5 },
- *     { "$sZone": "international", "$nWeightKg": 3 }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sZone": "local", "$nWeightKg": 2 },
+     { "$sZone": "national", "$nWeightKg": 5 },
+     { "$sZone": "international", "$nWeightKg": 3 }
+   ]
+ }
+*/
 
 const $nShippingCost = function($sZone, $nWeightKg) {
     let $nBaseRate = 0;

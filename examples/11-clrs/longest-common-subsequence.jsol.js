@@ -1,31 +1,31 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Computes the length of the longest common subsequence (LCS) of
- * $sTextA and $sTextB (CLRS chapter 15): the longest sequence of
- * characters that appears in both strings in the same relative order,
- * though not necessarily contiguously. Solved bottom-up with a 2D table
- * $aTable, where $aTable[i][j] holds the LCS length of the first i
- * characters of $sTextA and the first j characters of $sTextB: if the two
- * characters at that position match, it extends the LCS found without
- * them by 1; if not, it takes whichever of "drop the last character of A"
- * or "drop the last character of B" gave the longer LCS so far.
- *
- * @param {string} $sTextA - First string.
- * @param {string} $sTextB - Second string.
- * @returns {integer} - Length of the longest common subsequence.
- */
+ @description
+ Computes the length of the longest common subsequence (LCS) of
+ $sTextA and $sTextB (CLRS chapter 15): the longest sequence of
+ characters that appears in both strings in the same relative order,
+ though not necessarily contiguously. Solved bottom-up with a 2D table
+ $aTable, where $aTable[i][j] holds the LCS length of the first i
+ characters of $sTextA and the first j characters of $sTextB: if the two
+ characters at that position match, it extends the LCS found without
+ them by 1; if not, it takes whichever of "drop the last character of A"
+ or "drop the last character of B" gave the longer LCS so far.
+
+@param {string} $sTextA - First string.
+@param {string} $sTextB - Second string.
+@returns {integer} - Length of the longest common subsequence.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sTextA": "ABCBDAB", "$sTextB": "BDCABA" },
- *     { "$sTextA": "abc", "$sTextB": "xyz" }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sTextA": "ABCBDAB", "$sTextB": "BDCABA" },
+     { "$sTextA": "abc", "$sTextB": "xyz" }
+   ]
+ }
+*/
 
 const $qLongestCommonSubsequence = function($sTextA, $sTextB) {
     const $qLenA = Str.len($sTextA);

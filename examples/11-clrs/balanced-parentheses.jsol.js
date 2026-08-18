@@ -1,32 +1,31 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Checks whether every bracket in $sText is properly opened and closed in
- * the correct order, for three bracket types: (), [], and {}. The
- * classic stack-based solution: walk the string, push every opening
- * bracket onto a stack, and on every closing bracket, pop the stack and
- * check it matches. If the stack is not empty at the end, or a closing
- * bracket does not match what is on top of the stack, the text is
- * unbalanced.
- *
- * JSOL has no dedicated stack type; Arr.push / Arr.pop on a plain array
- * is exactly a stack, last-in-first-out by construction, no wrapper needed.
- *
- * @param {string} $sText - Text containing zero or more of (), [], {}.
- * @returns {boolean} - True if every bracket is balanced and correctly nested.
- */
+ @description
+ Checks whether every bracket in $sText is properly opened and closed in
+ the correct order, for three bracket types: (), [], and {}. The
+ classic stack-based solution: walk the string, push every opening
+ bracket onto a stack, and on every closing bracket, pop the stack and
+ check it matches. If the stack is not empty at the end, or a closing
+ bracket does not match what is on top of the stack, the text is
+ unbalanced.
+  JSOL has no dedicated stack type; Arr.push / Arr.pop on a plain array
+ is exactly a stack, last-in-first-out by construction, no wrapper needed.
+
+@param {string} $sText - Text containing zero or more of (), [], {}.
+@returns {boolean} - True if every bracket is balanced and correctly nested.
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sText": "([{}])" },
- *     { "$sText": "([)]" },
- *     { "$sText": "(" }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sText": "([{}])" },
+     { "$sText": "([)]" },
+     { "$sText": "(" }
+   ]
+ }
+*/
 
 const $bIsBalanced = function($sText) {
     const $aStack = [];

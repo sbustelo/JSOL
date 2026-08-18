@@ -1,29 +1,28 @@
 // @JSOL v0.2.91
 
 /**
- * @description
- * Validates a card number using the Luhn algorithm (mod 10 checksum), used
- * to catch single-digit typos and transpositions in credit card numbers and
- * other identification numbers.
- *
- * @param {string} $sCardNumber - Card number, may contain spaces or dashes.
- * @returns {boolean} - True if $sCardNumber passes the Luhn check, false otherwise.
- *
- * Standard test cards (source: Mercado Pago and Adyen public test-card docs):
- *   VISA:       4509 9535 6623 3704
- *   Mastercard: 5555 5555 5555 4444
- */
+ @description
+ Validates a card number using the Luhn algorithm (mod 10 checksum), used
+ to catch single-digit typos and transpositions in credit card numbers and
+ other identification numbers.
+
+@param {string} $sCardNumber - Card number, may contain spaces or dashes.
+@returns {boolean} - True if $sCardNumber passes the Luhn check, false otherwise.
+  Standard test cards (source: Mercado Pago and Adyen public test-card docs):
+   VISA:       4509 9535 6623 3704
+   Mastercard: 5555 5555 5555 4444
+*/
 
 /**
- * @contract
- * {
- *   "cases": [
- *     { "$sCardNumber": "4509 9535 6623 3704" },
- *     { "$sCardNumber": "4509 9535 6623 3705" },
- *     { "$sCardNumber": "1234" }
- *   ]
- * }
- */
+ @contract
+ {
+   "cases": [
+     { "$sCardNumber": "4509 9535 6623 3704" },
+     { "$sCardNumber": "4509 9535 6623 3705" },
+     { "$sCardNumber": "1234" }
+   ]
+ }
+*/
 
 const $bValidateLuhn = function($sCardNumber) {
 

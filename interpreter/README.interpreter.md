@@ -18,6 +18,12 @@ When executed in a new directory:
 2. It will navigate upwards in the file system looking for its original parent directory (`interpreter/`) to load its isolated CSS and JS.
 3. It will navigate upwards to locate the compiler engine (`jsol-compiler-php/index.php`).
 
+## Embedding the REPL
+You can embed the REPL inside any host application UI seamlessly.
+1. Look at <code>embedding-example.php</code> for a complete structural reference.
+2. The REPL container automatically fills 100% of its parent's width and height.
+3. The UI supports native theming via the <code>data-theme</code> attribute on the container wrapper (e.g., <code>data-theme="light"</code> or <code>data-theme="dark"</code>).
+
 ## Configurable Build Directory
 By default, compiled JavaScript artifacts are saved to `_jsol-bin/` inside the running directory. You can customize this directory name by setting the $tempBinDirName variable inside interpreter.php before launching:
 
@@ -36,4 +42,4 @@ The REPL parses two optional `/** ... */` comment blocks above the main function
 
 ---
 
-*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.93 — 2026-08-17, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
