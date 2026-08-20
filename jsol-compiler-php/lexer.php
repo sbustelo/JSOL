@@ -28,7 +28,7 @@ $mMaskSourceCode = function($sSourceCode) {
             }
             $sValue = mb_substr($sSourceCode,  $iStart,  $i - $iStart, "UTF-8");
             $sKey = "__JSOL_STR_" . "" . $iTokenIndex . "" . "__";
-            $aTokens[] =  JSOL::dict("key", $sKey, "value", $sValue);
+            $aTokens[] =  JSOL::dict("key",  $sKey,  "value",  $sValue);
             $sResult = $sResult . "" . $sKey;
             $iTokenIndex = $iTokenIndex + 1;
 
@@ -44,7 +44,7 @@ $mMaskSourceCode = function($sSourceCode) {
             }
             $sValue = mb_substr($sSourceCode,  $iStart,  $i - $iStart, "UTF-8");
             $sKey = "__JSOL_COM_" . "" . $iTokenIndex . "" . "__";
-            $aTokens[] =  JSOL::dict("key", $sKey, "value", $sValue);
+            $aTokens[] =  JSOL::dict("key",  $sKey,  "value",  $sValue);
             $sResult = $sResult . "" . $sKey;
             $iTokenIndex = $iTokenIndex + 1;
 
@@ -62,7 +62,7 @@ $mMaskSourceCode = function($sSourceCode) {
             }
             $sValue = mb_substr($sSourceCode,  $iStart,  $i - $iStart, "UTF-8");
             $sKey = "__JSOL_COM_" . "" . $iTokenIndex . "" . "__";
-            $aTokens[] =  JSOL::dict("key", $sKey, "value", $sValue);
+            $aTokens[] =  JSOL::dict("key",  $sKey,  "value",  $sValue);
             $sResult = $sResult . "" . $sKey;
             $iTokenIndex = $iTokenIndex + 1;
 
@@ -72,7 +72,7 @@ $mMaskSourceCode = function($sSourceCode) {
         }
     }
 
-    return JSOL::dict("maskedCode", $sResult, "tokens", $aTokens);
+    return JSOL::dict("maskedCode",  $sResult,  "tokens",  $aTokens);
 };
 
 $sUnmaskSourceCode = function($sMaskedCode, $aTokens) {

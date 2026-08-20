@@ -1,5 +1,18 @@
 # JSOL Version History
 
+## v0.2.94 (2026-08-20)
+Modular Architecture, Single Source of Truth (SSOT) implementation, and TypeScript Target compilation.
+
+* **TypeScript Target**: Successfully added a native TypeScript emitter (`jsol-compiler-ts`) with zero modifications to the core engine, proving the extensibility of the AST-free meta-regex architecture. The compiler correctly infers and maps JSOL's Single-Character Type Prefixes (e.g., `$s` to `string`, `$a` to `any[]`) into strict TS annotations.
+* Single Source of Truth (SSOT): Abandoned the monolithic compiler design. The language specification is now strictly separated into a Domain Axis (`src/domains/`) and a Target Axis (`src/targets/`), dynamically assembled by `tools/bootstrap.js` into a unified `jsol-spec.json`.
+* Cross-Validation Gate: The Bootstrapper now enforces absolute parity during the build step, automatically aborting if any primitive lacks a translation rule in any active target.
+* Unified CI/CD Pipeline: Redesigned the `selfhost-verify.sh` pipeline to extract volatile seed engines (`_seed_engine`), execute SSOT synchronization, and validate temporal and isomorphic Fixed-Point convergence across 4 generations before deploying public distributions.
+* Type Resolution Refinement: Eliminated unresolvable lookaheads and nested dependencies in the compiler rules, enabling zero-error passes under strict TypeScript validation (`tsc --noEmit --strict`).
+* Polyfill Modularization: Native environment fallbacks (`jsol-core.js`, `jsol-core.php`) are now dynamically copied and bundled by the Bootstrapper, rather than being manually hardcoded into the compiler's entry points.
+* Regex Catastrophic Backtracking Fix: Resolved an infinite loop (O(2^N) backtracking) in the PHP compiler rules caused by nested repetition operators `(?:\\s+|__JSOL_COM_\\d+__)*` when parsing `JSOL.use` directives.
+* Seed Engine Orchestration: Fixed the `00-compile-verify-jsol.sh` pipeline to properly isolate the SSOT during asymmetric regeneration, preventing obsolete regex rules from corrupting the PHP seed distribution.
+* Indenter Suite: Added `test-indenter.js` and `test-indenter-all.sh` to validate that the Brace-to-Indent Formatter (`indenter.jsol`) modifies exclusively the layout without altering behavioral execution or isomorphic parity. _This is the first step for future Python support._
+
 ## v0.2.93 (2026-08-14)
 Structural enforcement of the Type Prefix Matrix, control flow strictness, and Web/CLI decoupling.
 

@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.94
 
 /**
  @description
@@ -30,5 +30,5 @@
 // example exists specifically to demonstrate Regex.*, unlike
 // luhn-validator.jsol.js or iban-validator.jsol.js, which avoid it.
 const $bValidateEmail = function($sEmail) {
-    return Regex.test("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", $sEmail);
+    return Regex.test("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", $sEmail, "");
 };

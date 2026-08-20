@@ -34,66 +34,30 @@ Once fixed-point convergence holds, the legacy bootstrap compiler (`jsol-compile
 
 ## Running the Fixed-Point Verification
 
-The following runbook reproduces the fixed-point convergence test from a clean checkout. It assumes you are standing in the repository root and that the directory layout matches the published distribution.
+The manual compilation steps have been superseded by an automated fixed-point verification suite. The pipeline guarantees that the seed engine can compile Generation 3, which in turn compiles Generation 4, achieving 100% Code Point and Fixed-Point parity across both Node and PHP targets.
 
-Each compilation step must complete without reporting errors. The final `diff` commands must produce no output: Unix `diff` returns nothing when the compared files are identical.
-
-### A. Compile to the second generation
+To run the verification suite from a clean checkout, execute the following script from the repository root:
 
 ```bash
-# 1. Create clean directories for generation v0.2.91
-mkdir -p jsol-compiler-node-2 jsol-compiler-php-2
-
-# 2. Compile all src using the stable Node engine into node-2
-for f in jsol-compiler-src/*.jsol; do
-    node jsol-compiler-node/index.js --source="$f" --out-dir="jsol-compiler-node-2"
-done
-
-# 3. Compile all src using the stable PHP engine into php-2
-for f in jsol-compiler-src/*.jsol; do
-    php jsol-compiler-php/index.php --source="$f" --out-dir="jsol-compiler-php-2"
-done
-
-# 4. Copy the static orchestrator files needed by the new compilers
-cp jsol-compiler-src/index.js jsol-compiler-node-2/
-cp jsol-compiler-src/targets.json jsol-compiler-node-2/
-cp jsol-compiler-src/index.php jsol-compiler-php-2/
-cp jsol-compiler-src/targets.json jsol-compiler-php-2/
-
-# 5. Strict fixed-point parity check (ignoring file extensions)
-diff -r jsol-compiler-node-2 jsol-compiler-php-2 | grep -v ".js" | grep -v ".php"
+cd jsol-compiler-src
+./00-compile-verify-jsol.sh
 ```
 
-### B. Compile to the third generation
+### What the script does automatically:
 
-```bash
-# 1. Create directories for the third generation
-mkdir -p jsol-compiler-node-3 jsol-compiler-php-3
+1.  **Bootstrap & Seed Preparation:** Runs `tools/bootstrap.js` to assemble the Single Source of Truth (SSOT) into `dist/compiler/jsol-spec.json` and copies the current stable distributions into a temporary `_seed_engine`.
+2.  **Compile Generation 3:** Uses the seed Node and PHP engines to compile the `jsol-compiler-src/*.jsol` source code into `_build_node_gen3` and `_build_php_gen3`.
+3.  **Compile Generation 4:** Uses the newly minted Generation 3 orchestrators to compile the source code again into `_build_node_gen4` and `_build_php_gen4`.
+4.  **Fixed-Point Verification:**
+    
+    -   Compares Node Gen 3 vs Node Gen 4 (Temporal fixed-point).
+    -   Compares PHP Gen 3 vs PHP Gen 4 (Temporal fixed-point).
+    -   Compares Node Gen 4 vs PHP Gen 4 (Isomorphic fixed-point).
+5.  **TypeScript Validation:** Runs `npx tsc --noEmit` against the Generation 4 TS output to ensure zero strict-typing errors.
+6.  **Deployment:** If all assertions pass, it prompts the developer for permission to overwrite the public distributions (`../jsol-compiler-node`, `../jsol-compiler-php`, `../jsol-compiler-ts`) with the verified Generation 4 artifacts.
 
-# 2. Compile SRC using the generation-2 Node orchestrator
-for f in jsol-compiler-src/*.jsol; do
-    node jsol-compiler-node-2/index.js --source="$f" --out-dir="jsol-compiler-node-3"
-done
+Any divergence, undefined variable, or compilation timeout will instantly abort the script, preventing unstable artifacts from reaching the distribution directories.
 
-# 3. Compile SRC using the generation-2 PHP orchestrator
-for f in jsol-compiler-src/*.jsol; do
-    php jsol-compiler-php-2/index.php --source="$f" --out-dir="jsol-compiler-php-3"
-done
-
-# 4. Copy static orchestrator files and configuration
-cp jsol-compiler-src/index.js jsol-compiler-node-3/
-cp jsol-compiler-src/targets.json jsol-compiler-node-3/
-cp jsol-compiler-src/index.php jsol-compiler-php-3/
-cp jsol-compiler-src/targets.json jsol-compiler-php-3/
-
-# 5. TEST 1: Temporal fixed-point (is the new compiler stable when compiling itself?)
-# This diff must return nothing.
-diff -r jsol-compiler-node-2 jsol-compiler-node-3 | grep -v ".js"
-
-# 6. TEST 2: Isomorphic fixed-point (do Node and PHP generate the same logic?)
-# This diff should only show target-language structural differences, not logic drift.
-diff -r jsol-compiler-node-3 jsol-compiler-php-3 | grep -v ".js" | grep -v ".php"
-```
 * * *
 
-*JSOL v0.2.91 — 2026-08-12, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.94 — 2026-08-20, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

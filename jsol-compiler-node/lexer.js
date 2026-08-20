@@ -27,7 +27,7 @@ const $mMaskSourceCode = function($sSourceCode) {
             }
             const $sValue = $sSourceCode.substring( $iStart, ( $iStart) + ( $i - $iStart));
             const $sKey = "__JSOL_STR_" + "" + $iTokenIndex + "" + "__";
-            $aTokens.push( JSOL.dict("key", $sKey, "value", $sValue));
+            $aTokens.push( JSOL.dict("key",  $sKey,  "value",  $sValue));
             $sResult = $sResult + "" + $sKey;
             $iTokenIndex = $iTokenIndex + 1;
 
@@ -43,7 +43,7 @@ const $mMaskSourceCode = function($sSourceCode) {
             }
             const $sValue = $sSourceCode.substring( $iStart, ( $iStart) + ( $i - $iStart));
             const $sKey = "__JSOL_COM_" + "" + $iTokenIndex + "" + "__";
-            $aTokens.push( JSOL.dict("key", $sKey, "value", $sValue));
+            $aTokens.push( JSOL.dict("key",  $sKey,  "value",  $sValue));
             $sResult = $sResult + "" + $sKey;
             $iTokenIndex = $iTokenIndex + 1;
 
@@ -61,7 +61,7 @@ const $mMaskSourceCode = function($sSourceCode) {
             }
             const $sValue = $sSourceCode.substring( $iStart, ( $iStart) + ( $i - $iStart));
             const $sKey = "__JSOL_COM_" + "" + $iTokenIndex + "" + "__";
-            $aTokens.push( JSOL.dict("key", $sKey, "value", $sValue));
+            $aTokens.push( JSOL.dict("key",  $sKey,  "value",  $sValue));
             $sResult = $sResult + "" + $sKey;
             $iTokenIndex = $iTokenIndex + 1;
 
@@ -71,7 +71,7 @@ const $mMaskSourceCode = function($sSourceCode) {
         }
     }
 
-    return JSOL.dict("maskedCode", $sResult, "tokens", $aTokens);
+    return JSOL.dict("maskedCode",  $sResult,  "tokens",  $aTokens);
 };
 
 const $sUnmaskSourceCode = function($sMaskedCode, $aTokens) {

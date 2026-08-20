@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.94
 
 /**
  @description
@@ -55,6 +55,9 @@ const $qDaysSinceEpoch = function($qYear, $qMonth, $qDay) {
 };
 
 const $qDaysBetweenDates = function($qYear1, $qMonth1, $qDay1, $qYear2, $qMonth2, $qDay2) {
+    JSOL.use($qDaysSinceEpoch);
+	// JSOL.use: Injects external dependencies into the closure's isolated scope, required for PHP target compatibility.
+	
     const $qDays1 = $qDaysSinceEpoch($qYear1, $qMonth1, $qDay1);
     const $qDays2 = $qDaysSinceEpoch($qYear2, $qMonth2, $qDay2);
 

@@ -1,17 +1,25 @@
 <?php
-// @JSOL v0.2.93 - Self-Hosted JS Target Compiler (Pure JSOL)
-$sCompileToJS = function($sMaskedCode, $sPrefix, $sSuffix) use ($sRegexReplace) {
+// @JSOL v0.2.94 - Self-Hosted JS Target Compiler (Dynamic SSOT Iteration)
+$sCompileToJS = function($sMaskedCode, $sPrefix, $sSuffix, $aRules) use (&$sRegexReplace) {
 
     
     $fProcessBlock = function($sCode, $sKeyword, $bUnwrap) {
         $sResult = $sCode;
         $bContinue = true;
+        $iOffset = 0;
         while ($bContinue === true) {
-            $iStartIdx = JSOL::strIndexOf($sResult,  $sKeyword);
+            $iSearchLen = mb_strlen($sResult, "UTF-8") - $iOffset;
+            if ($iSearchLen <= 0) {
+                $bContinue = false;
+                continue;
+            }
+            $sSearchArea = mb_substr($sResult,  $iOffset,  $iSearchLen, "UTF-8");
+            $iRelIdx = JSOL::strIndexOf($sSearchArea,  $sKeyword);
             
-            if ($iStartIdx === -1) {
+            if ($iRelIdx === -1) {
                 $bContinue = false;
             } else {
+                $iStartIdx = $iOffset + $iRelIdx;
                 $iTailLen = mb_strlen($sResult, "UTF-8") - $iStartIdx;
                 $sTail = mb_substr($sResult,  $iStartIdx,  $iTailLen, "UTF-8");
                 $iRelOpenBrace = JSOL::strIndexOf($sTail,  "{");
@@ -55,8 +63,10 @@ $sCompileToJS = function($sMaskedCode, $sPrefix, $sSuffix) use ($sRegexReplace) 
                             $iInnerLen = $iCloseBrace - $iOpenBrace - 1;
                             $sInner = mb_substr($sResult,  $iOpenBrace + 1,  $iInnerLen, "UTF-8");
                             $sResult = $sBefore . "" . $sInner . "" . $sAfter;
+                            $iOffset = mb_strlen($sBefore, "UTF-8") + mb_strlen($sInner, "UTF-8");
                         } else {
                             $sResult = $sBefore . "" . $sAfter;
+                            $iOffset = mb_strlen($sBefore, "UTF-8");
                         }
                     }
                 }
@@ -65,14 +75,23 @@ $sCompileToJS = function($sMaskedCode, $sPrefix, $sSuffix) use ($sRegexReplace) 
         return $sResult;
     };
 
-    $fProcessCall = function($sCode, $sKeyword, $sType) {
+$fProcessCall = function($sCode, $sKeyword, $sTemplate) {
         $sResult = $sCode;
         $bContinue = true;
+        $iOffset = 0;
         while ($bContinue === true) {
-            $iStartIdx = JSOL::strIndexOf($sResult,  $sKeyword);
-            if ($iStartIdx === -1) {
+            $iSearchLen = mb_strlen($sResult, "UTF-8") - $iOffset;
+            if ($iSearchLen <= 0) {
+                $bContinue = false;
+                continue;
+            }
+            $sSearchArea = mb_substr($sResult,  $iOffset,  $iSearchLen, "UTF-8");
+            $iRelIdx = JSOL::strIndexOf($sSearchArea,  $sKeyword);
+            
+            if ($iRelIdx === -1) {
                 $bContinue = false;
             } else {
+                $iStartIdx = $iOffset + $iRelIdx;
                 $iKwLen = mb_strlen($sKeyword, "UTF-8");
                 $iOpenParen = $iStartIdx + $iKwLen - 1;
                 $iParenCount = 1;
@@ -120,37 +139,93 @@ $sCompileToJS = function($sMaskedCode, $sPrefix, $sSuffix) use ($sRegexReplace) 
                     $iAfterLen = mb_strlen($sResult, "UTF-8") - $iCloseParen - 1;
                     $sAfter = mb_substr($sResult,  $iCloseParen + 1,  $iAfterLen, "UTF-8");
                     
-                    $sRep = "";
-                    if ($sType === "sub") { $sRep = $aArgs[0] . ".substring(" . $aArgs[1] . ", (" . $aArgs[1] . ") + (" . $aArgs[2] . "))"; }
-                    else if ($sType === "len") { $sRep = $aArgs[0] . ".length"; }
-                    else if ($sType === "char") { $sRep = $aArgs[0] . ".charCodeAt(" . $aArgs[1] . ")"; }
-                    else if ($sType === "idx") { $sRep = $aArgs[0] . ".indexOf(" . $aArgs[1] . ")"; }
-                    else if ($sType === "rep") { $sRep = $aArgs[0] . ".split(" . $aArgs[1] . ").join(" . $aArgs[2] . ")"; }
-                    else if ($sType === "push") { $sRep = $aArgs[0] . ".push(" . $aArgs[1] . ")"; }
-                    else if ($sType === "pop") { $sRep = $aArgs[0] . ".pop()"; }
-                    else if ($sType === "shift") { $sRep = $aArgs[0] . ".shift()"; }
-                    else if ($sType === "arridx") { $sRep = $aArgs[0] . ".indexOf(" . $aArgs[1] . ")"; }
-                    else if ($sType === "mapkeys") { $sRep = "Object.keys(" . $aArgs[0] . ")"; }
-                    else if ($sType === "haskey") { $sRep = "Object.prototype.hasOwnProperty.call(" . $aArgs[0] . ", " . $aArgs[1] . ")"; }
-                    else if ($sType === "fromchar") { $sRep = "String.fromCharCode(" . $aArgs[0] . ")"; }
-                    else if ($sType === "upper") { $sRep = $aArgs[0] . ".toUpperCase()"; }
-                    else if ($sType === "lower") { $sRep = $aArgs[0] . ".toLowerCase()"; }
-                    else if ($sType === "toint") { $sRep = "parseInt(" . $aArgs[0] . ", 10)"; }
-                    else if ($sType === "tostr") { $sRep = "String(" . $aArgs[0] . ")"; }
-                    else if ($sType === "slice") { $sRep = $aArgs[0] . ".slice(" . $aArgs[1] . ", " . $aArgs[2] . ")"; }
-                    else if ($sType === "trim") { $sRep = $aArgs[0] . ".trim()"; }
-                    else if ($sType === "split") { $sRep = $aArgs[0] . ".split(" . $aArgs[1] . ")"; }
-                    else if ($sType === "join") { $sRep = $aArgs[0] . ".join(" . $aArgs[1] . ")"; }
-                    else if ($sType === "tofloat") { $sRep = "parseFloat(" . $aArgs[0] . ")"; }
-                    else if ($sType === "bitand") { $sRep = "(" . $aArgs[0] . " & " . $aArgs[1] . ")"; }
-                    else if ($sType === "bitor") { $sRep = "(" . $aArgs[0] . " | " . $aArgs[1] . ")"; }
-                    else if ($sType === "bitxor") { $sRep = "(" . $aArgs[0] . " ^ " . $aArgs[1] . ")"; }
-                    else if ($sType === "bitnot") { $sRep = "(~" . $aArgs[0] . ")"; }
-                    else if ($sType === "bitshiftl") { $sRep = "(" . $aArgs[0] . " << " . $aArgs[1] . ")"; }
-                    else if ($sType === "bitshiftr") { $sRep = "(" . $aArgs[0] . " >> " . $aArgs[1] . ")"; }
-                    else if ($sType === "noop") { $sRep = "/* mem-op */"; }
+                    $sRep = $sTemplate;
+                    if (JSOL::strIndexOf($sTemplate,  "{*}") !== -1) {
+                        $sRep = str_replace( "{*}",  implode( ", ", $aArgs), $sRep);
+                    } else {
+                        $iArgsCount = count($aArgs);
+                        for ($iK = 0; $iK < $iArgsCount; $iK = $iK + 1) {
+                            $sPlaceholder = "{" . "" . $iK . "" . "}";
+                            $sRep = str_replace( $sPlaceholder,  $aArgs[$iK], $sRep);
+                        }
+                    }
                     
                     $sResult = $sBefore . "" . $sRep . "" . $sAfter;
+                    $iOffset = $iStartIdx;
+                }
+            }
+        }
+        return $sResult;
+    };
+
+    // NEW (v0.2.95): scans literal "function(" occurrences and appends ": any"
+    // to every bare parameter that doesn't already carry a type annotation.
+    // JSOL params are always plain identifiers (no destructuring, no defaults),
+    // so a top-level comma split is sufficient — no bracket counting needed
+    // inside the parameter list itself, only to find where it closes.
+    $fProcessParams = function($sCode) {
+        $sKeyword = "function(";
+        $sResult = $sCode;
+        $bContinue = true;
+        $iOffset = 0;
+        while ($bContinue === true) {
+            $iSearchLen = mb_strlen($sResult, "UTF-8") - $iOffset;
+            if ($iSearchLen <= 0) {
+                $bContinue = false;
+                continue;
+            }
+            $sSearchArea = mb_substr($sResult,  $iOffset,  $iSearchLen, "UTF-8");
+            $iRelIdx = JSOL::strIndexOf($sSearchArea,  $sKeyword);
+
+            if ($iRelIdx === -1) {
+                $bContinue = false;
+            } else {
+                $iStartIdx = $iOffset + $iRelIdx;
+                $iKwLen = mb_strlen($sKeyword, "UTF-8");
+                $iOpenParen = $iStartIdx + $iKwLen - 1;
+                $iParenCount = 1;
+                $iCloseParen = -1;
+                $iRLen = mb_strlen($sResult, "UTF-8");
+
+                for ($i = $iOpenParen + 1; $i < $iRLen; $i = $i + 1) {
+                    $sChar = mb_substr($sResult,  $i,  1, "UTF-8");
+                    if ($sChar === "(") { $iParenCount = $iParenCount + 1; }
+                    if ($sChar === ")") { $iParenCount = $iParenCount - 1; }
+                    if ($iParenCount === 0) {
+                        $iCloseParen = $i;
+                        break;
+                    }
+                }
+
+                if ($iCloseParen === -1) {
+                    $bContinue = false;
+                } else {
+                    $iRawLen = $iCloseParen - $iOpenParen - 1;
+                    $sRawParams = mb_substr($sResult,  $iOpenParen + 1,  $iRawLen, "UTF-8");
+                    $sTrimmedParams = trim($sRawParams);
+
+                    $sTypedParams = "";
+                    if (mb_strlen($sTrimmedParams, "UTF-8") > 0) {
+                        $aParts = explode( ",", $sTrimmedParams);
+                        $iPartsCount = count($aParts);
+                        $aTypedParts = [];
+                        for ($iP = 0; $iP < $iPartsCount; $iP = $iP + 1) {
+                            $sRawPart = trim($aParts[$iP]);
+                            $sTypedPart = $sRawPart;
+                            if (mb_strlen($sRawPart, "UTF-8") > 0 && JSOL::strIndexOf($sRawPart,  ":") === -1) {
+                                $sTypedPart = $sRawPart . ": any";
+                            }
+                            $aTypedParts[] =  $sTypedPart;
+                        }
+                        $sTypedParams = implode( ", ", $aTypedParts);
+                    }
+
+                    $sBefore = mb_substr($sResult,  0,  $iOpenParen + 1, "UTF-8");
+                    $iAfterLen = mb_strlen($sResult, "UTF-8") - $iCloseParen;
+                    $sAfter = mb_substr($sResult,  $iCloseParen,  $iAfterLen, "UTF-8");
+
+                    $sResult = $sBefore . "" . $sTypedParams . "" . $sAfter;
+                    $iOffset = $iStartIdx + $iKwLen + mb_strlen($sTypedParams, "UTF-8");
                 }
             }
         }
@@ -158,51 +233,27 @@ $sCompileToJS = function($sMaskedCode, $sPrefix, $sSuffix) use ($sRegexReplace) 
     };
 
     $sTransformed = $sMaskedCode;
-    
-    $sTransformed = $fProcessBlock($sTransformed, "JSOL.PHP", false);
-    $sTransformed = $fProcessBlock($sTransformed, "JSOL.JS", true);
 
-    $sTransformed = $sRegexReplace("JSOL\\.use\\s*\\([^)]+\\)\\s*;?", "", $sTransformed, "g");
+    // Dynamic SSOT Rules Iterator
+    $iRulesCount = count($aRules);
+    for ($iR = 0; $iR < $iRulesCount; $iR = $iR + 1) {
+        $mRule = $aRules[$iR];
+        $sType = $mRule["type"];
+        $sId = $mRule["id"];
+        $sTemplate = $mRule["template"];
 
-    $sTransformed = str_replace( "Map.create(",  "JSOL.dict(", $sTransformed);
-    
-    $sTransformed = str_replace( "Regex.match(",  "$" . "mRegex.match(", $sTransformed);
-    $sTransformed = str_replace( "Regex.test(",  "$" . "mRegex.test(", $sTransformed);
-
-    $sTransformed = $fProcessCall($sTransformed, "JSOL.set(", "noop");
-    $sTransformed = $fProcessCall($sTransformed, "JSOL.unset(", "noop");
-
-    $sTransformed = $fProcessCall($sTransformed, "Str.sub(", "sub");
-    $sTransformed = $fProcessCall($sTransformed, "Str.len(", "len");
-    $sTransformed = $fProcessCall($sTransformed, "JSOL.len(", "len");
-    $sTransformed = $fProcessCall($sTransformed, "Arr.count(", "len");
-    $sTransformed = $fProcessCall($sTransformed, "JSOL.count(", "len");
-    $sTransformed = $fProcessCall($sTransformed, "Str.char(", "char");
-    $sTransformed = $fProcessCall($sTransformed, "Str.indexOf(", "idx");
-    $sTransformed = $fProcessCall($sTransformed, "Str.replace(", "rep");
-    $sTransformed = $fProcessCall($sTransformed, "Arr.push(", "push");
-    $sTransformed = $fProcessCall($sTransformed, "Arr.pop(", "pop");
-    $sTransformed = $fProcessCall($sTransformed, "Arr.shift(", "shift");
-    $sTransformed = $fProcessCall($sTransformed, "Arr.indexOf(", "arridx");
-    $sTransformed = $fProcessCall($sTransformed, "Map.keys(", "mapkeys");
-    $sTransformed = $fProcessCall($sTransformed, "Map.has(", "haskey");
-    $sTransformed = $fProcessCall($sTransformed, "JSOL.hasKey(", "haskey");
-    $sTransformed = $fProcessCall($sTransformed, "Str.fromChar(", "fromchar");
-    $sTransformed = $fProcessCall($sTransformed, "Str.upper(", "upper");
-    $sTransformed = $fProcessCall($sTransformed, "Str.lower(", "lower");
-    $sTransformed = $fProcessCall($sTransformed, "Str.trim(", "trim");
-    $sTransformed = $fProcessCall($sTransformed, "Str.split(", "split");
-    $sTransformed = $fProcessCall($sTransformed, "Arr.join(", "join");
-    $sTransformed = $fProcessCall($sTransformed, "Arr.slice(", "slice");
-    $sTransformed = $fProcessCall($sTransformed, "Cast.toInt(", "toint");
-    $sTransformed = $fProcessCall($sTransformed, "Cast.toStr(", "tostr");
-    $sTransformed = $fProcessCall($sTransformed, "Cast.toFloat(", "tofloat");
-    $sTransformed = $fProcessCall($sTransformed, "Bit.and(", "bitand");
-    $sTransformed = $fProcessCall($sTransformed, "Bit.or(", "bitor");
-    $sTransformed = $fProcessCall($sTransformed, "Bit.xor(", "bitxor");
-    $sTransformed = $fProcessCall($sTransformed, "Bit.not(", "bitnot");
-    $sTransformed = $fProcessCall($sTransformed, "Bit.shiftL(", "bitshiftl");
-    $sTransformed = $fProcessCall($sTransformed, "Bit.shiftR(", "bitshiftr");
+        if ($sType === "block") {
+            $sTransformed = $fProcessBlock($sTransformed, $sId, $sTemplate === "unwrap");
+        } else if ($sType === "regex") {
+            $sTransformed = $sRegexReplace($mRule["search"], $sTemplate, $sTransformed, "g");
+        } else if ($sType === "replace") {
+            $sTransformed = str_replace( $sId,  $sTemplate, $sTransformed);
+        } else if ($sType === "call") {
+            $sTransformed = $fProcessCall($sTransformed, $sId . "(", $sTemplate);
+        } else if ($sType === "paramtype") {
+            $sTransformed = $fProcessParams($sTransformed);
+        }
+    }
 
     $sFinalOutput = $sPrefix . "" . $sTransformed . "" . $sSuffix;
     return $sFinalOutput;

@@ -1,51 +1,18 @@
 <?php
 /**
  * JSOL CLI Host Runner (PHP) - Isolated Files Architecture
- * v0.2.93
+ * v0.2.94
  */
 
 declare(strict_types=1);
 
-// Provide JSOL Native Bridge for PHP
-class JSOL {
-    public static function dict(...$args) {
-        $obj = [];
-        for ($i = 0; $i < count($args); $i += 2) {
-            if (array_key_exists($i + 1, $args)) {
-                $obj[$args[$i]] = $args[$i + 1];
-            }
-        }
-        return $obj;
-    }
-    public static function use(...$args) {}
-    public static function strIndexOf($haystack, $needle) {
-        $r = strpos($haystack, $needle);
-        return $r === false ? -1 : $r;
-    }
-    public static function arrIndexOf($arr, $item) {
-        $r = array_search($item, $arr, true);
-        return $r === false ? -1 : $r;
-    }
+// Load dynamically generated SSOT Polyfills
+$polyfillPath = __DIR__ . '/dist/stdlib/jsol-core.php';
+if (!file_exists($polyfillPath)) {
+    fwrite(STDERR, "FATAL: dist/stdlib/jsol-core.php not found. Run bootstrapper first.\n");
+    exit(1);
 }
-
-class Str {
-    public static function indexOf($h, $n) { $r = strpos($h, $n); return $r === false ? -1 : $r; }
-    public static function len($s) { return mb_strlen($s, "UTF-8"); }
-    public static function sub($s, $start, $len) { return mb_substr($s, $start, $len, "UTF-8"); }
-    public static function char($s, $idx) { return mb_ord(mb_substr($s, $idx, 1, "UTF-8")); }
-    public static function fromChar($c) { return mb_chr($c, "UTF-8"); }
-    public static function replace($s, $search, $replace) { return str_replace($search, $replace, $s); }
-}
-
-class Arr {
-    public static function count($a) { return count($a); }
-    public static function push(&$a, $i) { $a[] = $i; return $a; }
-}
-
-class Map {
-    public static function create(...$args) { return JSOL::dict(...$args); }
-    public static function has($obj, $key) { return isset($obj[$key]); }
-}
+require_once $polyfillPath;
 
 // 1. Load Compiled JSOL Engine Parts (Order Matters)
 $parts = [
@@ -87,26 +54,53 @@ $targetsJsonPath = __DIR__ . '/targets.json';
 $rawConfig = file_exists($targetsJsonPath) ? json_decode(file_get_contents($targetsJsonPath), true) : null;
 $targetsConfig = $mNormalizeTargetsConfig($rawConfig);
 
-// 5. Read Source & Execute JSOL Engine Pipeline
+// 5. Load Compiled SSOT
+$ssotPath = __DIR__ . '/dist/compiler/jsol-spec.json';
+if (!file_exists($ssotPath)) {
+    fwrite(STDERR, "FATAL: dist/compiler/jsol-spec.json not found. Run bootstrapper first.\n");
+    exit(1);
+}
+$ssotConfig = json_decode(file_get_contents($ssotPath), true);
+
+// 6. Read Source & Execute JSOL Engine Pipeline
 $sourceCode = file_get_contents($sourcePath);
-$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOptions);
+$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOptions, $ssotConfig);
 
 if ($result['success'] === false) {
     fwrite(STDERR, "Compilation Failed with errors:\n" . implode("\n", $result['errors']) . "\n");
     exit(1);
 }
 
-// 6. Pure I/O Disk Write - Stripping dual extension
+// 7. Ensure output directory exists before writing
 $outDir = strlen($cliOptions['outDir']) > 0 ? $cliOptions['outDir'] : dirname($sourcePath);
+if (!is_dir($outDir)) {
+    mkdir($outDir, 0777, true);
+}
+
 $baseName = preg_replace('/\.jsol(\.js)?$/', '', basename($sourcePath));
 
-$targetJsFile = $outDir . '/' . $baseName . '.js';
-$targetPhpFile = $outDir . '/' . $baseName . '.php';
-
-file_put_contents($targetJsFile, $result['js']);
-file_put_contents($targetPhpFile, $result['php']);
+$targetsArg = ['js', 'php', 'ts'];
+if (!empty($cliOptions['targets']) && trim($cliOptions['targets']) !== '') {
+    $targetsArg = array_map('trim', array_map('strtolower', explode(',', $cliOptions['targets'])));
+}
 
 echo "JSOL Compilation Success:\n";
-echo " -> JS:  {$targetJsFile}\n";
-echo " -> PHP: {$targetPhpFile}\n";
+
+if (in_array('js', $targetsArg, true)) {
+    $targetJsFile = $outDir . '/' . $baseName . '.js';
+    file_put_contents($targetJsFile, $result['js']);
+    echo " -> JS:  {$targetJsFile}\n";
+}
+
+if (in_array('php', $targetsArg, true)) {
+    $targetPhpFile = $outDir . '/' . $baseName . '.php';
+    file_put_contents($targetPhpFile, $result['php']);
+    echo " -> PHP: {$targetPhpFile}\n";
+}
+
+if (in_array('ts', $targetsArg, true)) {
+    $targetTsFile = $outDir . '/' . $baseName . '.ts';
+    file_put_contents($targetTsFile, $result['ts']);
+    echo " -> TS:  {$targetTsFile}\n";
+}
 ?>

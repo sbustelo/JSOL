@@ -38,7 +38,7 @@ Everything below this line outlines the path to JSOL v1.0, ensuring the specific
 
 ## Where we are: v0.2.90 (Fixed-Point Bootstrap & Thompson VM Engine Complete)
 
-The v0.2.90 compiler proves the AST-free, regex-based compilation pipeline with pure JSOL self-hosting. It covers what this document calls **Level 1**: wrappers backed by deterministic, engine-agnostic logic.
+The v0.2.94 compiler proves the AST-free, regex-based compilation pipeline with pure JSOL self-hosting, a unified SSOT, and a stable TypeScript emitter. It covers what this document calls **Level 1**: wrappers backed by deterministic, engine-agnostic logic.
 
 Level 1 wrappers require no runtime verification because the guarantee comes from the wrapper's implementation, proven once, by the compiler maintainer, forever. The compiler is self-hosted (see `SELF_HOSTING.md`) and fixed-point verified on both JS and PHP hosts.
 
@@ -47,10 +47,15 @@ However, to support the C-like universe and the educational use-case, the core n
 
 ## Next Steps (Path to v0.3.0)
 
-* **Refactor 'Regex.*' Domain Namespace (Technical Debt):** Transition 'regex.jsol' functions ('$regexMatch', '$regexReplace') from bare global functions into the formal 'Regex.*' domain namespace ('Regex.match', 'Regex.replace', 'Regex.test') to eliminate global scope pollution and unify with 'Str.*'/'Arr.*'. (See 'docs/PENDING_IMPROVEMENTS.md').
+* **Refactor 'Regex.\*' Domain Namespace (Technical Debt):** Transition 'regex.jsol' functions ('$regexMatch', '$regexReplace') from bare global functions into the formal 'Regex.\*' domain namespace ('Regex.match', 'Regex.replace', 'Regex.test') to eliminate global scope pollution and unify with 'Str.\*'/'Arr.\*'.
 * **Priority 3 (Helper Architecture):** Core vs. Reference vs. Extension packages.
-* **Priority 6 (Contract Model):** Formalize cross-target test runner infrastructure.
-* **Priority 7 (Specification SSOT):** Extract the language domain API (namespaces and wrappers) from Markdown files into a centralized `jsol-spec.json` to act as a Single Source of Truth. This JSON will feed the compiler rules, dynamically generate the Markdown documentation, and power the interactive syntax-highlighting/autocomplete features of the REPL Interpreter.
+
+### Completed in v0.2.94:
+**Priority 6 (Contract Model):** Formalized cross-target test runner infrastructure (tools/contract-runner.js and execution pipeline).
+* **Priority 7 (Specification SSOT):** Extract the language domain API (namespaces and wrappers) from Markdown files into a centralized Single Source of Truth. This JSON will feed the compiler rules, dynamically generate the Markdown documentation, and power the interactive syntax-highlighting/autocomplete features of the REPL Interpreter.
+* **TypeScript Target:** Successfully added a native TypeScript emitter with zero modifications to the core engine.
+* **Unified CI/CD Pipeline:** Redesigned the selfhost-verify.sh pipeline to extract volatile seed engines and validate fixed-point convergence.
+* **Indenter Suite:** Added test-indenter.js and test-indenter-all.sh to validate the Brace-to-Indent Formatter. _This is a step for future Python support._
 
 ### Completed in v0.2.93:
 * Priority 1 & 2 (Control Flow Strictness & Static Typing Prefixes): Enforce '$s' (string), '$i' (index), '$q' (quantity), '$a' (array), '$m' (map), '$b' (boolean) strictly across all source variables.
@@ -249,4 +254,4 @@ TO DO:
 
 ---
 
-*JSOL v0.2.92 — 2026-08-13, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.94 — 2026-08-20, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

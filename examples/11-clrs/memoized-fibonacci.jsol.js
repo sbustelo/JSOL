@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.94
 
 /**
  @description
@@ -31,6 +31,9 @@
 */
 
 const $qFibonacciMemo = function($qN, $aCache) {
+    JSOL.use($qFibonacciMemo);
+	// JSOL.use: Explicitly binds external scope to the closure for the PHP target.
+
     if ($qN <= 1) {
         return $qN;
     }
@@ -47,6 +50,9 @@ const $qFibonacciMemo = function($qN, $aCache) {
 };
 
 const $qMemoizedFibonacci = function($qN) {
+    JSOL.use($qFibonacciMemo);
+	// JSOL.use: Explicitly binds external scope to the closure for the PHP target.
+	
     // $aCache: one slot per position from 0 to $qN, all starting unset (-1).
     const $aCache = [];
     for (let $i = 0; $i <= $qN; $i = $i + 1) {

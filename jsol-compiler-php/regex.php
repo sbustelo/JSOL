@@ -5,15 +5,23 @@ $mParseAtom = function($sPat, $i, $iN, $iGc, $mFns) {
     $sC = mb_substr($sPat,  $i,  1, "UTF-8");
     if ($sC === "(") {
         $i = $i + 1;
-        $iGc = $iGc + 1;
-        $iIdx = $iGc;
+        $bCapturing = true;
+        if ($i + 1 < $iN && mb_substr($sPat,  $i,  2, "UTF-8") === "?:") {
+            $bCapturing = false;
+            $i = $i + 2;
+        }
+        $iIdx = -1;
+        if ($bCapturing === true) {
+            $iGc = $iGc + 1;
+            $iIdx = $iGc;
+        }
         $fPAltFn = $mFns["parseAlt"];
         $mR = $fPAltFn($sPat, $i, $iN, $iGc, $mFns);
         $mBody = $mR["node"];
         $i = $mR["i"];
         $iGc = $mR["groupCount"];
         $i = $i + 1;
-        return JSOL::dict("node", JSOL::dict("type", "group", "index", $iIdx, "body", $mBody), "i", $i, "groupCount", $iGc);
+        return JSOL::dict("node",  JSOL::dict("type",  "group",  "index",  $iIdx,  "capturing",  $bCapturing,  "body",  $mBody),  "i",  $i,  "groupCount",  $iGc);
     }
     if ($sC === "[") {
         $i = $i + 1;
@@ -72,31 +80,31 @@ $mParseAtom = function($sPat, $i, $iN, $iGc, $mFns) {
             }
         }
         $i = $i + 1;
-        return JSOL::dict("node", JSOL::dict("type", "class", "negate", $bNegate, "ranges", $aRanges, "singles", $aSingles), "i", $i, "groupCount", $iGc);
+        return JSOL::dict("node",  JSOL::dict("type",  "class",  "negate",  $bNegate,  "ranges",  $aRanges,  "singles",  $aSingles),  "i",  $i,  "groupCount",  $iGc);
     }
     if ($sC === ".") {
         $i = $i + 1;
-        return JSOL::dict("node", JSOL::dict("type", "any"), "i", $i, "groupCount", $iGc);
+        return JSOL::dict("node",  JSOL::dict("type",  "any"),  "i",  $i,  "groupCount",  $iGc);
     }
     if ($sC === "^") {
         $i = $i + 1;
-        return JSOL::dict("node", JSOL::dict("type", "anchorStart"), "i", $i, "groupCount", $iGc);
+        return JSOL::dict("node",  JSOL::dict("type",  "anchorStart"),  "i",  $i,  "groupCount",  $iGc);
     }
     if ($sC === "$") {
         $i = $i + 1;
-        return JSOL::dict("node", JSOL::dict("type", "anchorEnd"), "i", $i, "groupCount", $iGc);
+        return JSOL::dict("node",  JSOL::dict("type",  "anchorEnd"),  "i",  $i,  "groupCount",  $iGc);
     }
     if ($sC === "\\") {
         $i = $i + 1;
         $sE = mb_substr($sPat,  $i,  1, "UTF-8");
         $i = $i + 1;
-        if ($sE === "d") { $aRd = [["0", "9"]]; return JSOL::dict("node", JSOL::dict("type", "class", "negate", false, "ranges", $aRd, "singles", []), "i", $i, "groupCount", $iGc); }
-        if ($sE === "w") { $aRw = [["a", "z"], ["A", "Z"], ["0", "9"]]; $aSw = ["_"]; return JSOL::dict("node", JSOL::dict("type", "class", "negate", false, "ranges", $aRw, "singles", $aSw), "i", $i, "groupCount", $iGc); }
-        if ($sE === "s") { $aSs = [" ", "\t", "\n", "\r"]; return JSOL::dict("node", JSOL::dict("type", "class", "negate", false, "ranges", [], "singles", $aSs), "i", $i, "groupCount", $iGc); }
-        return JSOL::dict("node", JSOL::dict("type", "char", "value", $sE), "i", $i, "groupCount", $iGc);
+        if ($sE === "d") { $aRd = [["0", "9"]]; return JSOL::dict("node",  JSOL::dict("type",  "class",  "negate",  false,  "ranges",  $aRd,  "singles",  []),  "i",  $i,  "groupCount",  $iGc); }
+        if ($sE === "w") { $aRw = [["a", "z"], ["A", "Z"], ["0", "9"]]; $aSw = ["_"]; return JSOL::dict("node",  JSOL::dict("type",  "class",  "negate",  false,  "ranges",  $aRw,  "singles",  $aSw),  "i",  $i,  "groupCount",  $iGc); }
+        if ($sE === "s") { $aSs = [" ", "\t", "\n", "\r"]; return JSOL::dict("node",  JSOL::dict("type",  "class",  "negate",  false,  "ranges",  [],  "singles",  $aSs),  "i",  $i,  "groupCount",  $iGc); }
+        return JSOL::dict("node",  JSOL::dict("type",  "char",  "value",  $sE),  "i",  $i,  "groupCount",  $iGc);
     }
     $i = $i + 1;
-    return JSOL::dict("node", JSOL::dict("type", "char", "value", $sC), "i", $i, "groupCount", $iGc);
+    return JSOL::dict("node",  JSOL::dict("type",  "char",  "value",  $sC),  "i",  $i,  "groupCount",  $iGc);
 };
 
 $mParseQuantified = function($sPat, $i, $iN, $iGc, $mFns) {
@@ -112,22 +120,22 @@ $mParseQuantified = function($sPat, $i, $iN, $iGc, $mFns) {
             $i = $i + 1;
             $bLazy = false;
             if ($i < $iN && mb_substr($sPat,  $i,  1, "UTF-8") === "?") { $bLazy = true; $i = $i + 1; }
-            $mAtom = JSOL::dict("type", "rep", "min", 0, "max", 999999, "lazy", $bLazy, "body", $mAtom);
+            $mAtom = JSOL::dict("type",  "rep",  "min",  0,  "max",  999999,  "lazy",  $bLazy,  "body",  $mAtom);
         } else if ($sC === "+") {
             $i = $i + 1;
             $bLazy = false;
             if ($i < $iN && mb_substr($sPat,  $i,  1, "UTF-8") === "?") { $bLazy = true; $i = $i + 1; }
-            $mAtom = JSOL::dict("type", "rep", "min", 1, "max", 999999, "lazy", $bLazy, "body", $mAtom);
+            $mAtom = JSOL::dict("type",  "rep",  "min",  1,  "max",  999999,  "lazy",  $bLazy,  "body",  $mAtom);
         } else if ($sC === "?") {
             $i = $i + 1;
             $bLazy = false;
             if ($i < $iN && mb_substr($sPat,  $i,  1, "UTF-8") === "?") { $bLazy = true; $i = $i + 1; }
-            $mAtom = JSOL::dict("type", "rep", "min", 0, "max", 1, "lazy", $bLazy, "body", $mAtom);
+            $mAtom = JSOL::dict("type",  "rep",  "min",  0,  "max",  1,  "lazy",  $bLazy,  "body",  $mAtom);
         } else {
             break;
         }
     }
-    return JSOL::dict("node", $mAtom, "i", $i, "groupCount", $iGc);
+    return JSOL::dict("node",  $mAtom,  "i",  $i,  "groupCount",  $iGc);
 };
 
 $mParseConcat = function($sPat, $i, $iN, $iGc, $mFns) {
@@ -139,7 +147,7 @@ $mParseConcat = function($sPat, $i, $iN, $iGc, $mFns) {
         $i = $mR["i"];
         $iGc = $mR["groupCount"];
     }
-    return JSOL::dict("node", JSOL::dict("type", "concat", "parts", $aParts), "i", $i, "groupCount", $iGc);
+    return JSOL::dict("node",  JSOL::dict("type",  "concat",  "parts",  $aParts),  "i",  $i,  "groupCount",  $iGc);
 };
 
 $mParseAlt = function($sPat, $i, $iN, $iGc, $mFns) {
@@ -157,21 +165,21 @@ $mParseAlt = function($sPat, $i, $iN, $iGc, $mFns) {
         $i = $mR2["i"];
         $iGc = $mR2["groupCount"];
     }
-    if (count($aOptions) === 1) { return JSOL::dict("node", $aOptions[0], "i", $i, "groupCount", $iGc); }
-    return JSOL::dict("node", JSOL::dict("type", "alt", "options", $aOptions), "i", $i, "groupCount", $iGc);
+    if (count($aOptions) === 1) { return JSOL::dict("node",  $aOptions[0],  "i",  $i,  "groupCount",  $iGc); }
+    return JSOL::dict("node",  JSOL::dict("type",  "alt",  "options",  $aOptions),  "i",  $i,  "groupCount",  $iGc);
 };
 
-$mParsePattern = function($sPat) use ($mParseAlt, $mParseConcat, $mParseQuantified, $mParseAtom) {
+$mParsePattern = function($sPat) use (&$mParseAlt, &$mParseConcat, &$mParseQuantified, &$mParseAtom) {
 
     $mFns = JSOL::dict(
-        "parseAlt", $mParseAlt,
-        "parseConcat", $mParseConcat,
-        "parseQuantified", $mParseQuantified,
-        "parseAtom", $mParseAtom
+        "parseAlt",  $mParseAlt, 
+        "parseConcat",  $mParseConcat, 
+        "parseQuantified",  $mParseQuantified, 
+        "parseAtom",  $mParseAtom
     );
     $iN = mb_strlen($sPat, "UTF-8");
     $mR = $mParseAlt($sPat, 0, $iN, 0, $mFns);
-    return JSOL::dict("tree", $mR["node"], "groupCount", $mR["groupCount"]);
+    return JSOL::dict("tree",  $mR["node"],  "groupCount",  $mR["groupCount"]);
 };
 
 $fGen = function($mN, $aProg, $fSelfFn) {
@@ -189,11 +197,11 @@ $fGen = function($mN, $aProg, $fSelfFn) {
         for ($iIdx = 0; $iIdx < $iOCount; $iIdx = $iIdx + 1) {
             if ($iIdx < $iOCount - 1) {
                 $iSplitPc = count($aProg);
-                $aProg[] =  JSOL::dict("op", "SPLIT", "x", 0, "y", 0);
+                $aProg[] =  JSOL::dict("op",  "SPLIT",  "x",  0,  "y",  0);
                 $iX = count($aProg);
                 $aProg = $fSelfFn($aOptions[$iIdx], $aProg, $fSelfFn);
                 $iJmpPc = count($aProg);
-                $aProg[] =  JSOL::dict("op", "JMP", "to", 0);
+                $aProg[] =  JSOL::dict("op",  "JMP",  "to",  0);
                 $aJmpEnds[] =  $iJmpPc;
                 $aProg[$iSplitPc]["x"] = $iX;
                 $aProg[$iSplitPc]["y"] = count($aProg);
@@ -214,10 +222,10 @@ $fGen = function($mN, $aProg, $fSelfFn) {
         }
         if ($iMax === 999999) {
             $iSplitPc = count($aProg);
-            $aProg[] =  JSOL::dict("op", "SPLIT", "x", 0, "y", 0);
+            $aProg[] =  JSOL::dict("op",  "SPLIT",  "x",  0,  "y",  0);
             $iBodyStart = count($aProg);
             $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
-            $aProg[] =  JSOL::dict("op", "JMP", "to", $iSplitPc);
+            $aProg[] =  JSOL::dict("op",  "JMP",  "to",  $iSplitPc);
             if ($bLazy === true) {
                 $aProg[$iSplitPc]["x"] = count($aProg);
                 $aProg[$iSplitPc]["y"] = $iBodyStart;
@@ -229,7 +237,7 @@ $fGen = function($mN, $aProg, $fSelfFn) {
             $iOptional = $iMax - $iMin;
             for ($iC = 0; $iC < $iOptional; $iC = $iC + 1) {
                 $iSplitPc = count($aProg);
-                $aProg[] =  JSOL::dict("op", "SPLIT", "x", 0, "y", 0);
+                $aProg[] =  JSOL::dict("op",  "SPLIT",  "x",  0,  "y",  0);
                 $iBodyStart = count($aProg);
                 $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
                 if ($bLazy === true) {
@@ -242,30 +250,34 @@ $fGen = function($mN, $aProg, $fSelfFn) {
             }
         }
     } else if ($sType === "group") {
-        $aProg[] =  JSOL::dict("op", "SAVE", "slot", $mN["index"] * 2);
-        $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
-        $aProg[] =  JSOL::dict("op", "SAVE", "slot", $mN["index"] * 2 + 1);
+        if (isset($mN[ "capturing"]) && $mN["capturing"] === false) {
+            $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
+        } else {
+            $aProg[] =  JSOL::dict("op",  "SAVE",  "slot",  $mN["index"] * 2);
+            $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
+            $aProg[] =  JSOL::dict("op",  "SAVE",  "slot",  $mN["index"] * 2 + 1);
+        }
     } else if ($sType === "char") {
-        $aProg[] =  JSOL::dict("op", "CHAR", "value", $mN["value"]);
+        $aProg[] =  JSOL::dict("op",  "CHAR",  "value",  $mN["value"]);
     } else if ($sType === "any") {
-        $aProg[] =  JSOL::dict("op", "ANY");
+        $aProg[] =  JSOL::dict("op",  "ANY");
     } else if ($sType === "class") {
-        $aProg[] =  JSOL::dict("op", "CLASS", "negate", $mN["negate"], "ranges", $mN["ranges"], "singles", $mN["singles"]);
+        $aProg[] =  JSOL::dict("op",  "CLASS",  "negate",  $mN["negate"],  "ranges",  $mN["ranges"],  "singles",  $mN["singles"]);
     } else if ($sType === "anchorStart") {
-        $aProg[] =  JSOL::dict("op", "BOL");
+        $aProg[] =  JSOL::dict("op",  "BOL");
     } else if ($sType === "anchorEnd") {
-        $aProg[] =  JSOL::dict("op", "EOL");
+        $aProg[] =  JSOL::dict("op",  "EOL");
     }
     return $aProg;
 };
 
-$aCompileRegex = function($mNode, $iGroupCount) use ($fGen) {
+$aCompileRegex = function($mNode, $iGroupCount) use (&$fGen) {
 
     $aProg = [];
-    $aProg[] =  JSOL::dict("op", "SAVE", "slot", 0);
+    $aProg[] =  JSOL::dict("op",  "SAVE",  "slot",  0);
     $aProg = $fGen($mNode, $aProg, $fGen);
-    $aProg[] =  JSOL::dict("op", "SAVE", "slot", 1);
-    $aProg[] =  JSOL::dict("op", "MATCH");
+    $aProg[] =  JSOL::dict("op",  "SAVE",  "slot",  1);
+    $aProg[] =  JSOL::dict("op",  "MATCH");
     return $aProg;
 };
 
@@ -275,7 +287,7 @@ $sToLower = function($sCh) {
     return $sCh;
 };
 
-$bCharMatches = function($mInstr, $sCh, $bCi) use ($sToLower) {
+$bCharMatches = function($mInstr, $sCh, $bCi) use (&$sToLower) {
 
     $bInSet = false;
     $sChComp = $bCi === true ? $sToLower($sCh) : $sCh;
@@ -304,7 +316,7 @@ $bCharMatches = function($mInstr, $sCh, $bCi) use ($sToLower) {
     return $bInSet;
 };
 
-$mRunRegex = function($aProg, $sStr, $bCi, $iGroupCount, $iStartSp) use ($bCharMatches, $sToLower) {
+$mRunRegex = function($aProg, $sStr, $bCi, $iGroupCount, $iStartSp) use (&$bCharMatches, &$sToLower) {
 
     $iN = mb_strlen($sStr, "UTF-8");
     $iPc = 0;
@@ -347,7 +359,7 @@ $mRunRegex = function($aProg, $sStr, $bCi, $iGroupCount, $iStartSp) use ($bCharM
         } else if ($sOp === "SPLIT") {
             $aSavesCopy = [];
             for ($i = 0; $i < $iSavesLen; $i = $i + 1) { $aSavesCopy[] =  $aSaves[$i]; }
-            $mFrame = JSOL::dict("pc", $mInstr["y"], "sp", $iSp, "saves", $aSavesCopy);
+            $mFrame = JSOL::dict("pc",  $mInstr["y"],  "sp",  $iSp,  "saves",  $aSavesCopy);
             if ($iStackPtr < count($aStack)) { $aStack[$iStackPtr] = $mFrame; } else { $aStack[] =  $mFrame; }
             $iStackPtr = $iStackPtr + 1;
             
@@ -375,10 +387,10 @@ $mRunRegex = function($aProg, $sStr, $bCi, $iGroupCount, $iStartSp) use ($bCharM
         }
     }
 
-    return JSOL::dict("matched", $bMatched, "saves", $aSaves);
+    return JSOL::dict("matched",  $bMatched,  "saves",  $aSaves);
 };
 
-$mRegexMatch = function($sPatternStr, $sStr, $sFlags) use ($mParsePattern, $aCompileRegex, $mRunRegex) {
+$mRegexMatch = function($sPatternStr, $sStr, $sFlags) use (&$mParsePattern, &$aCompileRegex, &$mRunRegex) {
 
     $bCi = false;
     $bGlobal = false;
@@ -404,13 +416,13 @@ $mRegexMatch = function($sPatternStr, $sStr, $sFlags) use ($mParsePattern, $aCom
                     $aGroups[] =  null;
                 }
             }
-            return JSOL::dict("matched", true, "groups", $aGroups, "index", $iStart, "length", $mR["saves"][1] - $mR["saves"][0]);
+            return JSOL::dict("matched",  true,  "groups",  $aGroups,  "index",  $iStart,  "length",  $mR["saves"][1] - $mR["saves"][0]);
         }
     }
-    return JSOL::dict("matched", false, "groups", [], "index", -1, "length", 0);
+    return JSOL::dict("matched",  false,  "groups",  [],  "index",  -1,  "length",  0);
 };
 
-$sRegexReplace = function($sPatternStr, $sReplacementStr, $sStr, $sFlags) use ($mParsePattern, $aCompileRegex, $mRunRegex) {
+$sRegexReplace = function($sPatternStr, $sReplacementStr, $sStr, $sFlags) use (&$mParsePattern, &$aCompileRegex, &$mRunRegex) {
 
     $bCi = false;
     $bGlobal = false;
@@ -427,7 +439,7 @@ $sRegexReplace = function($sPatternStr, $sReplacementStr, $sStr, $sFlags) use ($
 
     while ($i <= $iN) {
         $bMatchFound = false;
-        $mR = null;
+        $mR = JSOL::dict("matched",  false,  "saves",  []);
         $iMatchIndex = $i;
         
         for ($iStart = $i; $iStart <= $iN; $iStart = $iStart + 1) {
@@ -499,7 +511,16 @@ $sRegexReplace = function($sPatternStr, $sReplacementStr, $sStr, $sFlags) use ($
     return $sResult;
 };
 
-$mRegex = JSOL::dict(
-    "match", $mRegexMatch,
-    "replace", $sRegexReplace
+$bRegexTest = function($sPatternStr, $sStr, $sFlags) {
+    $mR = $mRegexMatch($sPatternStr, $sStr, $sFlags);
+    if (isset($mR[ "matched"]) && $mR["matched"] === true) {
+        return true;
+    }
+    return false;
+};
+
+$mRgx = JSOL::dict(
+    "match",  $mRegexMatch, 
+    "replace",  $sRegexReplace, 
+    "test",  $bRegexTest
 );

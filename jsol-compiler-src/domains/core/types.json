@@ -1,0 +1,15 @@
+{
+  "core": {
+    "i": ["i", "idx", "index"],
+    "q": ["q", "qty", "quantity"],
+    "n": ["n", "num", "number", "float"],
+    "s": ["s", "str", "string", "text"],
+    "a": ["a", "arr", "array", "list"],
+    "m": ["m", "map", "dict", "obj"],
+    "b": ["b", "bool", "boolean", "is", "has"],
+    "f": ["f", "fn", "func", "function"],
+    "x": ["x", "rgx", "regex", "pattern"],
+    "y": ["y", "bin", "byte", "binary"]
+  },
+  "reserved": ["c", "p", "g", "t", "d"]
+}

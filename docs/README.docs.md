@@ -63,4 +63,4 @@
 
 ---
 
-*JSOL v0.2.93 — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.94 — 2026-08-20, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

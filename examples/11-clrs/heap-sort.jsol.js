@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.94
 
 /**
  @description
@@ -30,6 +30,9 @@
 */
 
 const $aSiftDown = function($aValues, $qHeapSize, $qRoot) {
+    // JSOL.use: Explicitly binds self-reference for recursive closure execution across target runtimes.
+    JSOL.use($aSiftDown);
+
     let $qLargest = $qRoot;
     const $qLeftChild = (2 * $qRoot) + 1;
     const $qRightChild = (2 * $qRoot) + 2;
@@ -45,31 +48,36 @@ const $aSiftDown = function($aValues, $qHeapSize, $qRoot) {
         const $nTemp = $aValues[$qRoot];
         $aValues[$qRoot] = $aValues[$qLargest];
         $aValues[$qLargest] = $nTemp;
-        // The swap may have broken the heap property further down; sift
-        // down again from the value's new position.
-        $aSiftDown($aValues, $qHeapSize, $qLargest);
+        
+        // Cross-Engine Parity Note: Array reassignment guarantees that in-place mutations persist
+        // on target runtimes where arrays are passed by value (e.g., PHP) vs by reference (e.g., JS/TS).
+        $aValues = $aSiftDown($aValues, $qHeapSize, $qLargest);
     }
 
     return $aValues;
 };
 
 const $aHeapSort = function($aValues) {
-    const $aSorted = Arr.slice($aValues, 0, Arr.count($aValues));
+    // JSOL.use: Injects helper functions into closure scope for isolated target runtimes.
+    JSOL.use($aSiftDown);
+
+    let $aSorted = Arr.slice($aValues, 0, Arr.count($aValues));
     const $qLen = Arr.count($aSorted);
 
-    // Build the max-heap: sift down every non-leaf node, from the last one
-    // back to the root.
+    // Build the max-heap: sift down every non-leaf node, from the last one back to the root.
     for (let $qI = Math.floor($qLen / 2) - 1; $qI >= 0; $qI = $qI - 1) {
-        $aSiftDown($aSorted, $qLen, $qI);
+        // Capture returned array to ensure mutation persistence across value-type array engines.
+        $aSorted = $aSiftDown($aSorted, $qLen, $qI);
     }
 
-    // Repeatedly move the current max (the root) to the end of the
-    // unsorted region, then re-heapify the smaller remaining heap.
+    // Repeatedly move current max (root) to the end of unsorted region, then re-heapify.
     for (let $qEnd = $qLen - 1; $qEnd > 0; $qEnd = $qEnd - 1) {
         const $nTemp = $aSorted[0];
         $aSorted[0] = $aSorted[$qEnd];
         $aSorted[$qEnd] = $nTemp;
-        $aSiftDown($aSorted, $qEnd, 0);
+        
+        // Capture returned array to ensure mutation persistence across value-type array engines.
+        $aSorted = $aSiftDown($aSorted, $qEnd, 0);
     }
 
     return $aSorted;

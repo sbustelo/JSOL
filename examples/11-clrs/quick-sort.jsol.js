@@ -1,18 +1,11 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.94
 
 /**
  @description
- Sorts an array of numbers into ascending order using quicksort (CLRS
- chapter 7) with the Lomuto partition scheme: pick the last element of
- the current range as the pivot, rearrange the range so everything
- smaller than the pivot ends up to its left and everything larger ends
- up to its right, then recursively sort each side. Unlike
- merge-sort.jsol.js, quicksort partitions in place, no extra array is
- needed for merging.
-  O(n log n) on average, but O(n^2) in the worst case (e.g. an already
- sorted array, with this particular pivot choice) — the classic
- trade-off CLRS discusses alongside quicksort: average-case speed at the
- cost of a data-dependent worst case that merge sort does not have.
+ Sorts an array of numbers into ascending order using quicksort (Hoare /
+ CLRS chapter 7): chooses the last element as a pivot, partitions the
+ array into elements smaller than and larger than the pivot, then
+ recursively quicksorts the two sub-arrays.
 
 @param {array<number>} $aValues - Numbers to sort.
 @returns {array<number>} - A new array with the same numbers in ascending order.
@@ -28,45 +21,50 @@
  }
 */
 
-const $qPartition = function($aValues, $qLow, $qHigh) {
+const $mPartition = function($aValues, $qLow, $qHigh) {
     const $nPivot = $aValues[$qHigh];
-    let $qBoundary = $qLow - 1;
+    let $qI = $qLow - 1;
 
-    for (let $qI = $qLow; $qI < $qHigh; $qI = $qI + 1) {
-        if ($aValues[$qI] <= $nPivot) {
-            $qBoundary = $qBoundary + 1;
-            const $nTemp = $aValues[$qBoundary];
-            $aValues[$qBoundary] = $aValues[$qI];
-            $aValues[$qI] = $nTemp;
+    for (let $qJ = $qLow; $qJ < $qHigh; $qJ = $qJ + 1) {
+        if ($aValues[$qJ] <= $nPivot) {
+            $qI = $qI + 1;
+            const $nTemp1 = $aValues[$qI];
+            $aValues[$qI] = $aValues[$qJ];
+            $aValues[$qJ] = $nTemp1;
         }
     }
 
-    // Place the pivot right after the last element known to be smaller
-    // than it: everything to its left is now <= pivot, everything to its
-    // right is > pivot.
-    const $nTemp = $aValues[$qBoundary + 1];
-    $aValues[$qBoundary + 1] = $aValues[$qHigh];
-    $aValues[$qHigh] = $nTemp;
+    const $nTemp2 = $aValues[$qI + 1];
+    $aValues[$qI + 1] = $aValues[$qHigh];
+    $aValues[$qHigh] = $nTemp2;
 
-    return $qBoundary + 1;
+    // Returns both the mutated array and the pivot index to ensure cross-engine compatibility.
+    return Map.create("array", $aValues, "pivot", $qI + 1);
 };
 
 const $aQuickSortRange = function($aValues, $qLow, $qHigh) {
+    // JSOL.use: Binds internal function dependencies for isolated closure scopes in target engines.
+    JSOL.use($aQuickSortRange, $mPartition);
+
     if ($qLow < $qHigh) {
-        const $qPivotIndex = $qPartition($aValues, $qLow, $qHigh);
-        $aQuickSortRange($aValues, $qLow, $qPivotIndex - 1);
-        $aQuickSortRange($aValues, $qPivotIndex + 1, $qHigh);
+        const $mPartResult = $mPartition($aValues, $qLow, $qHigh);
+        $aValues = $mPartResult["array"];
+        const $qPivot = $mPartResult["pivot"];
+
+        // Cross-Engine Parity Note: Re-assigning array return values ensures mutation persistence
+        // across target runtimes where arrays are passed by value (e.g., PHP) vs passed by reference (e.g., JS/TS).
+        $aValues = $aQuickSortRange($aValues, $qLow, $qPivot - 1);
+        $aValues = $aQuickSortRange($aValues, $qPivot + 1, $qHigh);
     }
+
     return $aValues;
 };
 
 const $aQuickSort = function($aValues) {
-    const $aSorted = Arr.slice($aValues, 0, Arr.count($aValues));
-    const $qLen = Arr.count($aSorted);
+    // JSOL.use: Explicitly imports external function reference into the closure scope.
+    JSOL.use($aQuickSortRange);
 
-    if ($qLen > 1) {
-        $aQuickSortRange($aSorted, 0, $qLen - 1);
-    }
-
+    let $aSorted = Arr.slice($aValues, 0, Arr.count($aValues));
+    $aSorted = $aQuickSortRange($aSorted, 0, Arr.count($aSorted) - 1);
     return $aSorted;
 };

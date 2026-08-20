@@ -1,5 +1,5 @@
 <?php
-// @JSOL v0.2.93 - Self-Hosted Compiler Linter Module (regex-free)
+// @JSOL v0.2.94 - Self-Hosted Compiler Linter Module (Dynamic SSOT Validation)
 $bIsWordChar = function($sCh) {
     if ($sCh === "") { return false; }
     $iCode = mb_ord(mb_substr($sCh,  0, 1, "UTF-8"));
@@ -45,7 +45,7 @@ $mAuditPragma = function($sSourceCode) {
     if ($bHasPragma === false) {
         $aErrors[] =  "Fatal: Missing MANDATORY @JSOL pragma on Line 1.";
     }
-    return JSOL::dict("valid", count($aErrors) === 0, "errors", $aErrors);
+    return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors);
 };
 
 $mAuditForbiddenPatterns = function($sMaskedCode) {
@@ -82,5 +82,80 @@ $mAuditForbiddenPatterns = function($sMaskedCode) {
         $aErrors[] =  "Linter Error: The 'with' statement is FORBIDDEN.";
     }
 
-    return JSOL::dict("valid", count($aErrors) === 0, "errors", $aErrors);
+    return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors);
+};
+
+$mAuditStrictTyping = function($sMaskedCode, $mSSOT) use (&$bIsWordChar) {
+
+    $aErrors = [];
+    $iLen = mb_strlen($sMaskedCode, "UTF-8");
+    
+    for ($i = 0; $i < $iLen; $i = $i + 1) {
+        if (mb_substr($sMaskedCode,  $i,  1, "UTF-8") === "$") {
+            $iJ = $i + 1;
+            while ($iJ < $iLen && $bIsWordChar(mb_substr($sMaskedCode,  $iJ,  1, "UTF-8"))) {
+                $iJ = $iJ + 1;
+            }
+            $sVarName = mb_substr($sMaskedCode,  $i,  $iJ - $i, "UTF-8");
+            
+            if (JSOL::strIndexOf($sVarName,  '$_') === 0) {
+                $iBack = $i - 1;
+                while ($iBack >= 0 && (mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === " " || mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === "\t" || mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === "\n")) {
+                    $iBack = $iBack - 1;
+                }
+                if ($iBack >= 2 && mb_substr($sMaskedCode,  $iBack - 2,  3, "UTF-8") === "let") {
+                    $aErrors[] =  "Linter Error: Variable '" . $sVarName . "' uses reserved internal prefix '" . '$_' . "' in declaration.";
+                } else if ($iBack >= 4 && mb_substr($sMaskedCode,  $iBack - 4,  5, "UTF-8") === "const") {
+                    $aErrors[] =  "Linter Error: Variable '" . $sVarName . "' uses reserved internal prefix '" . '$_' . "' in declaration.";
+                }
+                $i = $iJ - 1;
+                continue;
+            }
+
+            $sPrefix = "";
+            $iK = 1;
+            $iVarLen = mb_strlen($sVarName, "UTF-8");
+            while ($iK < $iVarLen) {
+                $iCode = mb_ord(mb_substr($sVarName,  $iK, 1, "UTF-8"));
+                if ($iCode >= 97 && $iCode <= 122) {
+                    $sPrefix = $sPrefix . "" . mb_chr($iCode, "UTF-8");
+                    $iK = $iK + 1;
+                } else {
+                    break;
+                }
+            }
+
+            if (mb_strlen($sPrefix, "UTF-8") === 0) {
+                if (mb_strlen($sVarName, "UTF-8") > 1) {
+                    $aErrors[] =  "Linter Error: Variable '" . $sVarName . "' lacks a valid lowercase type prefix.";
+                }
+            } else {
+                $bValid = false;
+                $aTypes = array_keys($mSSOT["types"]["core"]);
+                $iTCount = count($aTypes);
+                
+                for ($iT = 0; $iT < $iTCount; $iT = $iT + 1) {
+                    $aAliases = $mSSOT["types"]["core"][$aTypes[$iT]];
+                    if (JSOL::arrIndexOf($aAliases,  $sPrefix) !== -1) {
+                        $bValid = true;
+                        break;
+                    }
+                }
+                
+                if ($bValid === false) {
+                    $aReserved = $mSSOT["types"]["reserved"];
+                    if (JSOL::arrIndexOf($aReserved,  $sPrefix) !== -1) {
+                        $aErrors[] =  "Linter Error: Type prefix '" . $sPrefix . "' in variable '" . $sVarName . "' is RESERVED and not implemented.";
+                        $bValid = true;
+                    }
+                }
+                
+                if ($bValid === false) {
+                    $aErrors[] =  "Linter Error: Unknown type prefix '" . $sPrefix . "' in variable '" . $sVarName . "'. No truncation fallback allowed.";
+                }
+            }
+            $i = $iJ - 1;
+        }
+    }
+    return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors);
 };

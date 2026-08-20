@@ -88,48 +88,49 @@ if (!class_exists('Map')) {
 }
 
 
-function parseJsolMetadata(string $filePath): array {
-    $metadata = [
-        'funcName' => null,
-        'params' => [],
-        'contract' => [],
-        'documentation' => '',
-        'sourceCode' => ''
-    ];
+function parseJsolMetadata(string $filePath): array
+{
+	$metadata = [
+		'funcName' => null,
+		'params' => [],
+		'contract' => [],
+		'documentation' => '',
+		'sourceCode' => ''
+	];
 
-    $sourceCode = file_get_contents($filePath);
-    $metadata['sourceCode'] = $sourceCode;
-    
-    // Extract @contract block
-if (preg_match('/\/\*\*[\s\*]*@contract\s*\n(.*?)\*\//s', $sourceCode, $matches)) {
-        $jsonStr = preg_replace('/^\s*\*\s?/m', '', $matches[1]);
-        $parsedJson = json_decode($jsonStr, true);
-        if (json_last_error() === JSON_ERROR_NONE && isset($parsedJson['cases'])) {
-            $metadata['contract'] = $parsedJson['cases'];
-        }
-    }
+	$sourceCode = file_get_contents($filePath);
+	$metadata['sourceCode'] = $sourceCode;
 
-    // Extract documentation
-    if (preg_match_all('/\/\*(.*?)\*\//s', $sourceCode, $docMatches)) {
-        foreach ($docMatches[1] as $docContent) {
-            if (strpos($docContent, '@contract') === false) {
-                $cleanDoc = preg_replace('/^\s*\*\s?/m', '', $docContent);
-                $metadata['documentation'] .= trim($cleanDoc) . "\n\n";
-            }
-        }
-    }
+	// Extract @contract block
+	if (preg_match('/\/\*\*[\s\*]*@contract\s*\n(.*?)\*\//s', $sourceCode, $matches)) {
+		$jsonStr = preg_replace('/^\s*\*\s?/m', '', $matches[1]);
+		$parsedJson = json_decode($jsonStr, true);
+		if (json_last_error() === JSON_ERROR_NONE && isset($parsedJson['cases'])) {
+			$metadata['contract'] = $parsedJson['cases'];
+		}
+	}
 
-    // Extract function signature
-    if (preg_match('/const\s+(\$[a-zA-Z0-9_]+)\s*=\s*function\s*\(([^)]*)\)/', $sourceCode, $matches)) {
-        $metadata['funcName'] = $matches[1];
-        $rawParams = explode(',', $matches[2]);
-        foreach ($rawParams as $p) {
-            $p = trim($p);
-            if ($p !== '') $metadata['params'][] = $p;
-        }
-    }
+	// Extract documentation
+	if (preg_match_all('/\/\*(.*?)\*\//s', $sourceCode, $docMatches)) {
+		foreach ($docMatches[1] as $docContent) {
+			if (strpos($docContent, '@contract') === false) {
+				$cleanDoc = preg_replace('/^\s*\*\s?/m', '', $docContent);
+				$metadata['documentation'] .= trim($cleanDoc) . "\n\n";
+			}
+		}
+	}
 
-    return $metadata;
+	// Extract function signature
+	if (preg_match('/const\s+(\$[a-zA-Z0-9_]+)\s*=\s*function\s*\(([^)]*)\)/', $sourceCode, $matches)) {
+		$metadata['funcName'] = $matches[1];
+		$rawParams = explode(',', $matches[2]);
+		foreach ($rawParams as $p) {
+			$p = trim($p);
+			if ($p !== '') $metadata['params'][] = $p;
+		}
+	}
+
+	return $metadata;
 }
 
 
@@ -153,8 +154,19 @@ function compileJsolInMemory(string $sourcePath, string $compilerDir, string $ou
 
 	$sourceCode = file_get_contents($sourcePath);
 
-	// $mNormalizeTargetsConfig and $mExecuteCompilationPipeline are now available in this scope
+	// Resolve target configuration
 	$targetsConfig = $mNormalizeTargetsConfig(null);
+
+	// Load Compiled SSOT directly from JSON as per index.php logic
+	$ssotPath = rtrim($compilerDir, '/') . '/dist/compiler/jsol-spec.json';
+	if (!file_exists($ssotPath)) {
+		return [
+			'success' => false,
+			'outputLog' => "FATAL: SSOT spec file not found at {$ssotPath}. Run bootstrapper first.",
+			'compiledFilename' => null
+		];
+	}
+	$mSSOTData = json_decode(file_get_contents($ssotPath), true);
 
 	// Export the compiled function explicitly to the browser's window object
 	$jsSuffix = "";
@@ -168,10 +180,14 @@ function compileJsolInMemory(string $sourcePath, string $compilerDir, string $ou
 		'jsSuffix' => $jsSuffix,
 		'phpTarget' => '',
 		'phpPrefix' => '',
-		'phpSuffix' => ''
+		'phpSuffix' => '',
+		'tsTarget' => '',
+		'tsPrefix' => '',
+		'tsSuffix' => ''
 	];
 
-	$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOpts);
+	// Execute compilation passing the decoded SSOT data array as argument #4
+	$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOpts, $mSSOTData);
 
 	$baseName = preg_replace('/\.jsol(\.js)?$/', '', basename($sourcePath));
 	$compiledJsFilename = $baseName . '.js';

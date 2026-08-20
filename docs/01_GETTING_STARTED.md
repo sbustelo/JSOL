@@ -11,13 +11,27 @@ Pick the one that matches what you're doing.
 
 Each distribution is self-contained: copy the folder into your project and it works, no shared dependency on the others.
 
+## CLI Arguments Reference
+
+Both the Node.js and PHP host compilers accept the exact same arguments for granular control over the compilation process:
+
+- --source="path/file.jsol" : (Required) Path to the input source file.
+- --out-dir="path/dir" : (Optional) Destination directory. Defaults to the source file's directory.
+- --targets="js,php,ts" : (Optional) Comma-separated list of targets to generate. Defaults to all available targets.
+- --target="profileId" : (Optional) Applies a unified profile from targets.json (which defines prefixes and suffixes) across all output languages.
+- --js-target="id", --php-target="id", --ts-target="id" : (Optional) Applies a specific profile from targets.json only to the matched language.
+- --js-prefix="str", --php-prefix="str", --ts-prefix="str" : (Optional) Overrides the prefix wrapper for the specified language.
+- --js-suffix="str", --php-suffix="str", --ts-suffix="str" : (Optional) Overrides the suffix wrapper for the specified language.
+
+Note: Explicit prefix/suffix CLI flags take precedence over profiles defined in targets.json.
+
 ## Compiling with Node
 
 ```bash
 node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out"
 ```
 
-Produces `./out/my-file.js` and `./out/my-file.php`. Every compile emits both targets — there's no flag to compile to only one, because parity between the two is the entire point.
+Produces `./out/my-file.js`, `./out/my-file.php`, and `./out/my-file.ts`. By default, every compile emits all available targets to ensure isomorphic parity. However, you can filter specific targets using the `--targets` flag (e.g., `--targets=js,php`).
 
 ## Compiling with PHP
 
@@ -25,7 +39,7 @@ Produces `./out/my-file.js` and `./out/my-file.php`. Every compile emits both ta
 php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out"
 ```
 
-Same output, same two files. Node and PHP hosts are verified to produce byte-identical output from the same `.jsol` source (see [10_dev/SELF_HOSTING.md](10_dev/SELF_HOSTING.md)), so it doesn't matter which one you use day to day.
+Same output, same three files. By default, every compile emits all available targets to ensure isomorphic parity. However, you can filter specific targets using the `--targets` flag (e.g., `--targets=js,php`). Node and PHP hosts are tested to produce byte-identical output from the same .jsol source (see [10_dev/SELF_HOSTING.md](10_dev/SELF_HOSTING.md)), so it doesn't matter which one you use day to day.
 
 ## Compiling multiple files
 
@@ -58,4 +72,4 @@ After changing anything here, re-run the fixed-point check described in [10_dev/
 
 ---
 
-*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*
+*JSOL v0.2.94 — 2026-08-20, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*

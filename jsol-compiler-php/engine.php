@@ -1,33 +1,33 @@
 <?php
-// @JSOL v0.2.93 - Self-Hosted Engine Orchestrator
+// @JSOL v0.2.94 - Self-Hosted Engine Orchestrator
 $mResolveWrappers = function($mTargetsConfig, $sCliTargetFlag, $sCliPrefixOverride, $sCliSuffixOverride) {
     $sPrefix = "";
     $sSuffix = "";
     if (mb_strlen($sCliPrefixOverride, "UTF-8") > 0 || mb_strlen($sCliSuffixOverride, "UTF-8") > 0) {
-        return JSOL::dict("prefix", $sCliPrefixOverride, "suffix", $sCliSuffixOverride);
+        return JSOL::dict("prefix",  $sCliPrefixOverride,  "suffix",  $sCliSuffixOverride);
     }
     if (mb_strlen($sCliTargetFlag, "UTF-8") > 0) {
         if ($mTargetsConfig["targets"] !== null && $mTargetsConfig["targets"][$sCliTargetFlag] !== null) {
             $mTargetObj = $mTargetsConfig["targets"][$sCliTargetFlag];
-            return JSOL::dict("prefix", $mTargetObj["prefix"], "suffix", $mTargetObj["suffix"]);
+            return JSOL::dict("prefix",  $mTargetObj["prefix"],  "suffix",  $mTargetObj["suffix"]);
         }
     }
     $sDefaultPointer = $mTargetsConfig["default"];
     if ($sDefaultPointer !== null && mb_strlen($sDefaultPointer, "UTF-8") > 0) {
         if ($mTargetsConfig["targets"] !== null && $mTargetsConfig["targets"][$sDefaultPointer] !== null) {
             $mDefaultObj = $mTargetsConfig["targets"][$sDefaultPointer];
-            return JSOL::dict("prefix", $mDefaultObj["prefix"], "suffix", $mDefaultObj["suffix"]);
+            return JSOL::dict("prefix",  $mDefaultObj["prefix"],  "suffix",  $mDefaultObj["suffix"]);
         }
     }
-    return JSOL::dict("prefix", "", "suffix", "");
+    return JSOL::dict("prefix",  "",  "suffix",  "");
 };
 
-$mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOptions) use ($mMaskSourceCode, $sUnmaskSourceCode, $mAuditPragma, $mAuditForbiddenPatterns, $sCompileToJS, $sCompileToPHP, $mResolveWrappers) {
+$mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOptions, $mSSOT) use (&$mMaskSourceCode, &$sUnmaskSourceCode, &$mAuditPragma, &$mAuditForbiddenPatterns, &$mAuditStrictTyping, &$sCompileToJS, &$sCompileToPHP, &$mResolveWrappers) {
 
 
     $mPragmaResult = $mAuditPragma($sSourceCode);
     if ($mPragmaResult["valid"] === false) {
-        return JSOL::dict("success", false, "errors", $mPragmaResult["errors"]);
+        return JSOL::dict("success",  false,  "errors",  $mPragmaResult["errors"]);
     }
 
     $mMaskedData = $mMaskSourceCode($sSourceCode);
@@ -36,7 +36,12 @@ $mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOpti
 
     $mPatternResult = $mAuditForbiddenPatterns($sMaskedCode);
     if ($mPatternResult["valid"] === false) {
-        return JSOL::dict("success", false, "errors", $mPatternResult["errors"]);
+        return JSOL::dict("success",  false,  "errors",  $mPatternResult["errors"]);
+    }
+
+    $mTypingResult = $mAuditStrictTyping($sMaskedCode, $mSSOT);
+    if ($mTypingResult["valid"] === false) {
+        return JSOL::dict("success",  false,  "errors",  $mTypingResult["errors"]);
     }
 
     $sJsTargetFlag = $mCliOptions["jsTarget"];
@@ -49,15 +54,23 @@ $mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOpti
     $sPhpSuffixArg = $mCliOptions["phpSuffix"];
     $mPhpWrappers = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
 
-    $sCompiledJS = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"]);
-    $sCompiledPHP = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"]);
+    $sTsTargetFlag = $mCliOptions["tsTarget"];
+    $sTsPrefixArg = $mCliOptions["tsPrefix"];
+    $sTsSuffixArg = $mCliOptions["tsSuffix"];
+    $mTsWrappers = $mResolveWrappers($mTargetsConfig["ts"], $sTsTargetFlag, $sTsPrefixArg, $sTsSuffixArg);
+
+    $sCompiledJS = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"], $mSSOT["targets"]["js"]);
+    $sCompiledPHP = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"], $mSSOT["targets"]["php"]);
+    $sCompiledTS = $sCompileToJS($sMaskedCode, $mTsWrappers["prefix"], $mTsWrappers["suffix"], $mSSOT["targets"]["ts"]);
 
     $sFinalJS = $sUnmaskSourceCode($sCompiledJS, $aTokens);
     $sFinalPHP = $sUnmaskSourceCode($sCompiledPHP, $aTokens);
+    $sFinalTS = $sUnmaskSourceCode($sCompiledTS, $aTokens);
 
     return JSOL::dict(
-        "success", true,
-        "js", $sFinalJS,
-        "php", $sFinalPHP
+        "success",  true, 
+        "js",  $sFinalJS, 
+        "php",  $sFinalPHP, 
+        "ts",  $sFinalTS
     );
 };

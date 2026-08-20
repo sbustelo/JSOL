@@ -5,20 +5,55 @@
 
 **An isomorphic business-logic standard for zero-dependency ecosystems.**
 
-Version: v0.2.93 • 2026-08-14
+Version: v0.2.94 • 2026-08-20
 
 
 ## Quick start
 
+JSOL compilers transpile a source '.jsol' file into target languages ('.js', '.php', and '.ts'). By default, it generates all available targets simultaneously, but you can filter them using the '--targets' flag.
+
+Compile to ALL targets simultaneously:
 ```bash
+# Using the Node.js compiler host
 node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out"
-# or
+
+# Using the PHP compiler host
 php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out"
 ```
+Compile ONLY to specific targets (e.g., JavaScript and PHP)
 
-Full setup, per distribution, in [docs/01_GETTING_STARTED.md](docs/01_GETTING_STARTED.md).
+```bash
+# Using the Node.js compiler host
+node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out" --targets="js,php"
+
+# Using the PHP compiler host
+php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out" --targets="js,php"
+```
+
+Both host CLI tools accept the same flags and generate identical outputs in the target directory.
+
+### Consuming & Validating TypeScript
+
+There is no separate 'jsol-compiler-ts' binary. The Node and PHP host compilers emit the '.ts' files directly, annotated according to the JSOL Type Prefix Matrix. 
+
+To verify that the generated TypeScript output complies strictly with your project's 'tsc' configuration without errors:
+
+```bash
+npx tsc --noEmit --skipLibCheck ./out/*.ts
+```
+
+Full setup instructions per distribution are available in [docs/01_GETTING_STARTED.md](docs/01_GETTING_STARTED.md).
+
 
 **Live demo:** https://jsol.bustelo.com.ar/ — try the interactive REPL and explore the example library.
+
+
+## Supported Targets
+
+-   **JavaScript**: Pure, GC-reliant output ready for Node.js or any Browser environment.
+-   **PHP**: Native associative arrays and closures, ready for CLI or Web SAPI with zero external dependencies.
+-   **TypeScript**: Strictly typed output matching the JSOL Type Prefix Matrix, ready to be imported into any strict TS codebase.
+
 
 
 ## What is JSOL?
@@ -27,9 +62,17 @@ Over a decade ago, Douglas Crockford took JavaScript, amputated all executable c
 
 **JSOL** does the inverse. It takes JavaScript, amputates access to the host environment (DOM, window, I/O), and restricts its syntax to a strict, C-style subset, to give us a universal format for *business logic*.
 
-JSOL lets you write complex mathematical and procedural rules once, run them natively in the browser, and transpile them to other languages for the backend, with no Abstract Syntax Tree and no external toolchain. It's the missing link for isomorphism in lightweight frameworks.
+JSOL lets you write complex mathematical and procedural rules once, run them natively in the browser, and transpile them to other languages for the backend. Driven by a Single Source of Truth (SSOT) and an AST-free compiler architecture, it ensures absolute mathematical convergence and zero-dead-code execution across different programming environments. It's the missing link for isomorphism in lightweight frameworks.
 
-JavaScript and PHP are the first proven targets. Extending this is part of the [vision and call for support](docs/ROADMAP.md).
+**Supported Targets:**
+* **JavaScript:** Pure, GC-reliant output ready for Node.js or any Browser environment.
+* **PHP:** Native associative arrays and closures, ready for CLI or Web SAPI with zero external dependencies.
+* **TypeScript:** Strictly typed output matching the JSOL Type Prefix Matrix, ensuring zero errors under strict compilation.
+
+Extending this is part of the [vision and call for support](docs/ROADMAP.md).
+
+*(For a detailed log of all changes, features, and architectural updates, see [docs/20_product/version_history.md](docs/20_product/version_history.md)).*
+
 
 ## What's New (v0.2.9 series)
 
@@ -61,7 +104,7 @@ Full detail, with the reasoning behind each derived rule, in [docs/02_LANGUAGE_S
 
 JSOL fits any scenario where the same logic has to run identically on two or more independently-implemented runtimes, or when a canonical, human-readable standard is required:
 
-1. **Executable Pseudocode**: A highly readable replacement for academic and documentation pseudocode. It allows developers to express algorithms (e.g., binary search, parsers, ciphers) clearly, designed to be directly compiled and executed across C-like languages as that support ships — see [docs/21_future/ROADMAP.md](docs/21_future/ROADMAP.md) for what's proven today versus what's still ahead.
+1. **Executable Pseudocode**: A highly readable replacement for academic and documentation pseudocode. It allows developers to express algorithms (e.g., binary search, parsers, ciphers) clearly, designed to be directly compiled and executed across C-like languages (currently JS, PHP, and TS). See [docs/21_future/ROADMAP.md](docs/21_future/ROADMAP.md) for what's proven today versus what's still ahead.
 2. **Computational Mathematics**: Engines like IPAX (color science, 2D physics, geometry) where the frontend needs instant feedback, and other implementations need to guarantee the exact same results given the same inputs.
 3. **E-commerce & Business Rules**: Tax calculations, commission tiers, and cart rules, ensuring what the client displays is mathematically identical to what the server bills, eliminating reconciliation sync issues.
 4. **Strict Validation**: Complex form rules, algorithmic checksums (Luhn, IBAN), and sanitization evaluated in real time on the client and re-verified byte-for-byte on the server.

@@ -46,7 +46,8 @@
 
 
 
-const $validateLuhn = function($sCardNumber) {
+const $bValidateLuhn = function($sCardNumber) {
+	//As the function returns a bool, its prefix is $b.
     
 	// Step 1: Clean the input - keep only ASCII digits (0-9)
 	// We walk the string manually instead of using Regex.* here: the Luhn

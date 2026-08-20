@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.94
 
 /**
  @description
@@ -44,22 +44,33 @@ const $nLinearizeChannel = function($qChannel8Bit) {
 };
 
 const $nRelativeLuminance = function($qR, $qG, $qB) {
-    const $nR = $nLinearizeChannel($qR);
-    const $nG = $nLinearizeChannel($qG);
-    const $nB = $nLinearizeChannel($qB);
+    // JSOL.use: Binds helper function to closure scope for PHP target execution.
+    JSOL.use($nLinearizeChannel);
+
+    const $nRs = $qR / 255;
+    const $nGs = $qG / 255;
+    const $nBs = $qB / 255;
+
+    const $nR = $nLinearizeChannel($nRs);
+    const $nG = $nLinearizeChannel($nGs);
+    const $nB = $nLinearizeChannel($nBs);
 
     return (0.2126 * $nR) + (0.7152 * $nG) + (0.0722 * $nB);
 };
 
-const $nWcagContrastRatio = function($qR1, $qG1, $qB1, $qR2, $qG2, $qB2) {
-    const $nLuminance1 = $nRelativeLuminance($qR1, $qG1, $qB1);
-    const $nLuminance2 = $nRelativeLuminance($qR2, $qG2, $qB2);
+const $nContrastRatio = function($qR1, $qG1, $qB1, $qR2, $qG2, $qB2) {
+    // JSOL.use: Binds helper function to closure scope for PHP target execution.
+    JSOL.use($nRelativeLuminance);
 
-    let $nLighter = $nLuminance1;
-    let $nDarker = $nLuminance2;
-    if ($nLuminance2 > $nLuminance1) {
-        $nLighter = $nLuminance2;
-        $nDarker = $nLuminance1;
+    const $nL1 = $nRelativeLuminance($qR1, $qG1, $qB1);
+    const $nL2 = $nRelativeLuminance($qR2, $qG2, $qB2);
+
+    let $nLighter = $nL1;
+    let $nDarker = $nL2;
+
+    if ($nL2 > $nL1) {
+        $nLighter = $nL2;
+        $nDarker = $nL1;
     }
 
     return ($nLighter + 0.05) / ($nDarker + 0.05);

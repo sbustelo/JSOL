@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.94
 
 /**
  @description
@@ -26,6 +26,9 @@
 */
 
 const $qFactorial = function($qN) {
+    JSOL.use($qFactorial);
+	// JSOL.use: Binds the function's own name to its internal scope, preventing 'undefined variable' in PHP recursive closures.
+    
     // Base case: stops the recursion.
     if ($qN === 0) {
         return 1;

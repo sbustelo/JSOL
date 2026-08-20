@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.94
 
 /**
  @description
@@ -62,6 +62,9 @@ const $aMergeSortedHalves = function($aLeft, $aRight) {
 };
 
 const $aMergeSort = function($aValues) {
+    JSOL.use($aMergeSort, $aMergeSortedHalves);
+	// JSOL.use: Explicitly binds external scope to the closure for the PHP target.
+	
     const $qLen = Arr.count($aValues);
 
     // A list of 0 or 1 elements is already sorted: recursion's base case.

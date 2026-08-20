@@ -1,4 +1,4 @@
-// @JSOL v0.2.93 - Self-Hosted Compiler Linter Module (regex-free)
+// @JSOL v0.2.94 - Self-Hosted Compiler Linter Module (Dynamic SSOT Validation)
 const $bIsWordChar = function($sCh) {
     if ($sCh === "") { return false; }
     const $iCode = Str.char($sCh, 0);
@@ -81,5 +81,80 @@ const $mAuditForbiddenPatterns = function($sMaskedCode) {
         Arr.push($aErrors, "Linter Error: The 'with' statement is FORBIDDEN.");
     }
 
+    return Map.create("valid", Arr.count($aErrors) === 0, "errors", $aErrors);
+};
+
+const $mAuditStrictTyping = function($sMaskedCode, $mSSOT) {
+    JSOL.use($bIsWordChar);
+    const $aErrors = [];
+    const $iLen = Str.len($sMaskedCode);
+    
+    for (let $i = 0; $i < $iLen; $i = $i + 1) {
+        if (Str.sub($sMaskedCode, $i, 1) === "$") {
+            let $iJ = $i + 1;
+            while ($iJ < $iLen && $bIsWordChar(Str.sub($sMaskedCode, $iJ, 1))) {
+                $iJ = $iJ + 1;
+            }
+            const $sVarName = Str.sub($sMaskedCode, $i, $iJ - $i);
+            
+            if (Str.indexOf($sVarName, '$_') === 0) {
+                let $iBack = $i - 1;
+                while ($iBack >= 0 && (Str.sub($sMaskedCode, $iBack, 1) === " " || Str.sub($sMaskedCode, $iBack, 1) === "\t" || Str.sub($sMaskedCode, $iBack, 1) === "\n")) {
+                    $iBack = $iBack - 1;
+                }
+                if ($iBack >= 2 && Str.sub($sMaskedCode, $iBack - 2, 3) === "let") {
+                    Arr.push($aErrors, "Linter Error: Variable '" + $sVarName + "' uses reserved internal prefix '" + '$_' + "' in declaration.");
+                } else if ($iBack >= 4 && Str.sub($sMaskedCode, $iBack - 4, 5) === "const") {
+                    Arr.push($aErrors, "Linter Error: Variable '" + $sVarName + "' uses reserved internal prefix '" + '$_' + "' in declaration.");
+                }
+                $i = $iJ - 1;
+                continue;
+            }
+
+            let $sPrefix = "";
+            let $iK = 1;
+            const $iVarLen = Str.len($sVarName);
+            while ($iK < $iVarLen) {
+                const $iCode = Str.char($sVarName, $iK);
+                if ($iCode >= 97 && $iCode <= 122) {
+                    $sPrefix = $sPrefix + "" + Str.fromChar($iCode);
+                    $iK = $iK + 1;
+                } else {
+                    break;
+                }
+            }
+
+            if (Str.len($sPrefix) === 0) {
+                if (Str.len($sVarName) > 1) {
+                    Arr.push($aErrors, "Linter Error: Variable '" + $sVarName + "' lacks a valid lowercase type prefix.");
+                }
+            } else {
+                let $bValid = false;
+                const $aTypes = Map.keys($mSSOT["types"]["core"]);
+                const $iTCount = Arr.count($aTypes);
+                
+                for (let $iT = 0; $iT < $iTCount; $iT = $iT + 1) {
+                    const $aAliases = $mSSOT["types"]["core"][$aTypes[$iT]];
+                    if (Arr.indexOf($aAliases, $sPrefix) !== -1) {
+                        $bValid = true;
+                        break;
+                    }
+                }
+                
+                if ($bValid === false) {
+                    const $aReserved = $mSSOT["types"]["reserved"];
+                    if (Arr.indexOf($aReserved, $sPrefix) !== -1) {
+                        Arr.push($aErrors, "Linter Error: Type prefix '" + $sPrefix + "' in variable '" + $sVarName + "' is RESERVED and not implemented.");
+                        $bValid = true;
+                    }
+                }
+                
+                if ($bValid === false) {
+                    Arr.push($aErrors, "Linter Error: Unknown type prefix '" + $sPrefix + "' in variable '" + $sVarName + "'. No truncation fallback allowed.");
+                }
+            }
+            $i = $iJ - 1;
+        }
+    }
     return Map.create("valid", Arr.count($aErrors) === 0, "errors", $aErrors);
 };
