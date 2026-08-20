@@ -1,4 +1,4 @@
-<img src="assets/mascot/jsol-avatar.png" width="90" alt="JSOL mascot">
+<img src="assets/icn/jsol-icon.svg" width="64" alt="JSOL icon">
 
 # JSOL: JavaScript Source Of Logic
 2026, [Santiago Bustelo](https://www.bustelo.com.ar/) • MIT License
@@ -87,7 +87,7 @@ JSOL was born out of a real requirement in [IPAX](https://icograma.com), a color
 
 It was built inside **j0**, a zero-config, zero-binary-dependency PHP/JS framework. That constraint ruled out the standard industrial answers (see [docs/20_product/COMPARISON.md](docs/20_product/COMPARISON.md) for why Haxe, WebAssembly, and JSON-driven math were each considered and rejected). The answer that fit was a JS subset trivial enough to convert to other C-like languages with regular expressions and a small hand-written lexer.
 
-<img src="assets/mascot/jsol-mascot-full.png" width="280" alt="JSOL mascot, full body">
+
 
 ## Design Pillars
 
