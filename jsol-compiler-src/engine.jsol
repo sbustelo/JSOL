@@ -1,4 +1,4 @@
-// @JSOL v0.2.94 - Self-Hosted Engine Orchestrator
+// @JSOL v0.2.95 - Self-Hosted Engine Orchestrator
 const $mResolveWrappers = function($mTargetsConfig, $sCliTargetFlag, $sCliPrefixOverride, $sCliSuffixOverride) {
     let $sPrefix = "";
     let $sSuffix = "";
@@ -22,7 +22,7 @@ const $mResolveWrappers = function($mTargetsConfig, $sCliTargetFlag, $sCliPrefix
 };
 
 const $mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOptions, $mSSOT) {
-    JSOL.use($mMaskSourceCode, $sUnmaskSourceCode, $mAuditPragma, $mAuditForbiddenPatterns, $mAuditStrictTyping, $sCompileToJS, $sCompileToPHP, $mResolveWrappers);
+JSOL.use($mMaskSourceCode, $sUnmaskSourceCode, $mAuditPragma, $mAuditForbiddenPatterns, $mAuditStrictTyping, $sCompileToJS, $sCompileToPHP, $mResolveWrappers, $sIndentCode, $aTranslateCommentTokensToPython, $sConvertTernaries, $sConvertControlFlowToPython, $sSanitizePythonIdentifiers, $sStripPythonBraces);
 
     const $mPragmaResult = $mAuditPragma($sSourceCode);
     if ($mPragmaResult["valid"] === false) {
@@ -60,16 +60,37 @@ const $mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mC
 
     const $sCompiledJS = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"], $mSSOT["targets"]["js"]);
     const $sCompiledPHP = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"], $mSSOT["targets"]["php"]);
+
     const $sCompiledTS = $sCompileToJS($sMaskedCode, $mTsWrappers["prefix"], $mTsWrappers["suffix"], $mSSOT["targets"]["ts"]);
 
-    const $sFinalJS = $sUnmaskSourceCode($sCompiledJS, $aTokens);
-    const $sFinalPHP = $sUnmaskSourceCode($sCompiledPHP, $aTokens);
-    const $sFinalTS = $sUnmaskSourceCode($sCompiledTS, $aTokens);
+    const $sPyTargetFlag = $mCliOptions["pyTarget"];
+    const $sPyPrefixArg = $mCliOptions["pyPrefix"];
+    const $sPySuffixArg = $mCliOptions["pySuffix"];
+    const $mPyWrappers = $mResolveWrappers($mTargetsConfig["py"], $sPyTargetFlag, $sPyPrefixArg, $sPySuffixArg);
+    const $sCompiledPY = $sCompileToJS($sMaskedCode, $mPyWrappers["prefix"], $mPyWrappers["suffix"], $mSSOT["targets"]["python"]);
+
+    const $sIndentedJS = $sIndentCode($sCompiledJS, "  ");
+    const $sIndentedPHP = $sIndentCode($sCompiledPHP, "  ");
+    const $sIndentedTS = $sIndentCode($sCompiledTS, "  ");
+
+    const $sTernaryPY = $sConvertTernaries($sCompiledPY);
+    const $sControlFlowPY = $sConvertControlFlowToPython($sTernaryPY);
+    const $sSanitizedPY = $sSanitizePythonIdentifiers($sControlFlowPY);
+    const $sIndentedPY = $sIndentCode($sSanitizedPY, "  ");
+    const $sStrippedPY = $sStripPythonBraces($sIndentedPY, "  ");
+
+    const $aTranslatedTokensPY = $aTranslateCommentTokensToPython($aTokens);
+
+    const $sFinalJS = $sUnmaskSourceCode($sIndentedJS, $aTokens);
+    const $sFinalPHP = $sUnmaskSourceCode($sIndentedPHP, $aTokens);
+    const $sFinalTS = $sUnmaskSourceCode($sIndentedTS, $aTokens);
+    const $sFinalPY = $sUnmaskSourceCode($sStrippedPY, $aTranslatedTokensPY);
 
     return Map.create(
         "success", true,
         "js", $sFinalJS,
         "php", $sFinalPHP,
-        "ts", $sFinalTS
+        "ts", $sFinalTS,
+        "py", $sFinalPY
     );
 };

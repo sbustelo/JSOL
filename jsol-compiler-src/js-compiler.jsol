@@ -143,8 +143,8 @@ const $fProcessCall = function($sCode, $sKeyword, $sTemplate) {
                         $sRep = Str.replace($sRep, "{*}", Arr.join($aArgs, ", "));
                     } else {
                         const $iArgsCount = Arr.count($aArgs);
-                        for (let $iK = 0; $iK < $iArgsCount; $iK = $iK + 1) {
-                            const $sPlaceholder = "{" + "" + $iK + "" + "}";
+for (let $iK = 0; $iK < $iArgsCount; $iK = $iK + 1) {
+                            const $sPlaceholder = Str.concat("{", $iK, "}");
                             $sRep = Str.replace($sRep, $sPlaceholder, $aArgs[$iK]);
                         }
                     }

@@ -11,6 +11,7 @@
   { "id": "TS_Func_Bool", "type": "regex", "search": "(^|\\s|\\{)(const|let)\\s+(\\$b\\w*):\\s*boolean\\s*=\\s*function\\s*\\(([^)]*)\\)", "template": "$1$2 $3 = function($4): boolean" },
   { "id": "TS_Func_Arr", "type": "regex", "search": "(^|\\s|\\{)(const|let)\\s+(\\$a\\w*):\\s*any\\[\\]\\s*=\\s*function\\s*\\(([^)]*)\\)", "template": "$1$2 $3 = function($4): any[]" },
   { "id": "TS_Func_Map", "type": "regex", "search": "(^|\\s|\\{)(const|let)\\s+(\\$m\\w*):\\s*Record<string,\\s*any>\\s*=\\s*function\\s*\\(([^)]*)\\)", "template": "$1$2 $3 = function($4): Record<string, any>" },
+{ "id": "Str.concat", "type": "call", "template": "[{*}].join(\"\")" },
   { "id": "Str.sub", "type": "call", "template": "{0}.substring({1}, ({1}) + ({2}))" },
   { "id": "Str.len", "type": "call", "template": "{0}.length" },
   { "id": "Str.indexOf", "type": "call", "template": "{0}.indexOf({1})" },

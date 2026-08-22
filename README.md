@@ -5,12 +5,12 @@
 
 **An isomorphic business-logic standard for zero-dependency ecosystems.**
 
-Version: v0.2.94 • 2026-08-20
+Version: v0.2.95 • 2026-08-20
 
 
 ## Quick start
 
-JSOL compilers transpile a source '.jsol' file into target languages ('.js', '.php', and '.ts'). By default, it generates all available targets simultaneously, but you can filter them using the '--targets' flag.
+JSOL compilers transpile a source '.jsol' file into target languages ('.js', '.php', '.ts', and '.py'). By default, it generates all available targets simultaneously, but you can filter them using the '--targets' flag.
 
 Compile to ALL targets simultaneously:
 ```bash
@@ -19,15 +19,22 @@ node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out"
 
 # Using the PHP compiler host
 php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out"
+
+# Using the Python compiler host
+python3 jsol-compiler-py/index.py --source="./my-file.jsol" --out-dir="./out"
 ```
-Compile ONLY to specific targets (e.g., JavaScript and PHP)
+
+Compile ONLY to specific targets (e.g., JavaScript, PHP, TypeScript, Python):
 
 ```bash
 # Using the Node.js compiler host
-node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out" --targets="js,php"
+node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out" --targets="js,php,ts,py"
 
 # Using the PHP compiler host
-php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out" --targets="js,php"
+php jsol-compiler-php/index.php --source="./my-file.jsol" --out-dir="./out" --targets="js,php,ts,py"
+
+# Using the Python compiler host
+python3 jsol-compiler-py/index.py --source="./my-file.jsol" --out-dir="./out" --targets="js,php,ts,py"
 ```
 
 Both host CLI tools accept the same flags and generate identical outputs in the target directory.
@@ -48,14 +55,6 @@ Full setup instructions per distribution are available in [docs/01_GETTING_START
 **Live demo:** https://jsol.bustelo.com.ar/ — try the interactive REPL and explore the example library.
 
 
-## Supported Targets
-
--   **JavaScript**: Pure, GC-reliant output ready for Node.js or any Browser environment.
--   **PHP**: Native associative arrays and closures, ready for CLI or Web SAPI with zero external dependencies.
--   **TypeScript**: Strictly typed output matching the JSOL Type Prefix Matrix, ready to be imported into any strict TS codebase.
-
-
-
 ## What is JSOL?
 
 Over a decade ago, Douglas Crockford took JavaScript, amputated all executable code from it, and gave us **JSON**: the de facto standard for transporting *data*.
@@ -68,6 +67,7 @@ JSOL lets you write complex mathematical and procedural rules once, run them nat
 * **JavaScript:** Pure, GC-reliant output ready for Node.js or any Browser environment.
 * **PHP:** Native associative arrays and closures, ready for CLI or Web SAPI with zero external dependencies.
 * **TypeScript:** Strictly typed output matching the JSOL Type Prefix Matrix, ensuring zero errors under strict compilation.
+* **Python:** Native Python 3 output with 100% isomorphic parity, dynamic loop unrolling and structured indentation.
 
 Extending this is part of the [vision and call for support](docs/ROADMAP.md).
 
@@ -104,7 +104,7 @@ Full detail, with the reasoning behind each derived rule, in [docs/02_LANGUAGE_S
 
 JSOL fits any scenario where the same logic has to run identically on two or more independently-implemented runtimes, or when a canonical, human-readable standard is required:
 
-1. **Executable Pseudocode**: A highly readable replacement for academic and documentation pseudocode. It allows developers to express algorithms (e.g., binary search, parsers, ciphers) clearly, designed to be directly compiled and executed across C-like languages (currently JS, PHP, and TS). See [docs/21_future/ROADMAP.md](docs/21_future/ROADMAP.md) for what's proven today versus what's still ahead.
+1. **Executable Pseudocode**: A highly readable replacement for academic and documentation pseudocode. It allows developers to express algorithms (e.g., binary search, parsers, ciphers) clearly, designed to be directly compiled and executed across multiple language families (currently JS, PHP, TS, and Python). See [docs/21_future/ROADMAP.md](docs/21_future/ROADMAP.md) for what's proven today versus what's still ahead.
 2. **Computational Mathematics**: Engines like IPAX (color science, 2D physics, geometry) where the frontend needs instant feedback, and other implementations need to guarantee the exact same results given the same inputs.
 3. **E-commerce & Business Rules**: Tax calculations, commission tiers, and cart rules, ensuring what the client displays is mathematically identical to what the server bills, eliminating reconciliation sync issues.
 4. **Strict Validation**: Complex form rules, algorithmic checksums (Luhn, IBAN), and sanitization evaluated in real time on the client and re-verified byte-for-byte on the server.

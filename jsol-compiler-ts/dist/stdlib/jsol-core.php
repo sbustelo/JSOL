@@ -35,8 +35,8 @@ class Str {
     public static function sub($s, $start, $len) { return mb_substr($s, $start, $len, "UTF-8"); }
     public static function char($s, $idx) { return mb_ord(mb_substr($s, $idx, 1, "UTF-8")); }
     public static function fromChar($c) { return mb_chr($c, "UTF-8"); }
-    public static function replace($s, $search, $replace) { return str_replace($search, $replace, $s); }
-}
+public static function replace($s, $search, $replace) { return str_replace($search, $replace, $s); }
+    public static function concat(...$args) { return implode("", $args); }}
 
 class Arr {
     public static function count($a) { return count($a); }

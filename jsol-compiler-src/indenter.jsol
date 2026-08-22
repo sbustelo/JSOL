@@ -78,9 +78,12 @@ const $sIndentCode = function($sMaskedCode, $sIndentUnit) {
 
         } else if ($sChar === "}") {
             $iDepth = $iDepth - 1;
-            $sResult = $sRTrimBuffer($sResult) + "\n" + $sRepeatUnit($sIndentUnit, $iDepth) + "" + "}" + "\n" + $sRepeatUnit($sIndentUnit, $iDepth);
+            $sResult = $sRTrimBuffer($sResult) + "\n" + $sRepeatUnit($sIndentUnit, $iDepth) + "" + "}";
             $i = $i + 1;
 
+            // Swallow whitespace right after "}" before deciding what comes next —
+            // same reasoning as after "{": the original spacing is irrelevant, we
+            // only care about the next real character.
             let $bSkippingAfter = true;
             while ($i < $iLen && $bSkippingAfter === true) {
                 if ($bIsWhitespaceChar(Str.sub($sMaskedCode, $i, 1)) === true) {
@@ -89,6 +92,25 @@ const $sIndentCode = function($sMaskedCode, $sIndentUnit) {
                     $bSkippingAfter = false;
                 }
             }
+
+            // A ";" immediately following a block close (e.g. "const $mFn = function(){...};")
+            // is not a new statement, it's the terminator of THIS one. Glue it onto the
+            // same line as "}" instead of stranding it alone on the next line.
+            if ($i < $iLen && Str.sub($sMaskedCode, $i, 1) === ";") {
+                $sResult = $sResult + "" + ";";
+                $i = $i + 1;
+
+                let $bSkippingAfterSemi = true;
+                while ($i < $iLen && $bSkippingAfterSemi === true) {
+                    if ($bIsWhitespaceChar(Str.sub($sMaskedCode, $i, 1)) === true) {
+                        $i = $i + 1;
+                    } else {
+                        $bSkippingAfterSemi = false;
+                    }
+                }
+            }
+
+            $sResult = $sResult + "\n" + $sRepeatUnit($sIndentUnit, $iDepth);
 
         } else {
             $sResult = $sResult + "" + $sChar;

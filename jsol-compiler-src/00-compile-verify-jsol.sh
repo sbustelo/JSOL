@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# SELF-HOSTING FIXED-POINT VERIFICATION SUITE v0.2.94
+# SELF-HOSTING FIXED-POINT VERIFICATION SUITE v0.2.95
 # ============================================================================
 
 # Forzar el directorio de trabajo a jsol-compiler-src independientemente de donde se ejecute
@@ -54,20 +54,22 @@ node tools/bootstrap.js 2>&1 | tee -a "$LOG_FILE"
 
 log "  - Preparing temporary _seed_engine from existing distributions..."
 rm -rf _seed_engine
-mkdir -p _seed_engine/node _seed_engine/php
+mkdir -p _seed_engine/node _seed_engine/php _seed_engine/py
 
-if [ ! -d "../jsol-compiler-node" ] || [ ! -d "../jsol-compiler-php" ]; then
-    log "  ❌ FATAL: Base distributions (jsol-compiler-node/php) not found in parent directory. Cannot bootstrap."
+if [ ! -d "../jsol-compiler-node" ] || [ ! -d "../jsol-compiler-php" ] || [ ! -d "../jsol-compiler-py" ]; then
+    log "  ❌ FATAL: Base distributions (jsol-compiler-node/php/py) not found in parent directory. Cannot bootstrap."
     exit 1
 fi
 
 cp -r ../jsol-compiler-node/* _seed_engine/node/
 cp -r ../jsol-compiler-php/* _seed_engine/php/
+cp -r ../jsol-compiler-py/* _seed_engine/py/
 
 log "  - Syncing new SSOT to _seed_engine..."
-rm -rf _seed_engine/node/dist _seed_engine/php/dist
+rm -rf _seed_engine/node/dist _seed_engine/php/dist _seed_engine/py/dist
 cp -r dist _seed_engine/node/
 cp -r dist _seed_engine/php/
+cp -r dist _seed_engine/py/
 log ""
 
 # ============================================================================
@@ -81,12 +83,15 @@ log ""
 
 log "A.1 Creating temporary directories..."
 find . -name ".DS_Store" -type f -delete || true
-rm -rf _build_node_gen3 _build_php_gen3
-mkdir -p _build_node_gen3 _build_php_gen3
+rm -rf _build_node_gen3 _build_php_gen3 _build_py_gen3
+mkdir -p _build_node_gen3 _build_php_gen3 _build_py_gen3
 log ""
 
 log "A.2 Compiling with Node engine (seed)..."
 for f in *.jsol; do
+	case "$f" in
+        _*) continue ;;
+    esac
     log_only "  - Compiling: $f"
     node _seed_engine/node/index.js --source="$f" --out-dir="_build_node_gen3" >> "$LOG_FILE" 2>&1
 done
@@ -94,17 +99,31 @@ log ""
 
 log "A.3 Compiling with PHP engine (seed)..."
 for f in *.jsol; do
+	case "$f" in
+        _*) continue ;;
+    esac
     log_only "  - Compiling: $f"
     php _seed_engine/php/index.php --source="$f" --out-dir="_build_php_gen3" >> "$LOG_FILE" 2>&1
 done
 log ""
 
-log "A.4 Copying static orchestrator files..."
-cp index.js targets.json _build_node_gen3/
-cp index.php ui.php targets.json _build_php_gen3/
+log "A.4 Compiling with Python engine (seed)..."
+for f in *.jsol; do
+	case "$f" in
+        _*) continue ;;
+    esac
+    log_only "  - Compiling: $f"
+    python3 _seed_engine/py/index.py --source="$f" --out-dir="_build_py_gen3" >> "$LOG_FILE" 2>&1
+done
+log ""
+
+log "A.5 Copying static orchestrator files..."
+cp index.js index.py targets.json _build_node_gen3/
+cp index.php ui.php index.py targets.json _build_php_gen3/
+cp index.py targets.json _build_py_gen3/
 cp -r dist _build_node_gen3/
 cp -r dist _build_php_gen3/
-log ""
+cp -r dist _build_py_gen3/
 
 # ============================================================================
 # B. COMPILE TO GENERATION 4
@@ -116,12 +135,15 @@ log "================================================================"
 log ""
 
 log "B.1 Creating temporary directories for Generation 4..."
-rm -rf _build_node_gen4 _build_php_gen4
-mkdir -p _build_node_gen4 _build_php_gen4
+rm -rf _build_node_gen4 _build_php_gen4 _build_py_gen4
+mkdir -p _build_node_gen4 _build_php_gen4 _build_py_gen4
 log ""
 
 log "B.2 Compiling with Generation 3 Node orchestrator..."
 for f in *.jsol; do
+	case "$f" in
+        _*) continue ;;
+    esac
     log_only "  - Compiling: $f"
     node _build_node_gen3/index.js --source="$f" --out-dir="_build_node_gen4" >> "$LOG_FILE" 2>&1
 done
@@ -129,16 +151,31 @@ log ""
 
 log "B.3 Compiling with Generation 3 PHP orchestrator..."
 for f in *.jsol; do
+	case "$f" in
+        _*) continue ;;
+    esac
     log_only "  - Compiling: $f"
     php _build_php_gen3/index.php --source="$f" --out-dir="_build_php_gen4" >> "$LOG_FILE" 2>&1
 done
 log ""
 
-log "B.4 Copying static orchestrator files for Generation 4..."
-cp index.js targets.json _build_node_gen4/
-cp index.php ui.php targets.json _build_php_gen4/
+log "B.4 Compiling with Generation 3 Python orchestrator..."
+for f in *.jsol; do
+	case "$f" in
+        _*) continue ;;
+    esac
+    log_only "  - Compiling: $f"
+    python3 _build_py_gen3/index.py --source="$f" --out-dir="_build_py_gen4" >> "$LOG_FILE" 2>&1
+done
+log ""
+
+log "B.5 Copying static orchestrator files for Generation 4..."
+cp index.js index.py targets.json _build_node_gen4/
+cp index.php ui.php index.py targets.json _build_php_gen4/
+cp index.py targets.json _build_py_gen4/
 cp -r dist _build_node_gen4/
 cp -r dist _build_php_gen4/
+cp -r dist _build_py_gen4/
 log ""
 
 # ============================================================================
@@ -163,7 +200,7 @@ check_diff() {
     # Filter out extensions to evaluate only logical integrity if needed.
     # Ignoring .js/.php/.ts for isomorphic comparison only.
     if [[ "$name" == *"Isomorphic"* ]]; then
-        local diff_filtered=$(echo "$diff_raw" | grep -v "\.js$" | grep -v "\.php$" | grep -v "\.ts$" 2>&1)
+		local diff_filtered=$(echo "$diff_raw" | grep -v "\.js$" | grep -v "\.php$" | grep -v "\.ts$" | grep -v "\.py$" 2>&1)
     else
         local diff_filtered="$diff_raw"
     fi
@@ -190,6 +227,7 @@ check_diff() {
 
 check_diff "Temporal fixed-point Node (Gen 3 vs Gen 4)" "_build_node_gen3" "_build_node_gen4"
 check_diff "Temporal fixed-point PHP (Gen 3 vs Gen 4)" "_build_php_gen3" "_build_php_gen4"
+check_diff "Temporal fixed-point Python (Gen 3 vs Gen 4)" "_build_py_gen3" "_build_py_gen4"
 check_diff "Isomorphic fixed-point (Node Gen 4 vs PHP Gen 4)" "_build_node_gen4" "_build_php_gen4"
 
 log "================================================================"
@@ -230,7 +268,8 @@ log ""
 # ============================================================================
 
 log "================================================================"
-log "✅ SUCCESS: All verification steps passed. No issues found that prevent considering this version stable."
+log "✅⚡ 𝐒𝐔𝐂𝐂𝐄𝐒𝐒: 𝐍𝐈𝐇𝐈𝐋 𝐎𝐁𝐒𝐓𝐀𝐓 𝐐𝐔𝐎𝐌𝐈𝐍𝐔𝐒 𝐆𝐈𝐓𝐇𝐔𝐁𝐈𝐓𝐔𝐑! 🏛️🚀🎉"
+log "All verification steps passed. No issues found that prevent considering this version stable."
 log "Senior developer criteria is required to confirm full completeness and approve publication under your responsibility."
 log ""
 log "****"
@@ -248,8 +287,8 @@ echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     log "  - Deploying isolated distributions to root directories..."
 
-    rm -rf ../jsol-compiler-node ../jsol-compiler-php ../jsol-compiler-ts
-    mkdir -p ../jsol-compiler-node ../jsol-compiler-php ../jsol-compiler-ts
+    rm -rf ../jsol-compiler-node ../jsol-compiler-php ../jsol-compiler-ts ../jsol-compiler-py
+    mkdir -p ../jsol-compiler-node ../jsol-compiler-php ../jsol-compiler-ts ../jsol-compiler-py
 
     cp _build_node_gen4/*.js ../jsol-compiler-node/
     cp _build_node_gen4/index.js _build_node_gen4/targets.json ../jsol-compiler-node/
@@ -263,13 +302,18 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     cp _build_node_gen4/targets.json ../jsol-compiler-ts/
     cp -r _build_node_gen4/dist ../jsol-compiler-ts/
 
+    cp _build_py_gen4/*.py ../jsol-compiler-py/
+    cp _build_py_gen4/index.py ../jsol-compiler-py/
+    cp _build_py_gen4/targets.json ../jsol-compiler-py/
+    cp -r _build_py_gen4/dist ../jsol-compiler-py/
+
     log "  ✅ PASSED: Deployment successful."
 else
     log "  - Deployment skipped by user. Distributions remain unchanged."
 fi
 
 # Cleanup
-rm -rf _seed_engine _build_node_gen3 _build_php_gen3 _build_node_gen4 _build_php_gen4
+rm -rf _seed_engine _build_node_gen3 _build_php_gen3 _build_node_gen4 _build_php_gen4 _build_py_gen3 _build_py_gen4
 
 log ""
 log "Full log saved to: $LOG_FILE"

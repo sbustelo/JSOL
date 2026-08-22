@@ -6,7 +6,8 @@ const $mMaskSourceCode = function($sSourceCode) {
     const $iLen = Str.len($sSourceCode);
     let $i = 0;
 
-    while ($i < $iLen) {
+    
+	while ($i < $iLen) {
         const $sC = Str.sub($sSourceCode, $i, 1);
 
         if ($sC === "\"" || $sC === "'" || $sC === "`") {
@@ -26,7 +27,7 @@ const $mMaskSourceCode = function($sSourceCode) {
                 }
             }
             const $sValue = Str.sub($sSourceCode, $iStart, $i - $iStart);
-            const $sKey = "__JSOL_STR_" + "" + $iTokenIndex + "" + "__";
+            const $sKey = Str.concat("__JSOL_STR_", $iTokenIndex, "__");
             Arr.push($aTokens, Map.create("key", $sKey, "value", $sValue));
             $sResult = $sResult + "" + $sKey;
             $iTokenIndex = $iTokenIndex + 1;
@@ -42,7 +43,7 @@ const $mMaskSourceCode = function($sSourceCode) {
                 }
             }
             const $sValue = Str.sub($sSourceCode, $iStart, $i - $iStart);
-            const $sKey = "__JSOL_COM_" + "" + $iTokenIndex + "" + "__";
+            const $sKey = Str.concat("__JSOL_COM_", $iTokenIndex, "__");
             Arr.push($aTokens, Map.create("key", $sKey, "value", $sValue));
             $sResult = $sResult + "" + $sKey;
             $iTokenIndex = $iTokenIndex + 1;
@@ -60,7 +61,7 @@ const $mMaskSourceCode = function($sSourceCode) {
                 }
             }
             const $sValue = Str.sub($sSourceCode, $iStart, $i - $iStart);
-            const $sKey = "__JSOL_COM_" + "" + $iTokenIndex + "" + "__";
+            const $sKey = Str.concat("__JSOL_COM_", $iTokenIndex, "__");
             Arr.push($aTokens, Map.create("key", $sKey, "value", $sValue));
             $sResult = $sResult + "" + $sKey;
             $iTokenIndex = $iTokenIndex + 1;

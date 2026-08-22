@@ -1,5 +1,6 @@
 [
-  { "id": "Str.sub", "type": "call", "template": "mb_substr({0}, {1}, {2}, \"UTF-8\")" },
+{ "id": "Str.concat", "type": "call", "template": "implode(\"\", [{*}])" },
+{ "id": "Str.sub", "type": "call", "template": "mb_substr({0}, {1}, {2}, \"UTF-8\")" },
   { "id": "Str.len", "type": "call", "template": "mb_strlen({0}, \"UTF-8\")" },
   { "id": "Str.indexOf", "type": "call", "template": "JSOL::strIndexOf({0}, {1})" },
   { "id": "Str.replace", "type": "call", "template": "str_replace({1}, {2}, {0})" },

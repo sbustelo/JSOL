@@ -1,7 +1,7 @@
 <?php
 /**
  * JSOL CLI Host Runner (PHP) - Isolated Files Architecture
- * v0.2.94
+ * v0.2.95
  */
 
 declare(strict_types=1);
@@ -21,8 +21,12 @@ $parts = [
     'cli-parser.php',
     'config-parser.php',
     'regex.php',
+    'indenter.php',
     'js-compiler.php',
-    'php-compiler.php',
+	'php-compiler.php',
+    'python-compiler.php',
+    'python-ternary.php',
+    'python-brace-strip.php',
     'engine.php'
 ];
 foreach ($parts as $part) {
@@ -79,7 +83,7 @@ if (!is_dir($outDir)) {
 
 $baseName = preg_replace('/\.jsol(\.js)?$/', '', basename($sourcePath));
 
-$targetsArg = ['js', 'php', 'ts'];
+$targetsArg = ['js', 'php', 'ts', 'py'];
 if (!empty($cliOptions['targets']) && trim($cliOptions['targets']) !== '') {
     $targetsArg = array_map('trim', array_map('strtolower', explode(',', $cliOptions['targets'])));
 }
@@ -103,4 +107,11 @@ if (in_array('ts', $targetsArg, true)) {
     file_put_contents($targetTsFile, $result['ts']);
     echo " -> TS:  {$targetTsFile}\n";
 }
+
+if (in_array('py', $targetsArg, true)) {
+    $targetPyFile = $outDir . '/' . $baseName . '.py';
+    file_put_contents($targetPyFile, $result['py']);
+    echo " -> PY:  {$targetPyFile}\n";
+}
+
 ?>

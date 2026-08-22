@@ -1,5 +1,14 @@
 # JSOL Version History
 
+## v0.2.95 (2026-08-21)
+Official Python Target and 4-Way Isomorphic Parity.
+
+* Python Target: Successfully added native Python 3 compilation ('jsol-compiler-py'). Expanded the AST-free architecture to handle indentation-based scoping, dynamic 'for'-to-'while' loop unrolling, and strict identifier sanitization, proving that JSOL can transpile to non-C-like syntax families.
+* 4-Way Isomorphic Parity: The 'contract-runner.js' QA suite now enforces mathematical and logical fixed-point parity across four simultaneous execution environments: Node.js (JS), PHP, TypeScript, and Python. All 66 mathematical contracts pass seamlessly.
+* Control Flow Normalization: Upgraded 'python-compiler.jsol' to safely map C-like structures ('switch'/'case') to Python 'elif' chains (maintaining compatibility with Python < 3.10), translate logical operators, and safely sanitize JSOL's '$' sigil to '_' for Python variables.
+* Structural Indentation Engine: Engineered 'python-brace-strip.jsol' to consume the generic C-like layout and output mathematically perfect, brace-less Python indentation line-by-line without relying on Abstract Syntax Trees.
+* Native Polyfill Orchestration: Python's runtime fallback ('jsol_core.py'), which wraps the native 're' module to guarantee regex parity, is now bundled automatically into the Single Source of Truth (SSOT) via the Bootstrapper.
+
 ## v0.2.94 (2026-08-20)
 Modular Architecture, Single Source of Truth (SSOT) implementation, and TypeScript Target compilation.
 

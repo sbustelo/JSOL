@@ -24,46 +24,48 @@ declare var Rgx: any;
 // to $sUnmaskSourceCode.
 
 const $sRepeatUnit = function($sUnit: any, $iCount: any): string {
-    let $sOut: string = "";
+  let $sOut: string = "";
     for (let $i = 0; $i < $iCount; $i = $i + 1) {
-        $sOut = $sOut + "" + $sUnit;
-    }
-    return $sOut;
+    $sOut = $sOut + "" + $sUnit;
+  }
+  return $sOut;
 };
-
 const $bIsWhitespaceChar = function($sCh: any): boolean {
-    if ($sCh === " ") { return true; }
-    if ($sCh === "\t") { return true; }
-    if ($sCh === "\n") { return true; }
-    if ($sCh === "\r") { return true; }
-    return false;
+  if ($sCh === " ") {
+    return true;
+  }
+  if ($sCh === "\t") {
+    return true;
+  }
+  if ($sCh === "\n") {
+    return true;
+  }
+  if ($sCh === "\r") {
+    return true;
+  }
+  return false;
 };
-
 // Trims only trailing whitespace from an accumulated output buffer, so closing
 // braces don't inherit blank lines or dangling spaces left over from the source's
 // own (irrelevant, about to be discarded) original formatting.
 const $sRTrimBuffer = function($sBuf: any): string {
-    
-    let $iEnd: number = $sBuf.length;
+  let $iEnd: number = $sBuf.length;
     while ($iEnd > 0 && $bIsWhitespaceChar($sBuf.substring( $iEnd - 1, ( $iEnd - 1) + ( 1))) === true) {
-        $iEnd = $iEnd - 1;
-    }
-    return $sBuf.substring( 0, ( 0) + ( $iEnd));
+    $iEnd = $iEnd - 1;
+  }
+  return $sBuf.substring( 0, ( 0) + ( $iEnd));
 };
-
 const $sIndentCode = function($sMaskedCode: any, $sIndentUnit: any): string {
-    
-
-    let $sResult: string = "";
+  let $sResult: string = "";
     let $iDepth: number = 0;
     let $i: number = 0;
     const $iLen: number = $sMaskedCode.length;
 
     while ($i < $iLen) {
-        const $sChar: string = $sMaskedCode.substring( $i, ( $i) + ( 1));
+    const $sChar: string = $sMaskedCode.substring( $i, ( $i) + ( 1));
 
         if ($sChar === "{") {
-            $iDepth = $iDepth + 1;
+      $iDepth = $iDepth + 1;
             $sResult = $sResult + "" + "{" + "\n" + $sRepeatUnit($sIndentUnit, $iDepth);
             $i = $i + 1;
 
@@ -72,32 +74,54 @@ const $sIndentCode = function($sMaskedCode: any, $sIndentUnit: any): string {
             // only produce blank lines.
             let $bSkipping: boolean = true;
             while ($i < $iLen && $bSkipping === true) {
-                if ($bIsWhitespaceChar($sMaskedCode.substring( $i, ( $i) + ( 1))) === true) {
-                    $i = $i + 1;
-                } else {
-                    $bSkipping = false;
-                }
-            }
-
-        } else if ($sChar === "}") {
-            $iDepth = $iDepth - 1;
-            $sResult = $sRTrimBuffer($sResult) + "\n" + $sRepeatUnit($sIndentUnit, $iDepth) + "" + "}" + "\n" + $sRepeatUnit($sIndentUnit, $iDepth);
+        if ($bIsWhitespaceChar($sMaskedCode.substring( $i, ( $i) + ( 1))) === true) {
+          $i = $i + 1;
+        }
+        else {
+          $bSkipping = false;
+        }
+      }
+    }
+    else if ($sChar === "}") {
+      $iDepth = $iDepth - 1;
+            $sResult = $sRTrimBuffer($sResult) + "\n" + $sRepeatUnit($sIndentUnit, $iDepth) + "" + "}";
             $i = $i + 1;
 
+            // Swallow whitespace right after "}" before deciding what comes next —
+            // same reasoning as after "{": the original spacing is irrelevant, we
+            // only care about the next real character.
             let $bSkippingAfter: boolean = true;
             while ($i < $iLen && $bSkippingAfter === true) {
-                if ($bIsWhitespaceChar($sMaskedCode.substring( $i, ( $i) + ( 1))) === true) {
-                    $i = $i + 1;
-                } else {
-                    $bSkippingAfter = false;
-                }
-            }
-
-        } else {
-            $sResult = $sResult + "" + $sChar;
-            $i = $i + 1;
+        if ($bIsWhitespaceChar($sMaskedCode.substring( $i, ( $i) + ( 1))) === true) {
+          $i = $i + 1;
         }
-    }
+        else {
+          $bSkippingAfter = false;
+        }
+      }
+      // A ";" immediately following a block close (e.g. "const $mFn = function(){...};")
+            // is not a new statement, it's the terminator of THIS one. Glue it onto the
+            // same line as "}" instead of stranding it alone on the next line.
+            if ($i < $iLen && $sMaskedCode.substring( $i, ( $i) + ( 1)) === ";") {
+        $sResult = $sResult + "" + ";";
+                $i = $i + 1;
 
-    return $sResult;
+                let $bSkippingAfterSemi: boolean = true;
+                while ($i < $iLen && $bSkippingAfterSemi === true) {
+          if ($bIsWhitespaceChar($sMaskedCode.substring( $i, ( $i) + ( 1))) === true) {
+            $i = $i + 1;
+          }
+          else {
+            $bSkippingAfterSemi = false;
+          }
+        }
+      }
+      $sResult = $sResult + "\n" + $sRepeatUnit($sIndentUnit, $iDepth);
+    }
+    else {
+      $sResult = $sResult + "" + $sChar;
+            $i = $i + 1;
+    }
+  }
+  return $sResult;
 };

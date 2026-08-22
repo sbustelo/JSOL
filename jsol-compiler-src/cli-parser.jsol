@@ -1,28 +1,54 @@
-// @JSOL v0.2.94 - CLI Arguments Parser
+// @JSOL v0.2.95 - CLI Arguments Parser
 const $mParseRawCliArgs = function($aRawArgs) {
-    const $mOptions = Map.create("source", "", "outDir", "", "target", "", "jsTarget", "", "jsPrefix", "", "jsSuffix", "", "phpTarget", "", "phpPrefix", "", "phpSuffix", "", "tsTarget", "", "tsPrefix", "", "tsSuffix", "", "targets", "");
+    const $mOptions = Map.create(
+        "source", "",
+        "outDir", "",
+        "target", "",
+        "jsTarget", "",
+        "jsPrefix", "",
+        "jsSuffix", "",
+        "phpTarget", "",
+        "phpPrefix", "",
+        "phpSuffix", "",
+        "tsTarget", "",
+        "tsPrefix", "",
+        "tsSuffix", "",
+        "pyTarget", "",
+        "pyPrefix", "",
+        "pySuffix", "",
+        "targets", ""
+    );
+
     const $iCount = Arr.count($aRawArgs);
     for (let $i = 0; $i < $iCount; $i = $i + 1) {
         const $sArg = $aRawArgs[$i];
-        let $bIsFlag = false;
-        JSOL.JS(() => { $bIsFlag = $sArg.indexOf("--") === 0; });
-        JSOL.PHP(() => { $bIsFlag = strpos($sArg, "--") === 0; });
+        const $bIsFlag = (Str.indexOf($sArg, "--") === 0);
+
         if ($bIsFlag === true) {
-            let $sKey = ""; let $sVal = "";
-            JSOL.JS(() => {
-                const $sClean = $sArg.substring(2);
-                const $iEqIndex = $sClean.indexOf("=");
-                if ($iEqIndex !== -1) { $sKey = $sClean.substring(0, $iEqIndex); $sVal = $sClean.substring($iEqIndex + 1); } else { $sKey = $sClean; $sVal = "true"; }
-            });
-            JSOL.PHP(() => {
-                $sClean = substr($sArg, 2);
-                $iEqIndex = strpos($sClean, "=");
-                if ($iEqIndex !== false) { $sKey = substr($sClean, 0, $iEqIndex); $sVal = substr($sClean, $iEqIndex + 1); } else { $sKey = $sClean; $sVal = "true"; }
-            });
+            const $sClean = Str.sub($sArg, 2, Str.len($sArg) - 2);
+            const $iEqIndex = Str.indexOf($sClean, "=");
+            let $sKey = "";
+            let $sVal = "";
+
+            if ($iEqIndex !== -1) {
+                $sKey = Str.sub($sClean, 0, $iEqIndex);
+                $sVal = Str.sub($sClean, $iEqIndex + 1, Str.len($sClean) - ($iEqIndex + 1));
+            } else {
+                $sKey = $sClean;
+                $sVal = "true";
+            }
+
             if ($sKey === "source") { $mOptions["source"] = $sVal; }
             if ($sKey === "out-dir") { $mOptions["outDir"] = $sVal; }
             if ($sKey === "targets") { $mOptions["targets"] = $sVal; }
-            if ($sKey === "target") { $mOptions["target"] = $sVal; $mOptions["jsTarget"] = $sVal; $mOptions["phpTarget"] = $sVal; $mOptions["tsTarget"] = $sVal; }
+
+            if ($sKey === "target") {
+                $mOptions["target"] = $sVal;
+                $mOptions["jsTarget"] = $sVal;
+                $mOptions["phpTarget"] = $sVal;
+                $mOptions["tsTarget"] = $sVal;
+                $mOptions["pyTarget"] = $sVal;
+            }
             if ($sKey === "js-target") { $mOptions["jsTarget"] = $sVal; }
             if ($sKey === "js-prefix") { $mOptions["jsPrefix"] = $sVal; }
             if ($sKey === "js-suffix") { $mOptions["jsSuffix"] = $sVal; }
@@ -32,6 +58,9 @@ const $mParseRawCliArgs = function($aRawArgs) {
             if ($sKey === "ts-target") { $mOptions["tsTarget"] = $sVal; }
             if ($sKey === "ts-prefix") { $mOptions["tsPrefix"] = $sVal; }
             if ($sKey === "ts-suffix") { $mOptions["tsSuffix"] = $sVal; }
+            if ($sKey === "py-target") { $mOptions["pyTarget"] = $sVal; }
+            if ($sKey === "py-prefix") { $mOptions["pyPrefix"] = $sVal; }
+            if ($sKey === "py-suffix") { $mOptions["pySuffix"] = $sVal; }
         }
     }
     return $mOptions;

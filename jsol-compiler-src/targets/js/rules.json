@@ -1,4 +1,5 @@
 [
+  { "id": "Str.concat", "type": "call", "template": "[{*}].join(\"\")" },
   { "id": "Str.sub", "type": "call", "template": "{0}.substring({1}, ({1}) + ({2}))" },
   { "id": "Str.len", "type": "call", "template": "{0}.length" },
   { "id": "Str.indexOf", "type": "call", "template": "{0}.indexOf({1})" },

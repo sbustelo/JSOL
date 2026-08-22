@@ -23,9 +23,9 @@ This is a deliberate design trade-off: a conventional recursive-descent parser w
 
 | Language | Basic Transforms | Type System | Closure Support | Memory Model | Feasibility |
 | --- | --- | --- | --- | --- | --- |
-| **JavaScript** | Native | Dynamic | Native | GC  | 🟢 Shipping |
-| **PHP** | Native | Dynamic | Native | GC  | 🟢 Shipping |
-| **Python** | Medium (Indentation tracking) | Dynamic | Native | GC  | 🟢 High |
+| **JavaScript** | Native | Dynamic | Native | GC  | 🟢 Shipping since 0.1 |
+| **PHP** | Native | Dynamic | Native | GC  | 🟢 Shipping since 0.1 |
+| **Python** | Medium (Indentation tracking) | Dynamic | Native | GC  | 🟢 Shipping since 0.2.95 |
 | **C#** | Easy | Static (`dynamic` escape hatch) | Native | GC  | 🟡 Medium-High |
 | **Go** | Easy syntax | Static (Requires runtime helpers) | Native | GC  | 🟡 Medium |
 | **Java** | Easy | Static (Wrapper classes) | Lambdas / Interfaces | GC  | 🟡 Medium |
@@ -34,7 +34,7 @@ This is a deliberate design trade-off: a conventional recursive-descent parser w
 
 ## Technical Feasibility Breakdown
 
-### 1\. High Feasibility: Python
+### 1\. High Feasibility: Python (✅DONE in 0.2.95)
 
 Python shares dynamic semantics with JS and PHP, but its reliance on indentation blocks (the off-side rule) requires a stack-aware block-depth tracker alongside standard regex rules. It remains highly feasible without an AST, provided the pipeline tracks brace nesting depth to emit proper whitespace. This tracking operates on lexer-masked source, where string and comment contents are already tokenized, so braces inside string literals do not affect depth counting.
 
@@ -76,16 +76,24 @@ For CS educators and students, building a JSOL-C backend offers a well-bounded, 
 
 ## Curated Target Reference Guide
 
+### 📋 Not yet supported:
+
 | Language | Paradigm | Key Structural Differences | JSOL Difficulty (1–5) | Key Challenge |
 | --- | --- | --- | --- | --- |
-| **TypeScript** | Static / Structural | Identical to JS with type signatures | **1 (Near-native)** | Strip or emit type annotations. |
-| **Python** | Dynamic | Indentation blocks, `and/or/not` | **3 (Medium effort)** | Converting `{}` to indentation depth via block tracking. |
 | **Go** | Static / Imperative | No classes, strict type assertions | **3 (Medium effort)** | Requires runtime helpers for dynamic operators. |
 | **C#** | Static / OOP | Properties, LINQ, `dynamic` keyword | **3 (Medium effort)** | Mapping dynamic logic via `dynamic` or `System.Object`. |
 | **Java** | Static / Strict OOP | Class-enforced, no free functions | **3 (Medium effort)** | Wrapping top-level logic in container classes. |
 | **C** | Static / Procedural | No GC, no closures, manual memory | **4 (High effort)** | Requires context structs for closures and explicit memory primitives. |
 | **Rust** | Static / Ownership | Lifetimes, strict borrow checker | **5 (Paradigm Break)** | Unfeasible via regex; reachable only via C FFI. |
 | **WebAssembly** | Bytecode Target | Stack-based virtual machine | **5** | Requires C backend first; via C it drops to 1. |
+
+### ✅ Already done:
+
+| Language | Paradigm | Key Structural Differences | JSOL Difficulty (1–5) | Key Challenge |
+| --- | --- | --- | --- | --- |
+| **TypeScript** ✅DONE in 0.2.94 | Static / Structural | Identical to JS with type signatures | **1 (Near-native)** | Strip or emit type annotations. |
+| **Python** ✅DONE in 0.2.95 | Dynamic | Indentation blocks, `and/or/not` | **3 (Medium effort)** | Converting `{}` to indentation depth via block tracking. |
+
 
 ## An Invitation to Extend
 
@@ -111,9 +119,9 @@ This reference list presents potential transpilation targets beyond the core set
 | --- | --- | --- | --- | --- | --- |
 | **JavaScript** | 5   | 5   | Wrapper mapping (`Str.*`, `Arr.*`), isolation block processing, string concatenation rules. | **0** (Shipping) | —   |
 | **PHP** | 5   | 3   | `$` variables, `use()` for closures, `array_*` functions instead of method calls. | **0** (Shipping) | —   |
-| **TypeScript** | 5   | 5   | Superset of JS with static types, interfaces, generics. Compiles natively to JS. | **1** | —   |
+| **TypeScript** | 5   | 5   | Superset of JS with static types, interfaces, generics. Compiles natively to JS. | **1** (Shipping) | —   |
+| **Python** | 5   | 5   | Indentation-based, `and/or/not` operators, `None/True/False` casing. | **3** (Shipping) | —   |
 | **Google Apps Script** | 3   | 3   | JS dialect with Google Workspace APIs integrated; sync-only execution. | **1** | —   |
-| **Python** | 5   | 5   | Indentation-based, `and/or/not` operators, `None/True/False` casing. | **3** | —   |
 | **Go** | 4   | 4   | No classes, explicit error returns, `func` keyword. Requires dynamic operator helpers. | **3** | **2** (via cgo) |
 | **C#** | 4   | 4   | Properties, LINQ, `dynamic` / `System.Object` escape hatch, value vs. reference types. | **3** | —   |
 | **Java** | 5   | 3   | Everything in classes, strict static typing, `java.util.function` for closures. | **3** | —   |
@@ -146,8 +154,8 @@ This reference list presents potential transpilation targets beyond the core set
 -   **Presence and Trend scores** (1–5 scale) reflect qualitative market awareness, repository prevalence, and active adoption reports as of 2025–2026. They are intended for rough sorting, not precise measurement.
 -   **The JSOL Difficulty score reflects today's reality**: the effort required to build a target compiler from scratch with the current regex-based, AST-free pipeline, assuming no JSOL-C backend exists yet. Several languages in this table (Objective-C, C++, D, Nim, Zig, Vala, Haxe, Rust, Go, Swift, WebAssembly, LLVM IR) will see their effective difficulty drop dramatically if JSOL-C is implemented. See the next section for that analysis.
 -   **"C-like"** here means the language uses C-style curly braces (`{}`), semicolons, and similar control structures. Languages marked "Not C-like" use indentation, `end` keywords, or Lisp-style prefix notation. This distinction is about syntax only; it does not imply a language is more or less suitable as a JSOL target.
--   **JavaScript and PHP are scored 0 in the table because they are already shipping targets.** The effort to build them from scratch would be approximately 2 on this scale: JSOL→JS involves wrapper mapping (`Str.*`, `Arr.*`, `Map.*`, `Bit.*`, `Cast.*`), `JSOL.use`/`JSOL.closure` resolution, `JSOL.JS`/`JSOL.PHP` block processing, and `+""+` concatenation enforcement. The JSOL 0.2.90 JS compiler is 164 lines, plus the ~500-line custom Regex implementation shared across targets.
--   **TypeScript and Google Apps Script are scored 1**, as they are near-native dialects where JSOL transformations apply with minimal additional rewriting from the current JS implementation.
+-   **JavaScript and PHP are scored 0 in the table because they were already shipping targets since the first POC.** The effort to build them from scratch would be approximately 2 on this scale: JSOL→JS involves wrapper mapping (`Str.*`, `Arr.*`, `Map.*`, `Bit.*`, `Cast.*`), `JSOL.use`/`JSOL.closure` resolution, `JSOL.JS`/`JSOL.PHP` block processing, and `+""+` concatenation enforcement. The JSOL 0.2.90 JS compiler is 164 lines, plus the ~500-line custom Regex implementation shared across targets.
+-   **TypeScript (done in 0.2.94) and Google Apps Script are scored 1**, as they are near-native dialects where JSOL transformations apply with minimal additional rewriting from the current JS implementation.
 -   **WebAssembly is scored 5 in the curated table** because direct generation from JSOL is not feasible without first going through C. Its score drops to 1 in the appendix table once JSOL-C exists, via Emscripten/WASI.
 -   **Rust via JSOL-C Note**: Rust's difficulty drops to 2 via C FFI by generating C ABI bindings wrapped in `extern "C"` and `unsafe` blocks. It does not produce native, idiomatic Rust borrow-checked code.
 
@@ -157,4 +165,4 @@ _This document was produced with systematic AI co-piloting as described in [`AI_
 
 ---
 
-*JSOL v0.2.93 — 2026-08-17, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.95 — 2026-08-21, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

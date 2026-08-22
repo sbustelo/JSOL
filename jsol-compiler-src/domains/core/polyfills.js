@@ -21,7 +21,8 @@ const jsolGlobal = {
         sub: function(s, start, len) { return s.substring(start, start + len); },
         char: function(s, idx) { return s.charCodeAt(idx); },
         fromChar: function(c) { return String.fromCharCode(c); },
-        replace: function(s, search, replace) { return s.split(search).join(replace); }
+        replace: function(s, search, replace) { return s.split(search).join(replace); },
+        concat: function(...args) { return args.join(""); }
     },
     Arr: {
         count: function(a) { return a.length; },

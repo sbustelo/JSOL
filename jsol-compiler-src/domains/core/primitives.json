@@ -1,5 +1,5 @@
 [
-  "Str.sub", "Str.len", "Str.indexOf", "Str.replace", "Str.char", "Str.fromChar", "Str.upper", "Str.lower", "Str.trim", "Str.split",
+  "Str.concat", "Str.sub", "Str.len", "Str.indexOf", "Str.replace", "Str.char", "Str.fromChar", "Str.upper", "Str.lower", "Str.trim", "Str.split",
   "Arr.count", "Arr.push", "Arr.pop", "Arr.shift", "Arr.slice", "Arr.indexOf", "Arr.join",
   "Map.has", "Map.keys", "Map.create",
   "Cast.toInt", "Cast.toStr", "Cast.toFloat",

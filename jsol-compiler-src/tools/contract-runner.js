@@ -74,29 +74,31 @@ const params = selectedSig[2].split(',').map(s => s.trim()).filter(Boolean);
 // 3. Setup temporary execution sandbox
 const basename = path.basename(sourceFile, '.jsol.js');
 const rootDir = path.resolve(__dirname, '../..');
-const nodeCompilerPath = path.join(rootDir, 'jsol-compiler-node', 'index.js');
-const phpCompilerPath = path.join(rootDir, 'jsol-compiler-php', 'index.php');
+const nodeCompilerPath = path.join(__dirname, '..', 'index.js');
+const phpCompilerPath = path.join(__dirname, '..', 'index.php');
 
 if (!fs.existsSync(nodeCompilerPath) || !fs.existsSync(phpCompilerPath)) {
-    console.error("  ❌ [FATAL] Compiled distributions (jsol-compiler-node/php) not found.");
-    process.exit(1);
+	console.error("  ❌ [FATAL] Local compilers not found. Run bootstrapping first.");
+	process.exit(1);
 }
 
 // 3B. Load JSOL Node Standard Library into Global Scope
-const stdlibNodePath = path.join(rootDir, 'jsol-compiler-node', 'dist', 'stdlib', 'jsol-core.js');
+const stdlibNodePath = path.join(__dirname, '..', 'dist', 'stdlib', 'jsol-core.js');
 if (fs.existsSync(stdlibNodePath)) {
-    require(stdlibNodePath);
+	require(stdlibNodePath);
 } else {
-    console.error(`  ❌ [FATAL] JSOL Node Stdlib not found at: ${stdlibNodePath}`);
-    process.exit(1);
+	console.error(`  ❌ [FATAL] JSOL Node Stdlib not found at: ${stdlibNodePath}`);
+	process.exit(1);
 }
 
 const outBase = path.join(rootDir, '_test_bin', basename);
 if (fs.existsSync(outBase)) fs.rmSync(outBase, { recursive: true, force: true });
 const phpDir = path.join(outBase, 'php');
+const pyDir = path.join(outBase, 'py');
 fs.mkdirSync(path.join(outBase, 'js'), { recursive: true });
 fs.mkdirSync(phpDir, { recursive: true });
 fs.mkdirSync(path.join(outBase, 'ts'), { recursive: true });
+fs.mkdirSync(pyDir, { recursive: true });
 
 const jsExportSuffix = `; module.exports = { ${funcName}: ${funcName} };`;
 const tsExportSuffix = `; declare var module: any; module.exports = { ${funcName}: ${funcName} };`;
@@ -153,18 +155,38 @@ if (resTsc.error && resTsc.error.code === 'ETIMEDOUT') {
     console.error("  ❌ [TRANSPILE:TS] Timed out after 10s.");
     process.exit(1);
 }
+
 if (resTsc.status !== 0) {
     console.error("  ❌ [TRANSPILE:TS] Failed:\n", resTsc.stdout || resTsc.stderr);
     process.exit(1);
 }
 
-console.log(`  🛠️  BUILD:  .js 🟢 • .php 🐘 • .ts 🟦`);
+const resPY = spawnSync('node', [
+    nodeCompilerPath, `--source=${sourceFile}`, `--out-dir=${pyDir}`, 
+    `--targets=py`
+], spawnOpts);
+if (resPY.error && resPY.error.code === 'ETIMEDOUT') {
+    console.error("  ❌ [BUILD:PY] Timed out after 10s.");
+    process.exit(1);
+}
+if (resPY.status !== 0) {
+    console.error("  ❌ [BUILD:PY] Failed:\n", resPY.stderr || resPY.stdout);
+    process.exit(1);
+}
+
+const stdlibPyPath = path.join(rootDir, 'jsol-compiler-src', 'dist', 'stdlib', 'jsol_core.py');
+if (fs.existsSync(stdlibPyPath)) {
+    fs.copyFileSync(stdlibPyPath, path.join(pyDir, 'jsol_core.py'));
+}
+
+console.log(`  🛠️  BUILD:  .js 🟢 • .php 🐘 • .ts 🟦 • .py 🐍`);
+
 
 // 7. Execution and Assertion Loop
 const jsMod = require(path.join(outBase, 'js', `${basename}.js`));
 const tsMod = require(path.join(outBase, 'ts', `${basename}.js`));
 
-const stdlibPhpPath = path.join(rootDir, 'jsol-compiler-php', 'dist', 'stdlib', 'jsol-core.php').replace(/\\/g, '/');
+const stdlibPhpPath = path.join(__dirname, '..', 'dist', 'stdlib', 'jsol-core.php').replace(/\\/g, '/');
 
 for (let i = 0; i < contractData.cases.length; i++) {
     const c = contractData.cases[i];
@@ -210,19 +232,53 @@ for (let i = 0; i < contractData.cases.length; i++) {
     try { phpRes = JSON.parse(phpExe.stdout.trim()); } 
     catch(e) { console.error(`  ❌ [EXEC:PHP] Return parse error in case ${i}. Got:\n${phpExe.stdout}`); process.exit(1); }
 
-    // 7D: Assert Parity
+    
+	
+// 7D: Run Native Python
+    const pythonFuncName = funcName.replace(/\$/g, '_');
+    const pyDriver = `
+import sys, json, importlib.util
+spec = importlib.util.spec_from_file_location("${basename}", "${path.join(pyDir, `${basename}.py`).replace(/\\/g, '\\\\')}")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+fn = getattr(mod, "${pythonFuncName}")
+args = json.loads(sys.argv[1])
+result = fn(*args)
+print(json.dumps(result))
+`;
+    const pyRunnerPath = path.join(pyDir, 'runner.py');
+    fs.writeFileSync(pyRunnerPath, pyDriver);
+    
+    const pyExe = spawnSync('python3', [pyRunnerPath, JSON.stringify(argsArray)], { timeout: 5000, stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' });
+    if (pyExe.error && pyExe.error.code === 'ETIMEDOUT') {
+        console.error(`  ❌ [EXEC:PY] Timed out in case ${i}.`);
+        process.exit(1);
+    }
+    if (pyExe.status !== 0) { 
+        console.error(`  ❌ [EXEC:PY] Error in case ${i}:\n`, pyExe.stderr || pyExe.stdout); 
+        process.exit(1); 
+    }
+    
+    let pyRes;
+    try { pyRes = JSON.parse(pyExe.stdout.trim()); } 
+    catch(e) { console.error(`  ❌ [EXEC:PY] Return parse error in case ${i}. Got:\n${pyExe.stdout}`); process.exit(1); }
+
+    // 7E: Assert Parity
     const jsStr = JSON.stringify(jsRes);
     const tsStr = JSON.stringify(tsRes);
     const phpStr = JSON.stringify(phpRes);
+    const pyStr = JSON.stringify(pyRes);
 
-    if (jsStr !== phpStr || jsStr !== tsStr) {
+    if (jsStr !== phpStr || jsStr !== tsStr || jsStr !== pyStr) {
         console.error(`\n  ❌ [PARITY FAILURE] Case ${i}`);
         console.error(`       Input:    ${JSON.stringify(inData)}`);
         console.error(`       JS says:  ${jsStr}`);
         console.error(`       PHP says: ${phpStr}`);
-        console.error(`       TS says:  ${tsStr}\n`);
+        console.error(`       TS says:  ${tsStr}`);
+        console.error(`       PY says:  ${pyStr}\n`);
         process.exit(1);
     }
+
 
     if (expected !== undefined) {
         const expStr = JSON.stringify(expected);
@@ -236,6 +292,6 @@ for (let i = 0; i < contractData.cases.length; i++) {
     }
 }
 
-console.log(`  ⚡ EXEC:   .js 🟢 • .php 🐘 • .ts 🟦 (${contractData.cases.length} case(s) verified)`);
+console.log(`  ⚡ EXEC:   .js 🟢 • .php 🐘 • .ts 🟦 • .py 🐍 (${contractData.cases.length} case(s) verified)`);
 console.log(`  🎉 RESULT: 100% ISOMORPHIC PARITY PASSED`);
 process.exit(0);

@@ -35,8 +35,9 @@ const primitivesList = JSON.parse(fs.readFileSync(primitivesPath, 'utf8'));
 const jsRulesPath = path.join(targetsDir, 'js', 'rules.json');
 const phpRulesPath = path.join(targetsDir, 'php', 'rules.json');
 const tsRulesPath = path.join(targetsDir, 'ts', 'rules.json');
+const pyRulesPath = path.join(targetsDir, 'python', 'rules.json');
 
-if (!fs.existsSync(jsRulesPath) || !fs.existsSync(phpRulesPath) || !fs.existsSync(tsRulesPath)) {
+if (!fs.existsSync(jsRulesPath) || !fs.existsSync(phpRulesPath) || !fs.existsSync(tsRulesPath) || !fs.existsSync(pyRulesPath)) {
     console.error("FATAL: Target rules files missing.");
     process.exit(1);
 }
@@ -44,6 +45,7 @@ if (!fs.existsSync(jsRulesPath) || !fs.existsSync(phpRulesPath) || !fs.existsSyn
 const jsRules = JSON.parse(fs.readFileSync(jsRulesPath, 'utf8'));
 const phpRules = JSON.parse(fs.readFileSync(phpRulesPath, 'utf8'));
 const tsRules = JSON.parse(fs.readFileSync(tsRulesPath, 'utf8'));
+const pythonRules = JSON.parse(fs.readFileSync(pyRulesPath, 'utf8'));
 
 // 4. CROSS-VALIDATION GATE
 let validationFailed = false;
@@ -52,10 +54,12 @@ primitivesList.forEach(prim => {
     const inJs = jsRules.some(r => r.id === prim);
     const inPhp = phpRules.some(r => r.id === prim);
     const inTs = tsRules.some(r => r.id === prim);
+    const inPy = pythonRules.some(r => r.id === prim);
 
     if (!inJs) { console.error(`[CROSS-VALIDATION ERROR] Primitive '${prim}' lacks a translation rule in JS target.`); validationFailed = true; }
     if (!inPhp) { console.error(`[CROSS-VALIDATION ERROR] Primitive '${prim}' lacks a translation rule in PHP target.`); validationFailed = true; }
     if (!inTs) { console.error(`[CROSS-VALIDATION ERROR] Primitive '${prim}' lacks a translation rule in TS target.`); validationFailed = true; }
+    if (!inPy) { console.error(`[CROSS-VALIDATION ERROR] Primitive '${prim}' lacks a translation rule in Python target.`); validationFailed = true; }
 });
 
 if (validationFailed) {
@@ -67,13 +71,14 @@ console.log("[JSOL Bootstrapper] Cross-Validation Passed: 100% parity across tar
 
 // 5. Assemble and export SSOT
 const ssoT = {
-    version: "0.2.94",
+    version: "0.2.95",
     types: typesMap,
     primitives: primitivesList,
     targets: {
         js: jsRules,
         php: phpRules,
-        ts: tsRules
+        ts: tsRules,
+        python: pythonRules
     }
 };
 
@@ -84,11 +89,14 @@ console.log(`[JSOL Bootstrapper] Compiled SSOT written to ${ssotDestPath}`);
 // 6. Copy Polyfills for Native Interpreter
 const jsPolyfillSrc = path.join(domainsDir, 'core', 'polyfills.js');
 const phpPolyfillSrc = path.join(domainsDir, 'core', 'polyfills.php');
+const pyPolyfillSrc = path.join(domainsDir, 'core', 'polyfills.py');
 const jsPolyfillDest = path.join(stdlibDistDir, 'jsol-core.js');
 const phpPolyfillDest = path.join(stdlibDistDir, 'jsol-core.php');
+const pyPolyfillDest = path.join(stdlibDistDir, 'jsol_core.py');
 
 fs.copyFileSync(jsPolyfillSrc, jsPolyfillDest);
 fs.copyFileSync(phpPolyfillSrc, phpPolyfillDest);
+if (fs.existsSync(pyPolyfillSrc)) {
+    fs.copyFileSync(pyPolyfillSrc, pyPolyfillDest);
+}
 console.log(`[JSOL Bootstrapper] Native Polyfills copied to dist/stdlib/`);
-
-console.log("[JSOL Bootstrapper] SUCCESS. Hito 4 config built.");

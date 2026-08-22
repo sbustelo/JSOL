@@ -1,6 +1,6 @@
 /**
  * JSOL CLI Host Runner (Node.js) - Isolated Files Architecture via VM Scope
- * v0.2.94
+ * v0.2.95
  */
 
 // Handle dynamic requires conditionally to prevent throwing in browser environments
@@ -23,14 +23,18 @@ if (typeof process !== 'undefined' && typeof require !== 'undefined') {
 // 2. Load and execute Compiled JSOL Engine Parts
 if (vm && fs && path) {
     const context = vm.createContext(global);
-    const parts = [
+	const parts = [
         'lexer.js',
         'linter.js',
         'cli-parser.js',
         'config-parser.js',
         'regex.js',
+        'indenter.js',
         'js-compiler.js',
-        'php-compiler.js',
+		'php-compiler.js',
+        'python-compiler.js',
+        'python-ternary.js',
+        'python-brace-strip.js',
         'engine.js'
     ];
 
@@ -104,7 +108,7 @@ if (vm && fs && path) {
 
 const baseName = path.basename(sourcePath).replace(/\.jsol(\.js)?$/, '');
 
-        let targetsArg = ['js', 'php', 'ts'];
+		let targetsArg = ['js', 'php', 'ts', 'py'];
         if (cliOptions.targets && cliOptions.targets.length > 0) {
             targetsArg = cliOptions.targets.split(',').map(t => t.trim().toLowerCase());
         }
@@ -123,10 +127,16 @@ const baseName = path.basename(sourcePath).replace(/\.jsol(\.js)?$/, '');
             console.log(` -> PHP: ${targetPhpFile}`);
         }
 
-        if (targetsArg.includes('ts')) {
+		if (targetsArg.includes('ts')) {
             const targetTsFile = path.join(outDir, `${baseName}.ts`);
             fs.writeFileSync(targetTsFile, result.ts, 'utf8');
             console.log(` -> TS:  ${targetTsFile}`);
+        }
+
+        if (targetsArg.includes('py')) {
+            const targetPyFile = path.join(outDir, `${baseName}.py`);
+            fs.writeFileSync(targetPyFile, result.py, 'utf8');
+            console.log(` -> PY:  ${targetPyFile}`);
         }
     }
 } else if (typeof window !== 'undefined') {

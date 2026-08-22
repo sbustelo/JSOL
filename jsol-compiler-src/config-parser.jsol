@@ -1,11 +1,12 @@
-// @JSOL v0.2.94 - Targets Configuration Normalizer
+// @JSOL v0.2.95 - Targets Configuration Normalizer
 const $mNormalizeTargetsConfig = function($mRawConfig) {
     const $mJsConfig = Map.create("default", "", "targets", Map.create());
     const $mPhpConfig = Map.create("default", "", "targets", Map.create());
     const $mTsConfig = Map.create("default", "", "targets", Map.create());
+    const $mPyConfig = Map.create("default", "", "targets", Map.create());
     
     if ($mRawConfig === null) {
-        return Map.create("js", $mJsConfig, "php", $mPhpConfig, "ts", $mTsConfig);
+        return Map.create("js", $mJsConfig, "php", $mPhpConfig, "ts", $mTsConfig, "py", $mPyConfig);
     }
     
     if (Map.has($mRawConfig, "js")) {
@@ -20,6 +21,10 @@ const $mNormalizeTargetsConfig = function($mRawConfig) {
         $mTsConfig["default"] = $mRawConfig["ts"]["default"] || "";
         $mTsConfig["targets"] = $mRawConfig["ts"]["targets"] || Map.create();
     }
+    if (Map.has($mRawConfig, "py")) {
+        $mPyConfig["default"] = $mRawConfig["py"]["default"] || "";
+        $mPyConfig["targets"] = $mRawConfig["py"]["targets"] || Map.create();
+    }
     
     if (Map.has($mRawConfig, "default") && Map.has($mRawConfig, "targets")) {
         $mJsConfig["default"] = $mRawConfig["default"];
@@ -28,7 +33,9 @@ const $mNormalizeTargetsConfig = function($mRawConfig) {
         $mJsConfig["targets"] = $mRawConfig["targets"];
         $mPhpConfig["targets"] = $mRawConfig["targets"];
         $mTsConfig["targets"] = $mRawConfig["targets"];
+        $mPyConfig["default"] = $mRawConfig["default"];
+        $mPyConfig["targets"] = $mRawConfig["targets"];
     }
     
-    return Map.create("js", $mJsConfig, "php", $mPhpConfig, "ts", $mTsConfig);
+    return Map.create("js", $mJsConfig, "php", $mPhpConfig, "ts", $mTsConfig, "py", $mPyConfig);
 };
