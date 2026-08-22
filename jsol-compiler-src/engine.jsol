@@ -43,19 +43,46 @@ JSOL.use($mMaskSourceCode, $sUnmaskSourceCode, $mAuditPragma, $mAuditForbiddenPa
         return Map.create("success", false, "errors", $mTypingResult["errors"]);
     }
 
-    const $sJsTargetFlag = $mCliOptions["jsTarget"];
-    const $sJsPrefixArg = $mCliOptions["jsPrefix"];
-    const $sJsSuffixArg = $mCliOptions["jsSuffix"];
+    let $sJsTargetFlag = "";
+    if (Map.has($mCliOptions, "jsTarget") === true) {
+        $sJsTargetFlag = $mCliOptions["jsTarget"];
+    }
+    let $sJsPrefixArg = "";
+    if (Map.has($mCliOptions, "jsPrefix") === true) {
+        $sJsPrefixArg = $mCliOptions["jsPrefix"];
+    }
+    let $sJsSuffixArg = "";
+    if (Map.has($mCliOptions, "jsSuffix") === true) {
+        $sJsSuffixArg = $mCliOptions["jsSuffix"];
+    }
     const $mJsWrappers = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
 
-    const $sPhpTargetFlag = $mCliOptions["phpTarget"];
-    const $sPhpPrefixArg = $mCliOptions["phpPrefix"];
-    const $sPhpSuffixArg = $mCliOptions["phpSuffix"];
+    let $sPhpTargetFlag = "";
+    if (Map.has($mCliOptions, "phpTarget") === true) {
+        $sPhpTargetFlag = $mCliOptions["phpTarget"];
+    }
+    let $sPhpPrefixArg = "";
+    if (Map.has($mCliOptions, "phpPrefix") === true) {
+        $sPhpPrefixArg = $mCliOptions["phpPrefix"];
+    }
+    let $sPhpSuffixArg = "";
+    if (Map.has($mCliOptions, "phpSuffix") === true) {
+        $sPhpSuffixArg = $mCliOptions["phpSuffix"];
+    }
     const $mPhpWrappers = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
 
-    const $sTsTargetFlag = $mCliOptions["tsTarget"];
-    const $sTsPrefixArg = $mCliOptions["tsPrefix"];
-    const $sTsSuffixArg = $mCliOptions["tsSuffix"];
+    let $sTsTargetFlag = "";
+    if (Map.has($mCliOptions, "tsTarget") === true) {
+        $sTsTargetFlag = $mCliOptions["tsTarget"];
+    }
+    let $sTsPrefixArg = "";
+    if (Map.has($mCliOptions, "tsPrefix") === true) {
+        $sTsPrefixArg = $mCliOptions["tsPrefix"];
+    }
+    let $sTsSuffixArg = "";
+    if (Map.has($mCliOptions, "tsSuffix") === true) {
+        $sTsSuffixArg = $mCliOptions["tsSuffix"];
+    }
     const $mTsWrappers = $mResolveWrappers($mTargetsConfig["ts"], $sTsTargetFlag, $sTsPrefixArg, $sTsSuffixArg);
 
     const $sCompiledJS = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"], $mSSOT["targets"]["js"]);
@@ -63,9 +90,18 @@ JSOL.use($mMaskSourceCode, $sUnmaskSourceCode, $mAuditPragma, $mAuditForbiddenPa
 
     const $sCompiledTS = $sCompileToJS($sMaskedCode, $mTsWrappers["prefix"], $mTsWrappers["suffix"], $mSSOT["targets"]["ts"]);
 
-    const $sPyTargetFlag = $mCliOptions["pyTarget"];
-    const $sPyPrefixArg = $mCliOptions["pyPrefix"];
-    const $sPySuffixArg = $mCliOptions["pySuffix"];
+    let $sPyTargetFlag = "";
+    if (Map.has($mCliOptions, "pyTarget") === true) {
+        $sPyTargetFlag = $mCliOptions["pyTarget"];
+    }
+    let $sPyPrefixArg = "";
+    if (Map.has($mCliOptions, "pyPrefix") === true) {
+        $sPyPrefixArg = $mCliOptions["pyPrefix"];
+    }
+    let $sPySuffixArg = "";
+    if (Map.has($mCliOptions, "pySuffix") === true) {
+        $sPySuffixArg = $mCliOptions["pySuffix"];
+    }
     const $mPyWrappers = $mResolveWrappers($mTargetsConfig["py"], $sPyTargetFlag, $sPyPrefixArg, $sPySuffixArg);
     const $sCompiledPY = $sCompileToJS($sMaskedCode, $mPyWrappers["prefix"], $mPyWrappers["suffix"], $mSSOT["targets"]["python"]);
 

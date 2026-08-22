@@ -40,30 +40,66 @@ const $mExecuteCompilationPipeline = function($sSourceCode: any, $mTargetsConfig
     if ($mTypingResult["valid"] === false) {
     return JSOL.dict("success",  false,  "errors",  $mTypingResult["errors"]);
   }
-  const $sJsTargetFlag: string = $mCliOptions["jsTarget"];
-    const $sJsPrefixArg: string = $mCliOptions["jsPrefix"];
-    const $sJsSuffixArg: string = $mCliOptions["jsSuffix"];
-    const $mJsWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
+  let $sJsTargetFlag: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "jsTarget") === true) {
+    $sJsTargetFlag = $mCliOptions["jsTarget"];
+  }
+  let $sJsPrefixArg: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "jsPrefix") === true) {
+    $sJsPrefixArg = $mCliOptions["jsPrefix"];
+  }
+  let $sJsSuffixArg: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "jsSuffix") === true) {
+    $sJsSuffixArg = $mCliOptions["jsSuffix"];
+  }
+  const $mJsWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
 
-    const $sPhpTargetFlag: string = $mCliOptions["phpTarget"];
-    const $sPhpPrefixArg: string = $mCliOptions["phpPrefix"];
-    const $sPhpSuffixArg: string = $mCliOptions["phpSuffix"];
-    const $mPhpWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
+    let $sPhpTargetFlag: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "phpTarget") === true) {
+    $sPhpTargetFlag = $mCliOptions["phpTarget"];
+  }
+  let $sPhpPrefixArg: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "phpPrefix") === true) {
+    $sPhpPrefixArg = $mCliOptions["phpPrefix"];
+  }
+  let $sPhpSuffixArg: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "phpSuffix") === true) {
+    $sPhpSuffixArg = $mCliOptions["phpSuffix"];
+  }
+  const $mPhpWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
 
-    const $sTsTargetFlag: string = $mCliOptions["tsTarget"];
-    const $sTsPrefixArg: string = $mCliOptions["tsPrefix"];
-    const $sTsSuffixArg: string = $mCliOptions["tsSuffix"];
-    const $mTsWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["ts"], $sTsTargetFlag, $sTsPrefixArg, $sTsSuffixArg);
+    let $sTsTargetFlag: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "tsTarget") === true) {
+    $sTsTargetFlag = $mCliOptions["tsTarget"];
+  }
+  let $sTsPrefixArg: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "tsPrefix") === true) {
+    $sTsPrefixArg = $mCliOptions["tsPrefix"];
+  }
+  let $sTsSuffixArg: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "tsSuffix") === true) {
+    $sTsSuffixArg = $mCliOptions["tsSuffix"];
+  }
+  const $mTsWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["ts"], $sTsTargetFlag, $sTsPrefixArg, $sTsSuffixArg);
 
     const $sCompiledJS: string = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"], $mSSOT["targets"]["js"]);
     const $sCompiledPHP: string = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"], $mSSOT["targets"]["php"]);
 
     const $sCompiledTS: string = $sCompileToJS($sMaskedCode, $mTsWrappers["prefix"], $mTsWrappers["suffix"], $mSSOT["targets"]["ts"]);
 
-    const $sPyTargetFlag: string = $mCliOptions["pyTarget"];
-    const $sPyPrefixArg: string = $mCliOptions["pyPrefix"];
-    const $sPySuffixArg: string = $mCliOptions["pySuffix"];
-    const $mPyWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["py"], $sPyTargetFlag, $sPyPrefixArg, $sPySuffixArg);
+    let $sPyTargetFlag: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "pyTarget") === true) {
+    $sPyTargetFlag = $mCliOptions["pyTarget"];
+  }
+  let $sPyPrefixArg: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "pyPrefix") === true) {
+    $sPyPrefixArg = $mCliOptions["pyPrefix"];
+  }
+  let $sPySuffixArg: string = "";
+    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "pySuffix") === true) {
+    $sPySuffixArg = $mCliOptions["pySuffix"];
+  }
+  const $mPyWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["py"], $sPyTargetFlag, $sPyPrefixArg, $sPySuffixArg);
     const $sCompiledPY: string = $sCompileToJS($sMaskedCode, $mPyWrappers["prefix"], $mPyWrappers["suffix"], $mSSOT["targets"]["python"]);
 
     const $sIndentedJS: string = $sIndentCode($sCompiledJS, "  ");

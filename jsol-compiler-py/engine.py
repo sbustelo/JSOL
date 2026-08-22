@@ -59,19 +59,64 @@ def _mExecuteCompilationPipeline(_sSourceCode, _mTargetsConfig, _mCliOptions, _m
     return JSOL.dict("success",  False,  "errors",  _mTypingResult["errors"]);
 
 
-  _sJsTargetFlag = _mCliOptions["jsTarget"];
-  _sJsPrefixArg = _mCliOptions["jsPrefix"];
-  _sJsSuffixArg = _mCliOptions["jsSuffix"];
+  _sJsTargetFlag = "";
+  if ( "jsTarget" in _mCliOptions) == True: 
+
+    _sJsTargetFlag = _mCliOptions["jsTarget"];
+
+
+  _sJsPrefixArg = "";
+  if ( "jsPrefix" in _mCliOptions) == True: 
+
+    _sJsPrefixArg = _mCliOptions["jsPrefix"];
+
+
+  _sJsSuffixArg = "";
+  if ( "jsSuffix" in _mCliOptions) == True: 
+
+    _sJsSuffixArg = _mCliOptions["jsSuffix"];
+
+
   _mJsWrappers = _mResolveWrappers(_mTargetsConfig["js"], _sJsTargetFlag, _sJsPrefixArg, _sJsSuffixArg);
 
-  _sPhpTargetFlag = _mCliOptions["phpTarget"];
-  _sPhpPrefixArg = _mCliOptions["phpPrefix"];
-  _sPhpSuffixArg = _mCliOptions["phpSuffix"];
+  _sPhpTargetFlag = "";
+  if ( "phpTarget" in _mCliOptions) == True: 
+
+    _sPhpTargetFlag = _mCliOptions["phpTarget"];
+
+
+  _sPhpPrefixArg = "";
+  if ( "phpPrefix" in _mCliOptions) == True: 
+
+    _sPhpPrefixArg = _mCliOptions["phpPrefix"];
+
+
+  _sPhpSuffixArg = "";
+  if ( "phpSuffix" in _mCliOptions) == True: 
+
+    _sPhpSuffixArg = _mCliOptions["phpSuffix"];
+
+
   _mPhpWrappers = _mResolveWrappers(_mTargetsConfig["php"], _sPhpTargetFlag, _sPhpPrefixArg, _sPhpSuffixArg);
 
-  _sTsTargetFlag = _mCliOptions["tsTarget"];
-  _sTsPrefixArg = _mCliOptions["tsPrefix"];
-  _sTsSuffixArg = _mCliOptions["tsSuffix"];
+  _sTsTargetFlag = "";
+  if ( "tsTarget" in _mCliOptions) == True: 
+
+    _sTsTargetFlag = _mCliOptions["tsTarget"];
+
+
+  _sTsPrefixArg = "";
+  if ( "tsPrefix" in _mCliOptions) == True: 
+
+    _sTsPrefixArg = _mCliOptions["tsPrefix"];
+
+
+  _sTsSuffixArg = "";
+  if ( "tsSuffix" in _mCliOptions) == True: 
+
+    _sTsSuffixArg = _mCliOptions["tsSuffix"];
+
+
   _mTsWrappers = _mResolveWrappers(_mTargetsConfig["ts"], _sTsTargetFlag, _sTsPrefixArg, _sTsSuffixArg);
 
   _sCompiledJS = _sCompileToJS(_sMaskedCode, _mJsWrappers["prefix"], _mJsWrappers["suffix"], _mSSOT["targets"]["js"]);
@@ -79,9 +124,24 @@ def _mExecuteCompilationPipeline(_sSourceCode, _mTargetsConfig, _mCliOptions, _m
 
   _sCompiledTS = _sCompileToJS(_sMaskedCode, _mTsWrappers["prefix"], _mTsWrappers["suffix"], _mSSOT["targets"]["ts"]);
 
-  _sPyTargetFlag = _mCliOptions["pyTarget"];
-  _sPyPrefixArg = _mCliOptions["pyPrefix"];
-  _sPySuffixArg = _mCliOptions["pySuffix"];
+  _sPyTargetFlag = "";
+  if ( "pyTarget" in _mCliOptions) == True: 
+
+    _sPyTargetFlag = _mCliOptions["pyTarget"];
+
+
+  _sPyPrefixArg = "";
+  if ( "pyPrefix" in _mCliOptions) == True: 
+
+    _sPyPrefixArg = _mCliOptions["pyPrefix"];
+
+
+  _sPySuffixArg = "";
+  if ( "pySuffix" in _mCliOptions) == True: 
+
+    _sPySuffixArg = _mCliOptions["pySuffix"];
+
+
   _mPyWrappers = _mResolveWrappers(_mTargetsConfig["py"], _sPyTargetFlag, _sPyPrefixArg, _sPySuffixArg);
   _sCompiledPY = _sCompileToJS(_sMaskedCode, _mPyWrappers["prefix"], _mPyWrappers["suffix"], _mSSOT["targets"]["python"]);
 

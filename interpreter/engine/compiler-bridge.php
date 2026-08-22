@@ -1,4 +1,5 @@
 <?php
+// JSOL v0.2.95
 
 declare(strict_types=1);
 
@@ -137,19 +138,31 @@ function parseJsolMetadata(string $filePath): array
 function compileJsolInMemory(string $sourcePath, string $compilerDir, string $outDir, array $metadata): array
 {
 	// Load all compiler parts into the current function scope
-	$parts = [
+$parts = [
 		'lexer.php',
 		'linter.php',
 		'cli-parser.php',
 		'config-parser.php',
 		'regex.php',
+		'indenter.php',
 		'js-compiler.php',
 		'php-compiler.php',
+		'python-compiler.php',
+		'python-ternary.php',
+		'python-brace-strip.php',
 		'engine.php'
 	];
+	
+	
+	
+foreach ($parts as $part) {
+		require rtrim($compilerDir, '/') . '/' . $part;
+	}
 
-	foreach ($parts as $part) {
-		require_once rtrim($compilerDir, '/') . '/' . $part;
+	foreach (get_defined_vars() as $varName => $varVal) {
+		if ($varName !== 'sourcePath' && $varName !== 'compilerDir' && $varName !== 'outDir' && $varName !== 'metadata' && $varName !== 'parts') {
+			$GLOBALS[$varName] = $varVal;
+		}
 	}
 
 	$sourceCode = file_get_contents($sourcePath);
@@ -183,8 +196,15 @@ function compileJsolInMemory(string $sourcePath, string $compilerDir, string $ou
 		'phpSuffix' => '',
 		'tsTarget' => '',
 		'tsPrefix' => '',
-		'tsSuffix' => ''
+		'tsSuffix' => '',
+		'pyTarget' => '',
+		'pyPrefix' => '',
+		'pySuffix' => ''
 	];
+
+
+
+
 
 	// Execute compilation passing the decoded SSOT data array as argument #4
 	$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOpts, $mSSOTData);

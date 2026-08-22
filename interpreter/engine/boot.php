@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * JSOL REPL Controller
+ * JSOL v0.2.95 REPL Controller
  * Handles routing, file scanning, metadata parsing, and in-memory compilation.
  */
 
@@ -40,7 +40,7 @@ require_once $interpreterCoreDir . '/engine/asset-router.php';
 require_once $interpreterCoreDir . '/engine/compiler-bridge.php';
 
 // 3. Handle HTTP Asset Requests (Stops execution if it's an asset call)
-routeAssets($interpreterCoreDir, $tempBinDir);
+routeAssets($interpreterCoreDir, $tempBinDir, $compilerDir);
 
 // 4. Scan for .jsol files in the current running directory with Jail Guard
 $realRunDir = realpath($runDir);

@@ -2,7 +2,7 @@
 
 _Compact reference for AI-assisted gap analysis. Companion to [`EXTENDING-SEMANTIC-PARITY.md`](extending-semantic-parity.md), a complement of [`EXTENDING.md`](extending.md)._
 
-JSOL exists to guarantee **Deterministic Parity**: the same `.jsol` source compiled to any target language must produce bit-for-bit identical output. Semantic divergences between languages — where the same expression means something slightly different depending on the target — are the primary blockers to that guarantee.
+JSOL strives to guarantee **Deterministic Parity**: the same `.jsol` source compiled to any target language must produce bit-for-bit identical output. Semantic divergences between languages — where the same expression means something slightly different depending on the target — are the primary blockers to that guarantee.
 
 This table lists every divergence identified across multiple rounds of AI evaluation, condensed to one line each: the problem, the example, the risk. **Risk 5** = can produce silently wrong business results in JS/PHP today; **Risk 1** = theoretical or requires exotic target/build flags. The full analysis, proposed wrappers, and per-target implementation notes live in the companion document.
 

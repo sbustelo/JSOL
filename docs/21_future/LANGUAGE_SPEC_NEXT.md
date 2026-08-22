@@ -39,35 +39,8 @@ Reserving without implementing is a mechanical linter rule, not a feature: any v
 
 A function's name may optionally be prefixed with the type it returns, prefix first: `$mCalculatePenalties`, `$bCheckPasswordRules`, `$cApplyDiscount`. Documented as convention in `LANGUAGE_SPEC.md`'s style section once this ships; no retroactive renaming required anywhere.
 
-## 3. `JSOL.range()` — new `for` syntax, resolved entirely at compile time
 
-```js
-for (let $i of JSOL.range($from, $to, $step, $maxLimit)) {
-    // body
-}
-```
-
-This is not a function call. There is no runtime iterator, no generator, nothing named `range` exists in the compiled output. The compiler recognizes this exact syntactic shape and rewrites it directly into the target's native `for` loop at compile time.
-
-**Semantics**: half-open interval, `$from` inclusive, `$to` exclusive — `JSOL.range(1, 5, 1)` produces `1, 2, 3, 4`, matching the convention most languages already use for range-style iteration, so nobody has to learn a new counting rule.
-
-**`$maxLimit`**: optional fourth argument. For Managed and JSOL-C targets, it compiles into a runtime guard — if the loop would run more iterations than `$maxLimit`, it throws, rather than being silently ignored. This keeps behavior uniform across every target instead of being a real safety bound in one profile and a no-op comment in the rest. For JSOL-X specifically (out of scope for this document, noted for consistency), `$maxLimit` isn't optional at all — Excel unrolls the loop into physical rows, so the bound has to be a static literal known at compile time, not a runtime guard.
-
-Compiled output, JS:
-
-```js
-for (let $i = $from; $i < $to; $i += $step) { /* body */ }
-```
-
-Compiled output, PHP:
-
-```php
-for ($i = $from; $i < $to; $i += $step) { /* body */ }
-```
-
-**Scope note**: this is the only `for...of` form the grammar accepts. It is not general support for `for...of` over arbitrary iterables — that reopens the iteration-order asymmetry risk already flagged for `for...in`/`foreach` elsewhere in the spec. Any `for...of` that isn't exactly `JSOL.range(...)` as its iterable is a linter error, not a silent pass-through.
-
-## 4. Regex, resolved now, without waiting on the full reference engine
+## 3. Regex, resolved now, without waiting on the full reference engine
 
 IPAX's actual production regex usage (`$parseHexToRGB` and anywhere else a `JSOL.JS`/`JSOL.PHP` pair exists solely to call a regex engine) is the concrete debt this spec exists to close. The pure-JSOL "safe" Thompson-construction engine (`ROADMAP.md` Priority 4) is a larger, separate project and doesn't need to exist for v0.3 to close this debt — what needs to exist now is a **stable name and calling convention**, so code written against it today doesn't change shape once the reference engine ships later.
 
@@ -81,7 +54,7 @@ For v0.3, these compile to each target's native engine (`.exec()`/`preg_match()`
 
 This is what actually retires the `JSOL.JS`/`JSOL.PHP` dual-block from IPAX's source: not a promise for later, a name that exists now.
 
-## 5. Pragma grammar, generalized once
+## 4. Pragma grammar, generalized once
 
 Today's compiler recognizes `// @JSOL` on line 1. v0.3 generalizes this into one rule that covers every current and future profile without touching the parser again per profile:
 
@@ -91,7 +64,7 @@ Today's compiler recognizes `// @JSOL` on line 1. v0.3 generalizes this into one
 
 No suffix (`// @JSOL`) is Managed Profile, the default. A suffix (`// @JSOL-C`, `// @JSOL-X`) selects that profile's grammar rules. The `@` is optional (`// JSOL-C` also matches) for the same reason the original pragma check already tolerated minor formatting variance. `@JSOL-X` is reserved by this rule today; its actual grammar (the Excel profile) is a separate spec, not defined here.
 
-## 6. JSOL-C stubs, syntax locked, full semantics still open
+## 5. JSOL-C stubs, syntax locked, full semantics still open
 
 ```js
 JSOL.set(...)     // reserve memory — argument shape (capacity alone vs. capacity + initial values) still undecided, see ROADMAP.md Priority on memory
@@ -99,9 +72,3 @@ JSOL.unset(...)   // free memory
 ```
 
 Locking the *names* now, even with the calling convention still open, means JSOL-C-flagged files can start being written without the syntax shifting under them later. In any Managed-profile compilation, both compile to near no-ops (the host's GC is already handling it) — this is what lets someone practice JSOL-C discipline with instant Managed-target feedback before ever targeting real C.
-
----
-
-## Migration note for IPAX
-
-Once this ships: `JSOL.count` → `Arr.count`, `JSOL.len` → `Str.len`, `JSOL.dict` → `Map.create`, `JSOL.hasKey` → `Map.has`, and every `JSOL.JS`/`JSOL.PHP` pair wrapping a regex call → `Regex.match`/`Regex.replace` plus an `@UNVERIFIED-PARITY` pragma. Nothing else in IPAX's existing logic needs to change shape — this is a rename and a wrapper-migration pass, not a rewrite.

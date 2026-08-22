@@ -1,7 +1,7 @@
 # JSOL Language Specification
 2026, [Santiago Bustelo](https://www.bustelo.com.ar/) • MIT License
 
-v.0.2.91 • 2026-08-12
+v.0.2.95 • 2026-08-21
 
 This document is the authoritative definition of the JSOL language. It defines JSOL by what it **is**, not by what it forbids. A construct is valid JSOL if and only if it matches one of the forms defined in Section 2. The forbidden-features list in Section 6 is a derived reference, not the source of truth.
 
@@ -60,10 +60,14 @@ else { <statements> }
 
 for (let $i = 0; $i < <bound>; $i = $i + 1) { <statements> }
 
+for (const $i of JSOL.range($start, $end, $maxIter)) { <statements> }
+
 while (<condition>) { <statements> }
 ```
 
-`for...of`, `for...in`, and functional iteration are not part of the grammar. See Section 4 for why.
+`for...of` (except when strictly bound to JSOL.range($start, $end, $maxIter)),, `for...in`, and functional iteration are not part of the grammar. See Section 4 for why.
+
+Standard for loops require explicit step assignments `($i = $i + 1)`. Bounded, deterministic numeric range iteration across all target generators is expressed strictly via `JSOL.range($start, $end, $maxIter)`, where the optional third parameter `$maxIter` specifies a hard iteration limit reserved for static analysis bounds in JSOL-X.
 
 ### 2.5 Data construction
 
@@ -88,20 +92,23 @@ JSOL.JS(() => {
 JSOL.PHP(() => {
     <PHP-only statements>
 });
+
+JSOL.PY(() => {
+    <Python-only statements>
+});
 ```
 
-This is the single place in the grammar where an arrow function with a block body is permitted, and only in this exact zero-parameter form, passed directly as the sole argument to `JSOL.JS` or `JSOL.PHP`. See Section 5 for why this construct exists and why it is a closure and not a comment block.
+This is the single place in the grammar where an arrow function with a block body is permitted, and only in this exact zero-parameter form, passed directly as the sole argument to `JSOL.JS` or `JSOL.PHP`. See Section 6 for why this construct exists and why it is a closure and not a comment block.
 
-### 2.8 The Vocabulary Matrix (v0.2.90 Standard)
+### 2.8 The Vocabulary Matrix (v0.2.95 Standard)
 
 These are language-level scoping and target-isolation mechanisms. They do not belong to a data domain and remain in the root namespace:
 
-| Primitive | Purpose & Behavior |
-|---|---|
-| JSOL.use($v1, $v2, ...) | Declares parent scope variables captured by a closure (translates to 'use ($v1, $v2)' in PHP). |
-| JSOL.closure([...deps], fn) | Explicit closure scope bridging across targets. |
-| JSOL.JS(() => { ... }) | Executable closure unwrapped exclusively in JavaScript target output. |
-| JSOL.PHP(() => { ... }) | Executable closure unwrapped exclusively in PHP target output. |
+- JSOL.use($v1, $v2, ...): Declares parent scope variables captured by a closure (translates to 'use ($v1, $v2)' in PHP).
+- JSOL.closure([...deps], fn): Explicit closure scope bridging across targets.
+- JSOL.JS(() => { ... }): Executable closure unwrapped exclusively in JavaScript target output.
+- JSOL.PHP(() => { ... }): Executable closure unwrapped exclusively in PHP target output.
+- JSOL.PY(() => { ... }): Executable closure unwrapped exclusively in Python target output.
 
 #### Domain Namespaces (Standard Data Operations)
 
@@ -111,7 +118,7 @@ The following are the complete, closed set of native-behavior wrappers. There is
 
 | Domain | Namespace | Primitive Methods |
 |---|---|---|
-| String | Str.* | Str.len($s), Str.sub($s, $start, $len), Str.indexOf($s, $needle), Str.replace($s, $search, $replace), Str.char($s, $idx), Str.fromChar($code), Str.upper($s), Str.lower($s), Str.trim($s), Str.split($s, $d) |
+| String | Str.* | Str.len($s), Str.sub($s, $start, $len), Str.indexOf($s, $needle), Str.replace($s, $search, $replace), Str.char($s, $idx), Str.fromChar($code), Str.upper($s), Str.lower($s), Str.trim($s), Str.split($s, $d), Str.concat($s1, $s2, ...) |
 | Array | Arr.* | Arr.count($a), Arr.push($a, $item), Arr.pop($a), Arr.shift($a), Arr.slice($a, $start, $end), Arr.indexOf($a, $item), Arr.join($a, $d) |
 | Hash Map | Map.* | Map.create('k1', $v1, ...), Map.has($m, $key), Map.keys($m) |
 | Math | Math.* | Math.floor($n), Math.abs($n), Math.pow($b, $e), Math.min($a, $b), Math.max($a, $b), Math.round($n) |
@@ -230,7 +237,39 @@ The restrictions in Section 2 aren't purely about transpilation safety. They hav
 
 ---
 
-## 5. Rules Reference
+
+## 5. `JSOL.range()` — `for` syntax suitable for JSOL-X, resolved entirely at compile time
+
+```js
+for (let $i of JSOL.range($from, $to, $step, $maxLimit)) {
+    // body
+}
+```
+
+This is not a function call. There is no runtime iterator, no generator, nothing named `range` exists in the compiled output. The compiler recognizes this exact syntactic shape and rewrites it directly into the target's native `for` loop at compile time.
+
+**Semantics**: half-open interval, `$from` inclusive, `$to` exclusive — `JSOL.range(1, 5, 1)` produces `1, 2, 3, 4`, matching the convention most languages already use for range-style iteration, so nobody has to learn a new counting rule.
+
+**`$maxLimit`**: optional fourth argument. For Managed and JSOL-C targets, it compiles into a runtime guard — if the loop would run more iterations than `$maxLimit`, it throws, rather than being silently ignored. This keeps behavior uniform across every target instead of being a real safety bound in one profile and a no-op comment in the rest. For **JSOL-X** specifically (out of scope for this document, noted for consistency), `$maxLimit` isn't optional at all — Excel unrolls the loop into physical rows, so the bound has to be a static literal known at compile time, not a runtime guard.
+
+Compiled output, JS:
+
+```js
+for (let $i = $from; $i < $to; $i += $step) { /* body */ }
+```
+
+Compiled output, PHP:
+
+```php
+for ($i = $from; $i < $to; $i += $step) { /* body */ }
+```
+
+**Scope note**: this is the only `for...of` form the grammar accepts. It is not general support for `for...of` over arbitrary iterables — that reopens the iteration-order asymmetry risk already flagged for `for...in`/`foreach` elsewhere in the spec. Any `for...of` that isn't exactly `JSOL.range(...)` as its iterable is a linter error, not a silent pass-through.
+
+
+---
+
+## 6. Rules Reference
 
 ### Rule 1: Never index strings directly
 
@@ -252,7 +291,7 @@ PHP auto-casts numeric string keys to integers (`['10' => $v]` becomes `[10 => $
 
 JS arrays and objects pass by reference; PHP arrays are copy-on-write value types. Logic that depends on a callee mutating a caller's array will behave correctly in JS and silently fail in PHP. Return new values instead of relying on mutation.
 
-### Rule 6: Environment isolation blocks (`JSOL.JS` / `JSOL.PHP`)
+### Rule 6: Environment isolation blocks (`JSOL.JS` / `JSOL.PHP` / `JSOL.PY`)
 
 **Isolation blocks should be used only as a provisional last resort**
 
@@ -296,17 +335,27 @@ const $calculateTotal = JSOL.closure([$tax, $discount], function($price) {
 
 Compiles to PHP with an explicit `use ($tax, $discount)`, and to JS with the dependency array stripped entirely (JS closures capture scope natively, so the array would be dead weight in the browser payload).
 
+
+
 ### Rule 8: Bitwise operations
 
-Native `&`, `|`, `^`, `~`, `<<`, `>>` are excluded: V8 coerces to 32-bit signed integers for bitwise ops, PHP's integer width is platform-dependent (typically 64-bit). Use the `JSOL.bw*` wrapper table (Section 2.8).
+Native `&`, `|`, `^`, `~`, `<<`, `>>` are excluded: V8 coerces to 32-bit signed integers for bitwise ops, PHP's integer width is platform-dependent (typically 64-bit). Use the `Bit.*` domain primitives (`Bit.and`, `Bit.or`, `Bit.xor`, `Bit.not`, `Bit.shiftL`, `Bit.shiftR`).
 
-### Rule 9: String concatenation
+### Rule 9: String concatenation and coercion
 
-Bare `+` concatenation between strings is excluded. Use template literals, or the `+ "" +` pattern for legacy-style concatenation that still needs to be explicit about producing a string.
+Bare `+` concatenation between strings is excluded.
+
+**Only for strings** use template literals, or the `+ "" +` pattern for legacy-style concatenation that still needs to be explicit about producing a string.
+
+Mixing uncasted numbers with strings via the `+ "" +` pattern is strictly forbidden as it produces fatal TypeErrors in Python.
+
+To safely concatenate strings and numbers or dynamic variables across all target runtimes:
+1. Explicitly cast numbers using `Cast.toStr($val)` prior to concatenation.
+2. Use `Str.concat($s1, $s2, ...)`, which accepts any number of variadic arguments and guarantees explicit string conversion of all operands across JS, PHP, TypeScript, and Python without runtime type errors.
 
 ---
 
-## 6. Forbidden Features (Quick Reference)
+## 7. Forbidden Features (Quick Reference)
 
 This table is a derived summary of Section 2. If something here contradicts Section 2, Section 2 wins; file it as a spec bug.
 
@@ -322,10 +371,10 @@ This table is a derived summary of Section 2. If something here contradicts Sect
 | Native bitwise operators | ⛔️ | `Bit.and`, `Bit.or`, `Bit.xor` |
 | Native array methods (.length, .push) | ⛔️ | `Arr.count`, `Arr.push` |
 | Native string methods (.length, .substring) | ⛔️ | `Str.len`, `Str.sub` |
-| `async` / `await` / `Promise` / `Worker` inside JSOL | ⛔️ | Orchestrate from outside; see Section 5.1 |
+| `async` / `await` / `Promise` / `Worker` inside JSOL | ⛔️ | Orchestrate from outside; see Section 6.1 |
 
 **Enforcement note**: this specification is the source of truth regardless of what the linter currently checks. The linter implements a growing subset of these rules as a convenience and a safety net, not as the definition of the language. A rule being unenforced by the linter today does not make code that violates it valid JSOL.
 
 ---
 
-*JSOL v0.2.93 — 2026-08-14, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*
+*JSOL v0.2.95 — 2026-08-21, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*

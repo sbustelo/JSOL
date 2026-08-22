@@ -1,4 +1,7 @@
-<?php declare(strict_types=1); ?>
+<?php
+// JSOL v0.2.95
+
+declare(strict_types=1); ?>
 
 
 <aside class="jsol-repl-sidebar">
@@ -92,7 +95,8 @@
             <?= json_encode($metadata) ?>
         </script>
 
-        <!-- Internal JS Dependencies -->
+        <!-- Internal JS Dependencies & JSOL Core Standard Library -->
+        <script src="?core_asset=stdlib/jsol-core.js"></script>
         <script src="?core_asset=js/repl.js"></script>
         <?php if ($compilationResult && $compilationResult['success']): ?>
             <!-- Compiled Target Algorithm -->

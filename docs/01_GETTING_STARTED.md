@@ -7,6 +7,7 @@ Pick the one that matches what you're doing.
 |---|---|
 | Compile my `.jsol` files with Node | `jsol-compiler-node/` |
 | Compile my `.jsol` files with PHP | `jsol-compiler-php/` |
+| Compile my `.jsol` files with Python | `jsol-compiler-py/` |
 | Modify the compiler itself | `jsol-compiler-src/` |
 
 Each distribution is self-contained: copy the folder into your project and it works, no shared dependency on the others.
@@ -17,7 +18,7 @@ Both the Node.js and PHP host compilers accept the exact same arguments for gran
 
 - --source="path/file.jsol" : (Required) Path to the input source file.
 - --out-dir="path/dir" : (Optional) Destination directory. Defaults to the source file's directory.
-- --targets="js,php,ts" : (Optional) Comma-separated list of targets to generate. Defaults to all available targets.
+- --targets="js,php,ts,py" : (Optional) Comma-separated list of targets to generate. Defaults to all available targets.
 - --target="profileId" : (Optional) Applies a unified profile from targets.json (which defines prefixes and suffixes) across all output languages.
 - --js-target="id", --php-target="id", --ts-target="id" : (Optional) Applies a specific profile from targets.json only to the matched language.
 - --js-prefix="str", --php-prefix="str", --ts-prefix="str" : (Optional) Overrides the prefix wrapper for the specified language.
@@ -31,7 +32,7 @@ Note: Explicit prefix/suffix CLI flags take precedence over profiles defined in 
 node jsol-compiler-node/index.js --source="./my-file.jsol" --out-dir="./out"
 ```
 
-Produces `./out/my-file.js`, `./out/my-file.php`, and `./out/my-file.ts`. By default, every compile emits all available targets to ensure isomorphic parity. However, you can filter specific targets using the `--targets` flag (e.g., `--targets=js,php`).
+Produces `./out/my-file.js`, `./out/my-file.php`, `./out/my-file.ts` and `./out/my-file.py`. By default, every compile emits all available targets to ensure isomorphic parity. However, you can filter specific targets using the `--targets` flag (e.g., `--targets=js,php`).
 
 ## Compiling with PHP
 
@@ -72,4 +73,4 @@ After changing anything here, re-run the fixed-point check described in [10_dev/
 
 ---
 
-*JSOL v0.2.94 — 2026-08-20, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*
+*JSOL v0.2.95 — 2026-08-21, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*

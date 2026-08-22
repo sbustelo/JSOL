@@ -38,30 +38,66 @@ $mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOpti
     if ($mTypingResult["valid"] === false) {
     return JSOL::dict("success",  false,  "errors",  $mTypingResult["errors"]);
   }
-  $sJsTargetFlag = $mCliOptions["jsTarget"];
+  $sJsTargetFlag = "";
+    if (isset($mCliOptions[ "jsTarget"]) === true) {
+    $sJsTargetFlag = $mCliOptions["jsTarget"];
+  }
+  $sJsPrefixArg = "";
+    if (isset($mCliOptions[ "jsPrefix"]) === true) {
     $sJsPrefixArg = $mCliOptions["jsPrefix"];
+  }
+  $sJsSuffixArg = "";
+    if (isset($mCliOptions[ "jsSuffix"]) === true) {
     $sJsSuffixArg = $mCliOptions["jsSuffix"];
-    $mJsWrappers = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
+  }
+  $mJsWrappers = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
 
+    $sPhpTargetFlag = "";
+    if (isset($mCliOptions[ "phpTarget"]) === true) {
     $sPhpTargetFlag = $mCliOptions["phpTarget"];
+  }
+  $sPhpPrefixArg = "";
+    if (isset($mCliOptions[ "phpPrefix"]) === true) {
     $sPhpPrefixArg = $mCliOptions["phpPrefix"];
+  }
+  $sPhpSuffixArg = "";
+    if (isset($mCliOptions[ "phpSuffix"]) === true) {
     $sPhpSuffixArg = $mCliOptions["phpSuffix"];
-    $mPhpWrappers = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
+  }
+  $mPhpWrappers = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
 
+    $sTsTargetFlag = "";
+    if (isset($mCliOptions[ "tsTarget"]) === true) {
     $sTsTargetFlag = $mCliOptions["tsTarget"];
+  }
+  $sTsPrefixArg = "";
+    if (isset($mCliOptions[ "tsPrefix"]) === true) {
     $sTsPrefixArg = $mCliOptions["tsPrefix"];
+  }
+  $sTsSuffixArg = "";
+    if (isset($mCliOptions[ "tsSuffix"]) === true) {
     $sTsSuffixArg = $mCliOptions["tsSuffix"];
-    $mTsWrappers = $mResolveWrappers($mTargetsConfig["ts"], $sTsTargetFlag, $sTsPrefixArg, $sTsSuffixArg);
+  }
+  $mTsWrappers = $mResolveWrappers($mTargetsConfig["ts"], $sTsTargetFlag, $sTsPrefixArg, $sTsSuffixArg);
 
     $sCompiledJS = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"], $mSSOT["targets"]["js"]);
     $sCompiledPHP = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"], $mSSOT["targets"]["php"]);
 
     $sCompiledTS = $sCompileToJS($sMaskedCode, $mTsWrappers["prefix"], $mTsWrappers["suffix"], $mSSOT["targets"]["ts"]);
 
+    $sPyTargetFlag = "";
+    if (isset($mCliOptions[ "pyTarget"]) === true) {
     $sPyTargetFlag = $mCliOptions["pyTarget"];
+  }
+  $sPyPrefixArg = "";
+    if (isset($mCliOptions[ "pyPrefix"]) === true) {
     $sPyPrefixArg = $mCliOptions["pyPrefix"];
+  }
+  $sPySuffixArg = "";
+    if (isset($mCliOptions[ "pySuffix"]) === true) {
     $sPySuffixArg = $mCliOptions["pySuffix"];
-    $mPyWrappers = $mResolveWrappers($mTargetsConfig["py"], $sPyTargetFlag, $sPyPrefixArg, $sPySuffixArg);
+  }
+  $mPyWrappers = $mResolveWrappers($mTargetsConfig["py"], $sPyTargetFlag, $sPyPrefixArg, $sPySuffixArg);
     $sCompiledPY = $sCompileToJS($sMaskedCode, $mPyWrappers["prefix"], $mPyWrappers["suffix"], $mSSOT["targets"]["python"]);
 
     $sIndentedJS = $sIndentCode($sCompiledJS, "  ");

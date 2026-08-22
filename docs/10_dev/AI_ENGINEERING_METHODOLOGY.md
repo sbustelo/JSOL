@@ -2,9 +2,9 @@
 
 ## Executive Summary & Transparency Declaration
 
-JSOL is an ambitious systems engineering effort: a self-hosting, AST-free, zero-dependency domain-specific language (DSL) that transpiles a strict subset of JavaScript into multiple runtime targets (currently shipping JavaScript and PHP, with exploratory backends for other C-like languages).
+JSOL is an ambitious systems engineering effort: a self-hosting, AST-free, zero-dependency domain-specific language (DSL) that transpiles a strict subset of JavaScript into multiple runtime targets (currently shipping JavaScript, PHP, TypeScript and Python, with exploratory backends for other C-like languages).
 
-Building a multi-target, self-hosting compiler without third-party parsers, AST generators, or external toolchains requires extreme architectural discipline. To systematically cover ground beyond what a solo developer or small team could manually execute, **JSOL transparently employs artificial intelligence (LLMs) as a systematic engineering co-pilot**.
+Building a multi-target, self-hosting compiler without third-party parsers, AST generators, or external toolchains requires architectural discipline. To systematically cover ground beyond what a solo developer or small team could manually execute, **JSOL transparently employs artificial intelligence (LLMs) as a systematic engineering co-pilot**.
 
 However, we reject "AI slop": the uncritical acceptance of LLM-generated code, superficial summaries, or unverified implementations. Instead, JSOL operates under a **strict, multi-agent AI governance framework**. AI is used for architectural pressure-testing, multi-model cross-validation, deep-pipeline auditing, and rapid prototyping under human air-gap control.
 
@@ -121,4 +121,4 @@ We welcome contributors who wish to extend JSOL or explore new target compilers 
 
 ---
 
-*JSOL v0.2.93 — 2026-08-18, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.95 — 2026-08-21, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

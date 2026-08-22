@@ -1,8 +1,8 @@
 # Adoption Economics: When JSOL Actually Pays Off
 
-JSOL costs more to write than a native implementation. The isomorphism constraints (no functional array methods, no native rounding, no regex outside the reference engine, mandatory imperative loops) make a `.jsol` file more expensive to produce, line for line, than the equivalent hand-written JS or PHP. That's not a marketing problem to paper over, it's a real cost, and pretending otherwise makes the case for JSOL weaker, not stronger.
+JSOL costs more to write than a native implementation. The isomorphism constraints (no functional array methods, no native rounding, no regex outside the reference engine, mandatory imperative loops) make a `.jsol` file more expensive to produce, line for line, than the equivalent hand-written JS, PHP or Python you are used to.
 
-The honest question isn't "is JSOL better." It's "under what conditions does the extra upfront cost pay for itself, and under what conditions doesn't it." This document answers that with a model, not a slogan.
+The honest question isn't "is JSOL better." It's "under what conditions does the extra upfront cost pay for itself, and under what conditions doesn't it." This document answers that with a model.
 
 ## The two costs, and why the second one is the one that matters
 
@@ -72,4 +72,4 @@ This model assumes `S`, `H`, and `Q_jsol` are stable, known quantities. In pract
 
 ---
 
-*JSOL v0.2 r. 2026-08-08, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.95 — 2026-08-21, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](LICENSE)*

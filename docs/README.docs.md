@@ -45,7 +45,7 @@ FILE: docs/README.docs.md
 | File/Dir | What it covers |
 | --- | --- |
 | ROADMAP.md | Priority-ordered backlog: what's next (v0.3 and beyond). |
-| LANGUAGE_SPEC_NEXT.md | v0.3 target: namespace revamp, type prefixes, JSOL.range(), regex. |
+| LANGUAGE_SPEC_NEXT.md | v0.3 target: namespace revamp, type prefixes, regex. |
 | SPEC_CANDIDATES.md | Proposed new methods (Arr.copy, Str.split) — pending decisions. |
 | JSOL-X_vision/ | Excel compilation vision (pre-spec). Nothing implemented. |
 
