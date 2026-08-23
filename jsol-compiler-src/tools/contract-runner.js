@@ -74,8 +74,8 @@ const params = selectedSig[2].split(',').map(s => s.trim()).filter(Boolean);
 // 3. Setup temporary execution sandbox
 const basename = path.basename(sourceFile, '.jsol.js');
 const rootDir = path.resolve(__dirname, '../..');
-const nodeCompilerPath = path.join(__dirname, '..', 'index.js');
-const phpCompilerPath = path.join(__dirname, '..', 'index.php');
+const nodeCompilerPath = path.join(rootDir, 'jsol-compiler-node', 'index.js');
+const phpCompilerPath = path.join(rootDir, 'jsol-compiler-php', 'index.php');
 
 if (!fs.existsSync(nodeCompilerPath) || !fs.existsSync(phpCompilerPath)) {
 	console.error("  ❌ [FATAL] Local compilers not found. Run bootstrapping first.");
@@ -83,7 +83,7 @@ if (!fs.existsSync(nodeCompilerPath) || !fs.existsSync(phpCompilerPath)) {
 }
 
 // 3B. Load JSOL Node Standard Library into Global Scope
-const stdlibNodePath = path.join(__dirname, '..', 'dist', 'stdlib', 'jsol-core.js');
+const stdlibNodePath = path.join(rootDir, 'jsol-compiler-node', 'dist', 'stdlib', 'jsol-core.js');
 if (fs.existsSync(stdlibNodePath)) {
 	require(stdlibNodePath);
 } else {
@@ -174,7 +174,7 @@ if (resPY.status !== 0) {
     process.exit(1);
 }
 
-const stdlibPyPath = path.join(rootDir, 'jsol-compiler-src', 'dist', 'stdlib', 'jsol_core.py');
+const stdlibPyPath = path.join(rootDir, 'jsol-compiler-py', 'dist', 'stdlib', 'jsol_core.py');
 if (fs.existsSync(stdlibPyPath)) {
     fs.copyFileSync(stdlibPyPath, path.join(pyDir, 'jsol_core.py'));
 }
@@ -186,7 +186,7 @@ console.log(`  🛠️  BUILD:  .js 🟢 • .php 🐘 • .ts 🟦 • .py 🐍
 const jsMod = require(path.join(outBase, 'js', `${basename}.js`));
 const tsMod = require(path.join(outBase, 'ts', `${basename}.js`));
 
-const stdlibPhpPath = path.join(__dirname, '..', 'dist', 'stdlib', 'jsol-core.php').replace(/\\/g, '/');
+const stdlibPhpPath = path.join(rootDir, 'jsol-compiler-php', 'dist', 'stdlib', 'jsol-core.php').replace(/\\/g, '/');
 
 for (let i = 0; i < contractData.cases.length; i++) {
     const c = contractData.cases[i];
