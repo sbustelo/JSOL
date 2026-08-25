@@ -1,4 +1,8 @@
-// @JSOL v0.2.95 - Python Control-Flow Translator
+
+// @JSOL v0.2.96 - Python Target Compiler
+// [!] ARCHITECTURE NOTICE: This Python target compiler has a direct structural dependency on 
+// js-compiler.jsol. It expects the source code to have passed through the JavaScript base 
+// transformations (like ternary and brace stripping) before applying Python-specific rules.
 //
 // Runs on MASKED code, AFTER $sCompileToJS(..., pythonRules) has already
 // substituted primitives (Str.*, Arr.*, Map.*, Cast.*), and BEFORE $sIndentCode.
@@ -17,12 +21,8 @@
 //   - else if (cond) { -> elif cond: {
 //   - else {           -> else: {
 //   - while (cond) {   -> while cond: {
-//   - Canonical for (let $i = A; $i <OP> B; $i = $i <OP2> C) {
-//         -> for $i in range(...): {
-//     Handles all four comparison directions (<, <=, >, >=). If a for-loop
-//     doesn't match this exact canonical shape, it is NOT silently mangled:
-//     it's left untouched with a loud "# JSOL-PYTHON-TODO" marker so it's
-//     impossible to miss and impossible to ship broken by accident.
+//   - switch (cond) {  -> converts to while loop with elif chain
+//   - for (init; cond; step) { -> converts to while loop mathematically
 //
 // NOT handled in this pass, on purpose (separate, harder problem):
 //   - Ternary (cond ? a : b) -> (a if cond else b)
@@ -31,14 +31,6 @@
 // engine.jsol until validated against real examples.
 
 
-
-// Comments are masked out by the lexer and restored VERBATIM by
-// $sUnmaskSourceCode — none of the passes above ever see them, by design.
-// That's correct for JS/PHP/TS (all share "//" and "/* */"), but Python
-// doesn't understand either. This transforms the TOKEN VALUES themselves,
-// before the final unmask, so there's zero risk of touching a "//" that
-// happens to live inside an actual string literal elsewhere in the code —
-// this only ever touches isolated comment tokens.
 const $aTranslateCommentTokensToPython = function($aTokens) {
   let $aResult = [];
     for (let $i = 0; $i < $aTokens.length; $i = $i + 1) {
@@ -81,10 +73,6 @@ const $bIsWhitespaceCharTrim = function($sCh) {
   }
   return false;
 };
-// Local trim, since the raw-execution polyfill (dist/stdlib/jsol-core.js)
-// doesn't implement Str.trim — it's only ever used compiled (-> native
-// .trim()), never as a raw runtime call before this module. Str.sub is
-// pervasively relied on already, safer to build on it than on the polyfill.
 const $sTrimWhitespace = function($sVal) {
   const $iLen = $sVal.length;
     let $iStart = 0;
@@ -115,9 +103,6 @@ const $bIsIdentChar = function($sCh) {
   }
   return false;
 };
-// Reads a full identifier/keyword starting at $iStart (assumes $iStart is a
-// valid identifier-start position). Returns { "word": ..., "end": ... } where
-// "end" is the index right after the last identifier char.
 const $mReadWord = function($sCode, $iStart) {
   const $iLen = $sCode.length;
     let $i = $iStart;
@@ -126,8 +111,6 @@ const $mReadWord = function($sCode, $iStart) {
   }
   return JSOL.dict("word",  $sCode.substring( $iStart, ( $iStart) + ( $i - $iStart)),  "end",  $i);
 };
-// Skips whitespace starting at $iStart, returns the index of the next
-// non-whitespace character (or $iLen if the code ends first).
 const $iSkipWhitespace = function($sCode, $iStart) {
   const $iLen = $sCode.length;
     let $i = $iStart;
@@ -142,10 +125,6 @@ const $iSkipWhitespace = function($sCode, $iStart) {
   }
   return $i;
 };
-// Given the index of an opening "(" (must point exactly at "("), returns the
-// balanced substring INSIDE the parens (not including the parens themselves)
-// and the index right after the matching ")". Depth-aware, so nested calls
-// inside the condition (e.g. "Str.len($s) > 0") are handled correctly.
 const $mReadBalancedParens = function($sCode, $iOpenIndex) {
   const $iLen = $sCode.length;
     let $iDepth = 0;
@@ -171,12 +150,8 @@ const $mReadBalancedParens = function($sCode, $iOpenIndex) {
     }
     $i = $i + 1;
   }
-  // Unbalanced input — should never happen on valid, already-linted JSOL.
-    return JSOL.dict("inside",  "",  "end",  $iLen);
+  return JSOL.dict("inside",  "",  "end",  $iLen);
 };
-// Translates JS-style boolean/comparison operators to Python inside a single
-// expression fragment (a condition, a for-loop clause, etc). Word-boundary
-// safe for "!" so it never touches "!=" / "!==".
 const $sTranslateOperators = function($sExpr) {
   let $sResult = "";
     let $i = 0;
@@ -243,9 +218,6 @@ const $sTranslateOperators = function($sExpr) {
   }
   return $sResult;
 };
-// Attempts to parse the canonical "let $i = A; $i <OP> B; $i = $i <OP2> C"
-// shape. Returns "ok"=false if the shape doesn't match — callers MUST check
-// "ok" and never assume success.
 const $mReadBalancedBraces = function($sCode, $iOpenIndex) {
   const $iLen = $sCode.length;
     let $iDepth = 0;
@@ -379,16 +351,11 @@ const $sConvertControlFlowToPython = function($sMaskedCode) {
           }
         }
         else if ($sMaskedCode.substring( $iAfter, ( $iAfter) + ( 1)) === "{") {
-          // Real control-flow else — goes straight to a block.
-                    $sResult = $sResult + "" + "else:";
+          $sResult = $sResult + "" + "else:";
                     $i = $mWord["end"];
         }
         else {
-          // Not followed by "{" — this is the "else" that
-                    // python-ternary.jsol already emitted as part of
-                    // "a if cond else b". Leave it exactly as plain text,
-                    // no colon, don't touch anything else on the line.
-                    $sResult = $sResult + "" + "else";
+          $sResult = $sResult + "" + "else";
                     $i = $mWord["end"];
         }
       }
@@ -504,15 +471,62 @@ const $sConvertControlFlowToPython = function($sMaskedCode) {
   return $sResult;
 };
 const $sSanitizePythonIdentifiers = function($sMaskedCode) {
-  let $sResult = "";
+  const $bIsIdentChar = function($sCh) {
+    if ($sCh === "_") {
+      return true;
+    }
+    if ($sCh >= "a" && $sCh <= "z") {
+      return true;
+    }
+    if ($sCh >= "A" && $sCh <= "Z") {
+      return true;
+    }
+    if ($sCh >= "0" && $sCh <= "9") {
+      return true;
+    }
+    return false;
+  };
+  // Python 3 hard keywords. Nunca pueden ser identificadores, sin excepcion.
+    const $aPyKeywords = [
+        "False", "None", "True", "and", "as", "assert", "async", "await",
+        "break", "class", "continue", "def", "del", "elif", "else", "except",
+        "finally", "for", "from", "global", "if", "import", "in", "is",
+        "lambda", "nonlocal", "not", "or", "pass", "raise", "return",
+        "try", "while", "with", "yield"
+    ];
+
+    // Builtins de uso frecuente que un nombre de variable de negocio puede
+    // pisar una vez removido el prefijo tipado (ej. $str, $map, $type, $id).
+    const $aPyBuiltins = [
+        "str", "int", "float", "bool", "list", "dict", "set", "tuple",
+        "type", "id", "len", "map", "filter", "sum", "min", "max",
+        "sorted", "input", "print", "format", "object", "super", "next",
+        "iter", "hash", "range", "repr", "slice", "zip", "vars", "dir",
+        "open", "eval", "exec", "abs", "all", "any", "bin", "chr", "ord",
+        "hex", "oct", "pow", "round", "property", "staticmethod", "classmethod"
+    ];
+
+    let $sResult = "";
     const $iLen = $sMaskedCode.length;
-    for (let $i = 0; $i < $iLen; $i = $i + 1) {
+    let $i = 0;
+    while ($i < $iLen) {
     const $sCh = $sMaskedCode.substring( $i, ( $i) + ( 1));
         if ($sCh === "$") {
-      $sResult = $sResult + "" + "_";
+      let $iJ = $i + 1;
+            while ($iJ < $iLen && $bIsIdentChar($sMaskedCode.substring( $iJ, ( $iJ) + ( 1))) === true) {
+        $iJ = $iJ + 1;
+      }
+      let $sName = $sMaskedCode.substring( $i + 1, ( $i + 1) + ( $iJ - $i - 1));
+            if ($aPyKeywords.indexOf( $sName) !== -1 || $aPyBuiltins.indexOf( $sName) !== -1) {
+        $sName = $sName + "_";
+      }
+      // Estado original puro: NO SE AGREGA EL GUION BAJO
+            $sResult = $sResult + "" + $sName;
+            $i = $iJ;
     }
     else {
       $sResult = $sResult + "" + $sCh;
+            $i = $i + 1;
     }
   }
   return $sResult;

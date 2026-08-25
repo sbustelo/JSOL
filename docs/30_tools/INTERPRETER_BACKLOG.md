@@ -38,12 +38,7 @@ Two real use cases surfaced this, from unrelated domains, which is why it's wort
 
 These two cases need different combination semantics (append a value to a growing list, vs. replace entirely) and different sources (self vs. a different selected column), so a naming convention alone ("call the accumulator `$mState`" or similar) can't carry enough information — it can't say _how_ to combine, and it can't say _whose_ output to use in Head-to-Head mode. This needs a declarative tag, the same shape as `@contract`, not a guess based on a variable name:
 
-js
-
-Copy
-
-Download
-
+```
 /\*\*
  \* @carry
  \* {
@@ -53,13 +48,9 @@ Download
  \* }
  \*/
 const $sTitForTat \= function($aOpponentHistory) { ... };
+```
 
-js
-
-Copy
-
-Download
-
+````
 /\*\*
  \* @carry
  \* {
@@ -69,6 +60,7 @@ Download
  \* }
  \*/
 const $aNextGeneration \= function($aGrid) { ... };
+```
 
 -   `"param"`: which of the function's own parameters receives the carried value.
 -   `"from"`: `"self"` (this same function's own previous return value) or `"column:<name>"` (another selected algorithm's previous return value — only meaningful in Head-to-Head mode, and the interpreter needs a way to let the user assign which selected function is `"opponent"`, `"player1"`, etc. when more than two are selected).
@@ -80,16 +72,12 @@ First row of any timeline/Head-to-Head run has nothing to carry yet; `param` get
 
 Conway's grid doesn't need a new core type — `array<array<boolean>>` already exists. What's missing is telling the interpreter this particular return value should be painted as a pixel grid instead of shown as a nested data table. Same shape of solution as `@carry`, a declarative tag instead of an inferred convention:
 
-js
-
-Copy
-
-Download
-
+```
 /\*\*
  \* @visualize
  \* { "type": "grid", "true": "#000000", "false": "#ffffff" }
  \*/
+ ```
 
 For a richer variant where each cell is a magnitude rather than boolean (heat maps, generational age-coloring), `"type": "grid"` over `array<array<number>>` with a color-scale spec instead of a two-color map covers it with the same tag shape — no second mechanism needed.
 
@@ -99,16 +87,12 @@ Not every example fits the generic spreadsheet-table paradigm, and forcing all o
 
 This is a distinct concept from `@carry`/`@visualize`: those describe how _rows_ relate to each other in the default table view; a custom I/O adapter replaces the _view itself_ for one example. Proposed shape, same declarative-tag family:
 
-js
-
-Copy
-
-Download
-
+```
 /\*\*
  \* @interface
  \* { "type": "text-generator", "input": "multi-file", "output": "editable-textarea" }
  \*/
+ ```
 
 Left open deliberately: how many `@interface` types are worth building before this becomes "another JS playground with extra steps" (see Positioning, above) — start with the one concrete case (Markov) rather than designing a general plugin system speculatively.
 
@@ -221,33 +205,25 @@ The editor should not necessarily follow the traditional IDE hierarchy where cod
 
 A JSOL document may instead be presented primarily as a business document:
 
-text
-
-Copy
-
-Download
-
+```
 \# Eligibility for financing
 A customer is eligible when:
 \- They are over 18
 \- They have no overdue debt
 \- Their score is above 650
 ▸ Implementation
+```
 
 The implementation can be disclosed on demand:
 
-text
-
-Copy
-
-Download
-
+```
 ▾ Implementation
 if (customer.age > 18
     && customer.overdueDebt == 0
     && customer.score > 650) {
     eligible = true
 }
+```
 
 This suggests at least two complementary presentation modes:
 
@@ -305,25 +281,17 @@ A further possibility is allowing Markdown documents to reference evaluated JSOL
 
 For example, some lightweight syntax could allow a business document to contain dynamically generated values:
 
-text
-
-Copy
-
-Download
-
+```
 \## Current eligibility threshold  
 The minimum score is \*\*{{ customer.scoreThreshold }}\*\*.
+```
 
 Or a computed result:
 
-text
-
-Copy
-
-Download
-
+```
 \### Result
 The customer is \*\*{{ eligible ? "eligible" : "not eligible" }}\*\*.
+```
 
 The exact syntax should not be decided yet. Possibilities include:
 
@@ -341,14 +309,10 @@ The same mechanism could potentially expose JSOL results directly inside the bus
 
 For example:
 
-text
-
-Copy
-
-Download
-
+```
 \## Eligible products
 \[dynamic table: eligibleProducts\]
+```
 
 which could render as:
 
@@ -412,12 +376,7 @@ Items 1–3 already exist today, not as a future design: `@description` is the n
 
 A JSOL document could eventually look conceptually like:
 
-text
-
-Copy
-
-Download
-
+```
 ┌──────────────────────────────────────────────┐
 │ CREDIT ELIGIBILITY                           │
 │                                              │
@@ -439,6 +398,7 @@ Download
 │                                              │
 │ ▸ Implementation                             │
 └──────────────────────────────────────────────┘
+```
 
 The same `.jsol` file would contain both the narrative and the executable logic required to produce this result.
 

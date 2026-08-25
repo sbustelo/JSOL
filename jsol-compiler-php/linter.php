@@ -1,6 +1,7 @@
 <?php
-// @JSOL v0.2.94 - Self-Hosted Compiler Linter Module (Dynamic SSOT Validation)
-$bIsWordChar = function($sCh) {
+
+// @JSOL v0.2.96 - Self-Hosted Compiler Linter Module (Dynamic SSOT Validation)
+$bIsLinterWordChar = function($sCh) {
   if ($sCh === "") {
     return false;
   }
@@ -22,42 +23,20 @@ $bIsWordChar = function($sCh) {
 $mAuditPragma = function($sSourceCode) {
   $aErrors = [];
     $bHasPragma = false;
-    $iLen = mb_strlen($sSourceCode, "UTF-8");
 
-    $i = 0;
-    $bSkipping = true;
-    while ($i < $iLen && $bSkipping === true) {
-    $sC = mb_substr($sSourceCode,  $i,  1, "UTF-8");
-        if ($sC === " " || $sC === "\t" || $sC === "\n" || $sC === "\r") {
-      $i = $i + 1;
-    }
-    else {
-      $bSkipping = false;
-    }
-  }
-  if (mb_substr($sSourceCode,  $i,  2, "UTF-8") === "//") {
-    $iLineEnd = $i;
-        $bScanning = true;
-        while ($iLineEnd < $iLen && $bScanning === true) {
-      if (mb_substr($sSourceCode,  $iLineEnd,  1, "UTF-8") === "\n") {
-        $bScanning = false;
-      }
-      else {
-        $iLineEnd = $iLineEnd + 1;
-      }
-    }
-    $sFirstLine = mb_substr($sSourceCode,  $i,  $iLineEnd - $i, "UTF-8");
-        if (JSOL::strIndexOf($sFirstLine,  "@JSOL") !== -1 || JSOL::strIndexOf($sFirstLine,  "// JSOL") !== -1) {
-      $bHasPragma = true;
-    }
+    // Perfil-agnóstico: acepta @JSOL, JSOL, y sufijos de perfil como JSOL-X, JSOL-C, etc.
+    // sin requerir cambios en el parser por cada perfil nuevo.
+    if (Rgx::test("^\\s*//\\s*@?JSOL(-[A-Z]+)?\\b",  $sSourceCode,  "") === true) {
+    $bHasPragma = true;
   }
   if ($bHasPragma === false) {
     $aErrors[] =  "Fatal: Missing MANDATORY @JSOL pragma on Line 1.";
   }
   return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors);
 };
-$mAuditForbiddenPatterns = function($sMaskedCode) {
+$mAuditForbiddenPatterns = function($sMaskedCode) use (&$bIsLinterWordChar) {
   $aErrors = [];
+    $aWarnings = [];
 
     $aFunctionalMethods = [".map(", ".filter(", ".reduce(", ".forEach(", ".find("];
     $bHasFunctionalMethods = false;
@@ -75,7 +54,7 @@ $mAuditForbiddenPatterns = function($sMaskedCode) {
     for ($iP = 0; $iP < $iMLen; $iP = $iP + 1) {
     if (mb_substr($sMaskedCode,  $iP,  7, "UTF-8") === ".length") {
       $sNextChar = mb_substr($sMaskedCode,  $iP + 7,  1, "UTF-8");
-            if ($bIsWordChar($sNextChar) === false) {
+            if ($bIsLinterWordChar($sNextChar) === false) {
         $bHasLengthProperty = true;
                 break;
       }
@@ -87,30 +66,149 @@ $mAuditForbiddenPatterns = function($sMaskedCode) {
   if (JSOL::strIndexOf($sMaskedCode,  "with (") !== -1 || JSOL::strIndexOf($sMaskedCode,  "with(") !== -1) {
     $aErrors[] =  "Linter Error: The 'with' statement is FORBIDDEN.";
   }
-  return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors);
+  if (JSOL::strIndexOf($sMaskedCode,  "JSOL.use(") !== -1) {
+    $aWarnings[] =  "Linter Warning: JSOL.use() is DEPRECATED. Auto-use injection handles scope transparency now.";
+  }
+  if (JSOL::strIndexOf($sMaskedCode,  "JSOL.JS") !== -1 || JSOL::strIndexOf($sMaskedCode,  "JSOL.PHP") !== -1 || JSOL::strIndexOf($sMaskedCode,  "JSOL.PY") !== -1) {
+    $aWarnings[] =  "Linter Warning: Asymmetric target blocks (JSOL.JS/PHP/PY) break isomorphic guarantees. Migrate to pure JSOL or native wrappers.";
+  }
+  return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors,  "warnings",  $aWarnings);
 };
-$mAuditStrictTyping = function($sMaskedCode, $mSSOT) use (&$bIsWordChar) {
+$mAuditStrictTyping = function($sMaskedCode, $mSSOT) use (&$bIsLinterWordChar) {
   $aErrors = [];
+    $aWarnings = [];
     $iLen = mb_strlen($sMaskedCode, "UTF-8");
     
+    $iBraceDepth = 0;
+    $aActiveLoops = [];
+    
     for ($i = 0; $i < $iLen; $i = $i + 1) {
-    if (mb_substr($sMaskedCode,  $i,  1, "UTF-8") === "$") {
+    $sCh = mb_substr($sMaskedCode,  $i,  1, "UTF-8");
+        
+        if ($sCh === "{") {
+      $iBraceDepth = $iBraceDepth + 1;
+    }
+    else if ($sCh === "}") {
+      $aNewLoops = [];
+            $iCount = count($aActiveLoops);
+            for ($iK = 0; $iK < $iCount; $iK = $iK + 1) {
+        if ($aActiveLoops[$iK]["depth"] < $iBraceDepth) {
+          $aNewLoops[] =  $aActiveLoops[$iK];
+        }
+      }
+      $aActiveLoops = $aNewLoops;
+            $iBraceDepth = $iBraceDepth - 1;
+    }
+    else if (mb_substr($sMaskedCode,  $i,  4, "UTF-8") === "for ") {
+      $iPeek = $i + 4;
+            while ($iPeek < $iLen && (mb_substr($sMaskedCode,  $iPeek,  1, "UTF-8") === " " || mb_substr($sMaskedCode,  $iPeek,  1, "UTF-8") === "(")) {
+        $iPeek = $iPeek + 1;
+      }
+      if (mb_substr($sMaskedCode,  $iPeek,  4, "UTF-8") === "let ") {
+        $iPeek = $iPeek + 4;
+                $iV = $iPeek;
+                while ($iV < $iLen && $bIsLinterWordChar(mb_substr($sMaskedCode,  $iV,  1, "UTF-8"))) {
+          $iV = $iV + 1;
+        }
+        $sVarName = mb_substr($sMaskedCode,  $iPeek,  $iV - $iPeek, "UTF-8");
+                
+                $iOf = $iV;
+                while ($iOf < $iLen && mb_substr($sMaskedCode,  $iOf,  1, "UTF-8") === " ") {
+          $iOf = $iOf + 1;
+        }
+        if (mb_substr($sMaskedCode,  $iOf,  2, "UTF-8") === "of") {
+          $iR = $iOf + 2;
+                    while ($iR < $iLen && mb_substr($sMaskedCode,  $iR,  1, "UTF-8") === " ") {
+            $iR = $iR + 1;
+          }
+          if (mb_substr($sMaskedCode,  $iR,  11, "UTF-8") === "JSOL.range(") {
+            $bShadow = false;
+                        for ($iK = 0; $iK < count($aActiveLoops); $iK = $iK + 1) {
+              if ($aActiveLoops[$iK]["var"] === $sVarName) {
+                $bShadow = true; break;
+              }
+            }
+            if ($bShadow === true) {
+              $aErrors[] =  "Linter Fatal Error: Shadowing of loop variable '" . $sVarName . "' is forbidden.";
+            }
+            $aActiveLoops[] =  JSOL::dict("var",  $sVarName,  "depth",  $iBraceDepth + 1);
+
+                        $iParenDepth = 0;
+                        $iArgsEnd = -1;
+                        for ($iK = $iR + 10; $iK < $iLen; $iK = $iK + 1) {
+              if (mb_substr($sMaskedCode,  $iK,  1, "UTF-8") === "(") {
+                $iParenDepth = $iParenDepth + 1;
+              }
+              else if (mb_substr($sMaskedCode,  $iK,  1, "UTF-8") === ")") {
+                $iParenDepth = $iParenDepth - 1;
+                                if ($iParenDepth === 0) {
+                  $iArgsEnd = $iK; break;
+                }
+              }
+            }
+            if ($iArgsEnd !== -1) {
+              $sArgs = mb_substr($sMaskedCode,  $iR + 11,  $iArgsEnd - $iR - 11, "UTF-8");
+                            $iCommas = 0;
+                            $iADepth = 0;
+                            $bInStr = false;
+                            for ($iK = 0; $iK < mb_strlen($sArgs, "UTF-8"); $iK = $iK + 1) {
+                $sC = mb_substr($sArgs,  $iK,  1, "UTF-8");
+                                if ($sC === '"') {
+                  $bInStr = !$bInStr;
+                }
+                if ($bInStr === false) {
+                  if ($sC === "(" || $sC === "[" || $sC === "{") {
+                    $iADepth = $iADepth + 1;
+                  }
+                  if ($sC === ")" || $sC === "]" || $sC === "}") {
+                    $iADepth = $iADepth - 1;
+                  }
+                  if ($sC === "," && $iADepth === 0) {
+                    $iCommas = $iCommas + 1;
+                  }
+                }
+              }
+              if ($iCommas < 3) {
+                $aWarnings[] =  "Linter Warning: JSOL.range lacks $qMaxTimes argument (4th arg). Recommended for JSOL-X profile.";
+              }
+            }
+          }
+        }
+      }
+    }
+    else if (mb_substr($sMaskedCode,  $i,  8, "UTF-8") === implode("", ["$",  "JSOL_i_"])) {
+      $iV = $i + 8;
+            while ($iV < $iLen && $bIsLinterWordChar(mb_substr($sMaskedCode,  $iV,  1, "UTF-8"))) {
+        $iV = $iV + 1;
+      }
+      $sBaseVar = implode("", ["$",  mb_substr($sMaskedCode,  $i + 8,  $iV - $i - 8, "UTF-8")]);
+            $bFound = false;
+            for ($iK = 0; $iK < count($aActiveLoops); $iK = $iK + 1) {
+        if ($aActiveLoops[$iK]["var"] === $sBaseVar) {
+          $bFound = true; break;
+        }
+      }
+      if ($bFound === false) {
+        $aErrors[] =  implode("", ["Linter Fatal Error: Invalid reference to '$",  "JSOL_i_",  mb_substr($sMaskedCode,  $i + 8,  $iV - $i - 8, "UTF-8"),  "'. Loop variable '",  $sBaseVar,  "' is not active in this scope."]);
+      }
+    }
+    if ($sCh === "$") {
       $iJ = $i + 1;
-            while ($iJ < $iLen && $bIsWordChar(mb_substr($sMaskedCode,  $iJ,  1, "UTF-8"))) {
+            while ($iJ < $iLen && $bIsLinterWordChar(mb_substr($sMaskedCode,  $iJ,  1, "UTF-8"))) {
         $iJ = $iJ + 1;
       }
       $sVarName = mb_substr($sMaskedCode,  $i,  $iJ - $i, "UTF-8");
             
-            if (JSOL::strIndexOf($sVarName,  '$_') === 0) {
+            if (JSOL::strIndexOf($sVarName,  implode("", ["$",  "_"])) === 0 || JSOL::strIndexOf($sVarName,  implode("", ["$",  "JSOL_"])) === 0) {
         $iBack = $i - 1;
-                while ($iBack >= 0 && (mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === " " || mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === "\t" || mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === "\n")) {
+                while ($iBack >= 0 && (mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === " " || mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === "\t" || mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === "\n" || mb_substr($sMaskedCode,  $iBack,  1, "UTF-8") === "(")) {
           $iBack = $iBack - 1;
         }
         if ($iBack >= 2 && mb_substr($sMaskedCode,  $iBack - 2,  3, "UTF-8") === "let") {
-          $aErrors[] =  "Linter Error: Variable '" . $sVarName . "' uses reserved internal prefix '" . '$_' . "' in declaration.";
+          $aErrors[] =  implode("", ["Linter Error: Variable '",  $sVarName,  "' uses reserved internal prefix in declaration."]);
         }
         else if ($iBack >= 4 && mb_substr($sMaskedCode,  $iBack - 4,  5, "UTF-8") === "const") {
-          $aErrors[] =  "Linter Error: Variable '" . $sVarName . "' uses reserved internal prefix '" . '$_' . "' in declaration.";
+          $aErrors[] =  implode("", ["Linter Error: Variable '",  $sVarName,  "' uses reserved internal prefix in declaration."]);
         }
         $i = $iJ - 1;
                 continue;
@@ -152,12 +250,24 @@ $mAuditStrictTyping = function($sMaskedCode, $mSSOT) use (&$bIsWordChar) {
                         $bValid = true;
           }
         }
+        if ($bValid === false && isset($mSSOT["types"][ "custom"]) === true) {
+          $aCustom = $mSSOT["types"]["custom"];
+                    if (JSOL::arrIndexOf($aCustom,  $sPrefix) !== -1) {
+            if (mb_strlen($sPrefix, "UTF-8") >= 3) {
+              $bValid = true;
+            }
+            else {
+              $aErrors[] =  "Linter Error: Custom type prefix '" . $sPrefix . "' in variable '" . $sVarName . "' must be 3 or more characters.";
+                            $bValid = true;
+            }
+          }
+        }
         if ($bValid === false) {
-          $aErrors[] =  "Linter Error: Unknown type prefix '" . $sPrefix . "' in variable '" . $sVarName . "'. No truncation fallback allowed.";
+          $aErrors[] =  "Linter Error: Unknown or unregistered type prefix '" . $sPrefix . "' in variable '" . $sVarName . "'. No truncation fallback allowed.";
         }
       }
       $i = $iJ - 1;
     }
   }
-  return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors);
+  return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors,  "warnings",  $aWarnings);
 };

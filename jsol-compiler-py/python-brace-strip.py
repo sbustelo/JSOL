@@ -22,24 +22,24 @@ from jsol_core import JSOL
 # Usage: standalone first, same discipline as every other piece in this
 # pipeline. Do not wire into engine.jsol until validated.
 
-def _bIsWhitespaceCharPY(_sCh): 
+def bIsWhitespaceCharPY(sCh): 
 
-  if _sCh == " ": 
-
-    return True;
-
-
-  if _sCh == "\t": 
+  if sCh == " ": 
 
     return True;
 
 
-  if _sCh == "\n": 
+  if sCh == "\t": 
 
     return True;
 
 
-  if _sCh == "\r": 
+  if sCh == "\n": 
+
+    return True;
+
+
+  if sCh == "\r": 
 
     return True;
 
@@ -47,130 +47,130 @@ def _bIsWhitespaceCharPY(_sCh):
   return False;
 
 
-def _sTrimWithPY(_sVal): 
+def sTrimWithPY(sVal): 
 
-  _iLen = len(_sVal);
-  _iStart = 0;
-  while _iStart < _iLen and _bIsWhitespaceCharPY(_sVal[( _iStart):( _iStart)+( 1)]) == True: 
+  iLen = len(sVal);
+  iStart = 0;
+  while iStart < iLen and bIsWhitespaceCharPY(sVal[( iStart):( iStart)+( 1)]) == True: 
 
-    _iStart = _iStart + 1;
-
-
-  _iEnd = _iLen;
-  while _iEnd > _iStart and _bIsWhitespaceCharPY(_sVal[( _iEnd - 1):( _iEnd - 1)+( 1)]) == True: 
-
-    _iEnd = _iEnd - 1;
+    iStart = iStart + 1;
 
 
-  return _sVal[( _iStart):( _iStart)+( _iEnd - _iStart)];
+  iEnd = iLen;
+  while iEnd > iStart and bIsWhitespaceCharPY(sVal[( iEnd - 1):( iEnd - 1)+( 1)]) == True: 
+
+    iEnd = iEnd - 1;
 
 
-def _sStripPythonBraces(_sIndentedCode, _sIndentUnit): 
-
-  _sResult = "";
-  _iDepth = 0;
-  _i = 0;
-  _iLen = len(_sIndentedCode);
-  _bStartOfLine = True;
-  _aOpenPositions = [];
-
-  while _i < _iLen: 
-
-    _sCh = _sIndentedCode[( _i):( _i)+( 1)];
-
-    if _sCh == "{": 
-
-      _aOpenPositions.append( len(_sResult));
-      _iDepth = _iDepth + 1;
-      _sResult = _sResult + "\n";
-      _bStartOfLine = True;
-      _i = _i + 1;
+  return sVal[( iStart):( iStart)+( iEnd - iStart)];
 
 
-    elif _sCh == "}": 
+def sStripPythonBraces(sIndentedCode, sIndentUnit): 
 
-      _iContentStart = 0;
-      if len(_aOpenPositions) > 0: 
+  sResult = "";
+  iDepth = 0;
+  i = 0;
+  iLen = len(sIndentedCode);
+  bStartOfLine = True;
+  aOpenPositions = [];
 
-        _iContentStart = _aOpenPositions[len(_aOpenPositions) - 1];
-        _aOpenPositions.pop();
+  while i < iLen: 
 
+    sCh = sIndentedCode[( i):( i)+( 1)];
 
-      _sSinceOpen = _sResult[( _iContentStart):( _iContentStart)+( len(_sResult) - _iContentStart)];
-      if _sTrimWithPY(_sSinceOpen) == "": 
+    if sCh == "{": 
 
-        _iStep = 0;
-        while _iStep < _iDepth: 
-
-          _sResult = _sResult + "" + _sIndentUnit; 
-
-          _iStep = _iStep + 1;
-
-
-        _sResult = _sResult + "pass\n";
-
-
-      _iDepth = _iDepth - 1;
-      _sResult = _sResult + "\n";
-      _bStartOfLine = True;
-      _i = _i + 1;
-
-      _iPeek = _i;
-      while _iPeek < _iLen and _bIsWhitespaceCharPY(_sIndentedCode[( _iPeek):( _iPeek)+( 1)]) == True: 
-
-        _iPeek = _iPeek + 1;
+      aOpenPositions.append( len(sResult));
+      iDepth = iDepth + 1;
+      sResult = sResult + "\n";
+      bStartOfLine = True;
+      i = i + 1;
 
 
-      if _iPeek < _iLen and _sIndentedCode[( _iPeek):( _iPeek)+( 1)] == ";": 
+    elif sCh == "}": 
 
-        _i = _iPeek + 1;
+      iContentStart = 0;
+      if len(aOpenPositions) > 0: 
 
-
-
-
-    elif _sCh == "\n": 
-
-      _sResult = _sResult + "\n";
-      _bStartOfLine = True;
-      _i = _i + 1;
+        iContentStart = aOpenPositions[len(aOpenPositions) - 1];
+        aOpenPositions.pop();
 
 
-    elif _bIsWhitespaceCharPY(_sCh) == True: 
+      sSinceOpen = sResult[( iContentStart):( iContentStart)+( len(sResult) - iContentStart)];
+      if sTrimWithPY(sSinceOpen) == "": 
 
-      if _bStartOfLine == True: 
+        iStep = 0;
+        while iStep < iDepth: 
 
-        _i = _i + 1;
+          sResult = sResult + "" + sIndentUnit; 
+
+          iStep = iStep + 1;
+
+
+        sResult = sResult + "pass\n";
+
+
+      iDepth = iDepth - 1;
+      sResult = sResult + "\n";
+      bStartOfLine = True;
+      i = i + 1;
+
+      iPeek = i;
+      while iPeek < iLen and bIsWhitespaceCharPY(sIndentedCode[( iPeek):( iPeek)+( 1)]) == True: 
+
+        iPeek = iPeek + 1;
+
+
+      if iPeek < iLen and sIndentedCode[( iPeek):( iPeek)+( 1)] == ";": 
+
+        i = iPeek + 1;
+
+
+
+
+    elif sCh == "\n": 
+
+      sResult = sResult + "\n";
+      bStartOfLine = True;
+      i = i + 1;
+
+
+    elif bIsWhitespaceCharPY(sCh) == True: 
+
+      if bStartOfLine == True: 
+
+        i = i + 1;
 
 
       else: 
 
-        _sResult = _sResult + "" + _sCh;
-        _i = _i + 1;
+        sResult = sResult + "" + sCh;
+        i = i + 1;
 
 
 
 
     else: 
 
-      if _bStartOfLine == True: 
+      if bStartOfLine == True: 
 
-        _iStep = 0;
-        while _iStep < _iDepth: 
+        iStep = 0;
+        while iStep < iDepth: 
 
-          _sResult = _sResult + "" + _sIndentUnit;
+          sResult = sResult + "" + sIndentUnit;
 
-          _iStep = _iStep + 1;
-
-
-        _bStartOfLine = False;
+          iStep = iStep + 1;
 
 
-      _sResult = _sResult + "" + _sCh;
-      _i = _i + 1;
+        bStartOfLine = False;
+
+
+      sResult = sResult + "" + sCh;
+      i = i + 1;
 
 
 
 
-  return _sResult;
+  return sResult;
 
 

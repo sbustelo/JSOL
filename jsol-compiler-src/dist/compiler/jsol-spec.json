@@ -5,7 +5,8 @@
       "i": [
         "i",
         "idx",
-        "index"
+        "index",
+        "int"
       ],
       "q": [
         "q",
@@ -68,6 +69,18 @@
       "g",
       "t",
       "d"
+    ],
+    "custom": [
+      "col",
+      "cs",
+      "csrgb",
+      "cscmyk",
+      "csxyz",
+      "cslab",
+      "csoklch",
+      "csoklab",
+      "cswcagy",
+      "csapcay"
     ]
   },
   "primitives": [
@@ -112,6 +125,7 @@
     "JSOL.JS",
     "JSOL.PHP",
     "JSOL.use",
+    "JSOL.range",
     "Math.PI",
     "isNaN",
     "Math."
@@ -322,6 +336,11 @@
         "id": "JSOL.use",
         "type": "regex",
         "search": "JSOL\\.use\\s*\\([^)]+\\)\\s*;?",
+        "template": ""
+      },
+      {
+        "id": "JSOL.range",
+        "type": "range",
         "template": ""
       },
       {
@@ -546,6 +565,11 @@
         "type": "regex",
         "search": "function\\s*\\(([^)]*)\\)\\s*\\{(?:\\s|__JSOL_COM_\\d+__)*JSOL\\.use\\s*\\(([^)]+)\\)\\s*;?",
         "template": "function($1) use ($2) {\n"
+      },
+      {
+        "id": "JSOL.range",
+        "type": "range",
+        "template": ""
       },
       {
         "id": "Math.PI",
@@ -842,6 +866,11 @@
         "template": ""
       },
       {
+        "id": "JSOL.range",
+        "type": "range",
+        "template": ""
+      },
+      {
         "id": "Math.PI",
         "type": "replace",
         "template": "Math.PI"
@@ -1073,6 +1102,11 @@
         "id": "JSOL.use",
         "type": "regex",
         "search": "JSOL\\.use\\s*\\([^)]+\\)\\s*;?",
+        "template": ""
+      },
+      {
+        "id": "JSOL.range",
+        "type": "range",
         "template": ""
       },
       {

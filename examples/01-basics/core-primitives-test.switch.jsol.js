@@ -1,16 +1,89 @@
-// @JSOL v0.2.93
+// @JSOL v0.2.96
 
 /**
  @description
- A complete validation suite that tests every primitive domain method specified in JSOL v0.3.
- Designed using a STRICT SWITCH routing pattern to specifically stress-test the compiler's 
- support for 'switch' statements without fallthrough. Each method is evaluated in isolation 
- as a separate row in the JSOL REPL Interpreter, preventing a single unimplemented function 
+
+ # Core Primitives Test Suite - Switch Pattern
+ 
+ A complete validation suite that tests every primitive domain method specified in **JSOL v0.3**.
+ Designed using a **STRICT SWITCH routing pattern** to specifically stress-test the compiler's 
+ support for `switch` statements without fallthrough. Each method is evaluated in isolation 
+ as a separate row in the **JSOL REPL Interpreter**, preventing a single unimplemented function 
  from crashing the entire test suite.
 
-@param {string} $sMethod - The name of the method to evaluate.
-@returns {string} - The stringified result of the evaluation.
-*/
+ ## Key Design Decisions
+
+ - **Strict Switch Pattern**: Specifically tests compiler support for switch without fallthrough
+ - **Isolation**: Each method runs independently to prevent cascade failures
+ - **Complementary Testing**: IF-ELSE version available in `.ifs.jsol.js`
+
+ ## Parameters
+
+ - **@param {string} $sMethod** - The name of the method to evaluate.
+
+ ## Returns
+
+ - **@returns {string}** - The stringified result of the evaluation.
+
+ 
+
+
+ ## Test Cases
+
+ The following methods are tested across all primitive domains:
+
+ ### String Methods
+ - `Str.len`
+ - `Str.sub`
+ - `Str.indexOf`
+ - `Str.replace`
+ - `Str.char`
+ - `Str.fromChar`
+ - `Str.upper`
+ - `Str.lower`
+ - `Str.trim`
+ - `Str.split`
+
+ ### Array Methods
+ - `Arr.count`
+ - `Arr.push`
+ - `Arr.pop`
+ - `Arr.shift`
+ - `Arr.slice`
+ - `Arr.indexOf`
+ - `Arr.join`
+
+ ### Map Methods
+ - `Map.create`
+ - `Map.has`
+ - `Map.keys`
+
+ ### Math Methods
+ - `Math.floor`
+ - `Math.abs`
+ - `Math.pow`
+ - `Math.min`
+ - `Math.max`
+ - `Math.round`
+
+ ### Bitwise Methods
+ - `Bit.and`
+ - `Bit.or`
+ - `Bit.xor`
+ - `Bit.not`
+ - `Bit.shiftL`
+ - `Bit.shiftR`
+
+ ### Casting Methods
+ - `Cast.toStr`
+ - `Cast.toInt`
+ - `Cast.toFloat`
+
+ ### Regex Methods
+ - `Regex.match`
+ - `Regex.replace`
+ - `Regex.test`
+ */
 
 /**
  @contract

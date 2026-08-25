@@ -1,5 +1,5 @@
 /**
- * JSOL Core Polyfills (JavaScript Runtime)
+ * JSOL Core Polyfills v0.2.96 (JavaScript Runtime)
  * Se inyectan en el entorno global para soportar funciones primitivas de JSOL.
  */
 const jsolGlobal = {
@@ -16,12 +16,13 @@ const jsolGlobal = {
         use: function() {}
     },
     Str: {
-        indexOf: function(h, n) { return h.indexOf(n); },
+		indexOf: function(h, n) { return h.indexOf(n); },
         len: function(s) { return s.length; },
         sub: function(s, start, len) { return s.substring(start, start + len); },
         char: function(s, idx) { return s.charCodeAt(idx); },
         fromChar: function(c) { return String.fromCharCode(c); },
         replace: function(s, search, replace) { return s.split(search).join(replace); },
+        split: function(s, sep) { return s.split(sep); },
         concat: function(...args) { return args.join(""); }
     },
     Arr: {
@@ -41,6 +42,7 @@ const jsolGlobal = {
     Rgx: {
         match: function(p, s, f) {
             try {
+                p = p.replace(/\(\?P</g, '(?<');
                 const re = new RegExp(p, f || '');
                 const m = re.exec(s);
                 if (!m) return jsolGlobal.JSOL.dict("matched", false, "groups", [], "index", -1, "length", 0);
@@ -49,10 +51,16 @@ const jsolGlobal = {
             } catch(e) { return jsolGlobal.JSOL.dict("matched", false, "groups", [], "index", -1, "length", 0); }
         },
         replace: function(p, r, s, f) {
-            try { return s.replace(new RegExp(p, f || ''), r); } catch(e) { return s; }
+            try { 
+                p = p.replace(/\(\?P</g, '(?<');
+                return s.replace(new RegExp(p, f || ''), r); 
+            } catch(e) { return s; }
         },
         test: function(p, s, f) {
-            try { return new RegExp(p, f || '').test(s); } catch(e) { return false; }
+            try { 
+                p = p.replace(/\(\?P</g, '(?<');
+                return new RegExp(p, f || '').test(s); 
+            } catch(e) { return false; }
         }
     }
 };

@@ -1,7 +1,7 @@
 import math
 from jsol_core import JSOL
 
-# @JSOL v0.2.95 - Python Ternary Reorderer
+# @JSOL v0.2.96 - Python Ternary Reorderer
 #
 # Runs on MASKED code, BEFORE $sConvertControlFlowToPython (still JS-shaped
 # operators: &&, ||, ===, null, true, false — the next pass handles those
@@ -23,29 +23,29 @@ from jsol_core import JSOL
 # together in the same concatenated script (harness or, later, the real
 # `parts` array), and a duplicate top-level const would collide.
 
-def _bIsIdentChar2(_sCh): 
+def bIsIdentChar2(sCh): 
 
-  if _sCh == "_": 
-
-    return True;
-
-
-  if _sCh == "$": 
+  if sCh == "_": 
 
     return True;
 
 
-  if _sCh >= "a" and _sCh <= "z": 
+  if sCh == "$": 
 
     return True;
 
 
-  if _sCh >= "A" and _sCh <= "Z": 
+  if sCh >= "a" and sCh <= "z": 
 
     return True;
 
 
-  if _sCh >= "0" and _sCh <= "9": 
+  if sCh >= "A" and sCh <= "Z": 
+
+    return True;
+
+
+  if sCh >= "0" and sCh <= "9": 
 
     return True;
 
@@ -57,172 +57,187 @@ def _bIsIdentChar2(_sCh):
 # statement, tracking paren/bracket depth so a ";" inside a nested call isn't
 # mistaken for the statement end. Returns the index of that ";" (or $iLen if
 # none found — malformed input, caller should treat as "no ternary found").
-def _iFindStatementEnd(_sCode, _iStart): 
+def iFindStatementEnd(sCode, iStart): 
 
-  _iLen = len(_sCode);
-  _iParenDepth = 0;
-  _iBracketDepth = 0;
-  _i = _iStart;
+  iLen = len(sCode);
+  iParenDepth = 0;
+  iBracketDepth = 0;
+  i = iStart;
 
-  while _i < _iLen: 
+  while i < iLen: 
 
-    _sCh = _sCode[( _i):( _i)+( 1)];
-    if _sCh == "(": 
+    sCh = sCode[( i):( i)+( 1)];
+    if sCh == "(": 
 
-      _iParenDepth = _iParenDepth + 1;
-
-
-    elif _sCh == ")": 
-
-      _iParenDepth = _iParenDepth - 1;
+      iParenDepth = iParenDepth + 1;
 
 
-    elif _sCh == "[": 
+    elif sCh == ")": 
 
-      _iBracketDepth = _iBracketDepth + 1;
-
-
-    elif _sCh == "]": 
-
-      _iBracketDepth = _iBracketDepth - 1;
+      iParenDepth = iParenDepth - 1;
 
 
-    elif _sCh == ";" and _iParenDepth == 0 and _iBracketDepth == 0: 
+    elif sCh == "[": 
 
-      return _i;
-
-
-    _i = _i + 1;
+      iBracketDepth = iBracketDepth + 1;
 
 
-  return _iLen;
+    elif sCh == "]": 
+
+      iBracketDepth = iBracketDepth - 1;
+
+
+    elif sCh == ";" and iParenDepth == 0 and iBracketDepth == 0: 
+
+      return i;
+
+
+    i = i + 1;
+
+
+  return iLen;
 
 
 # Within $sExpr (a full statement RHS, no trailing ";"), finds a top-level
 # "?" and its matching top-level ":" (both at paren/bracket depth 0). Returns
 # "ok"=false if no top-level "?" exists at all — meaning this is a plain
 # expression, not a ternary, and must be left untouched by the caller.
-def _mSplitTernary(_sExpr): 
+def mSplitTernary(sExpr): 
 
-  _iLen = len(_sExpr);
-  _iParenDepth = 0;
-  _iBracketDepth = 0;
-  _iQuestionIndex = -1;
-  _iColonIndex = -1;
-  _i = 0;
+  iLen = len(sExpr);
+  iParenDepth = 0;
+  iBracketDepth = 0;
+  iQuestionIndex = -1;
+  iColonIndex = -1;
+  i = 0;
 
-  while _i < _iLen: 
+  while i < iLen: 
 
-    _sCh = _sExpr[( _i):( _i)+( 1)];
-    if _sCh == "(": 
+    sCh = sExpr[( i):( i)+( 1)];
+    if sCh == "(": 
 
-      _iParenDepth = _iParenDepth + 1;
-
-
-    elif _sCh == ")": 
-
-      _iParenDepth = _iParenDepth - 1;
+      iParenDepth = iParenDepth + 1;
 
 
-    elif _sCh == "[": 
+    elif sCh == ")": 
 
-      _iBracketDepth = _iBracketDepth + 1;
-
-
-    elif _sCh == "]": 
-
-      _iBracketDepth = _iBracketDepth - 1;
+      iParenDepth = iParenDepth - 1;
 
 
-    elif _sCh == "?" and _iParenDepth == 0 and _iBracketDepth == 0 and _iQuestionIndex == -1: 
+    elif sCh == "[": 
 
-      _iQuestionIndex = _i;
-
-
-    elif _sCh == ":" and _iParenDepth == 0 and _iBracketDepth == 0 and _iQuestionIndex != -1 and _iColonIndex == -1: 
-
-      _iColonIndex = _i;
+      iBracketDepth = iBracketDepth + 1;
 
 
-    _i = _i + 1;
+    elif sCh == "]": 
+
+      iBracketDepth = iBracketDepth - 1;
 
 
-  if _iQuestionIndex == -1 or _iColonIndex == -1: 
+    elif sCh == "?" and iParenDepth == 0 and iBracketDepth == 0: 
+
+      if iQuestionIndex == -1: 
+
+        iQuestionIndex = i;
+
+
+      else: 
+
+        # A second top-level "?" before we've found the matching
+        # ":" means a nested ternary in the true-branch. Taking the
+        # FIRST ":" found from here on would pair with the WRONG
+        # "?" and silently split the expression incorrectly. Bail
+        # instead — the caller leaves the original text untouched,
+        # which is unsupported-but-visible, not silently wrong.
+        return JSOL.dict("ok",  False);
+
+
+
+
+    elif sCh == ":" and iParenDepth == 0 and iBracketDepth == 0 and iQuestionIndex != -1 and iColonIndex == -1: 
+
+      iColonIndex = i;
+
+
+    i = i + 1;
+
+
+  if iQuestionIndex == -1 or iColonIndex == -1: 
 
     return JSOL.dict("ok",  False);
 
 
-  _sCond = _sTrimWhitespace(_sExpr[( 0):( 0)+( _iQuestionIndex)]);
-  _sTrue = _sTrimWhitespace(_sExpr[( _iQuestionIndex + 1):( _iQuestionIndex + 1)+( _iColonIndex - (_iQuestionIndex + 1))]);
-  _sFalse = _sTrimWhitespace(_sExpr[( _iColonIndex + 1):( _iColonIndex + 1)+( _iLen - (_iColonIndex + 1))]);
+  sCond = sTrimWhitespace(sExpr[( 0):( 0)+( iQuestionIndex)]);
+  sTrue = sTrimWhitespace(sExpr[( iQuestionIndex + 1):( iQuestionIndex + 1)+( iColonIndex - (iQuestionIndex + 1))]);
+  sFalse = sTrimWhitespace(sExpr[( iColonIndex + 1):( iColonIndex + 1)+( iLen - (iColonIndex + 1))]);
 
-  return JSOL.dict("ok",  True,  "cond",  _sCond,  "true",  _sTrue,  "false",  _sFalse);
+  return JSOL.dict("ok",  True,  "cond",  sCond,  "true",  sTrue,  "false",  sFalse);
 
 
-def _sConvertTernaries(_sMaskedCode): 
+def sConvertTernaries(sMaskedCode): 
 
-  _sResult = "";
-  _i = 0;
-  _iLen = len(_sMaskedCode);
+  sResult = "";
+  i = 0;
+  iLen = len(sMaskedCode);
 
-  while _i < _iLen: 
+  while i < iLen: 
 
-    _sCh = _sMaskedCode[( _i):( _i)+( 1)];
+    sCh = sMaskedCode[( i):( i)+( 1)];
 
     # Trigger 1: "return <expr>;"
-    _bAtBoundary = (_i == 0) or (_bIsIdentChar2(_sMaskedCode[( _i - 1):( _i - 1)+( 1)]) == False);
-    _bHandled = False;
+    bAtBoundary = (i == 0) or (bIsIdentChar2(sMaskedCode[( i - 1):( i - 1)+( 1)]) == False);
+    bHandled = False;
 
-    if _bAtBoundary == True and _sMaskedCode[( _i):( _i)+( 7)] == "return " and _bIsIdentChar2(_sMaskedCode[( _i + 6):( _i + 6)+( 1)]) == False: 
+    if bAtBoundary == True and sMaskedCode[( i):( i)+( 7)] == "return " and bIsIdentChar2(sMaskedCode[( i + 6):( i + 6)+( 1)]) == False: 
 
-      _iRhsStart = _i + 7;
-      _iStmtEnd = _iFindStatementEnd(_sMaskedCode, _iRhsStart);
-      _sRhs = _sMaskedCode[( _iRhsStart):( _iRhsStart)+( _iStmtEnd - _iRhsStart)];
-      _mSplit = _mSplitTernary(_sRhs);
+      iRhsStart = i + 7;
+      iStmtEnd = iFindStatementEnd(sMaskedCode, iRhsStart);
+      sRhs = sMaskedCode[( iRhsStart):( iRhsStart)+( iStmtEnd - iRhsStart)];
+      mSplit = mSplitTernary(sRhs);
 
-      if _mSplit["ok"] == True: 
+      if mSplit["ok"] == True: 
 
-        _sResult = _sResult + "" + "return (" + "" + _mSplit["true"] + "" + " if " + "" + _mSplit["cond"] + "" + " else " + "" + _mSplit["false"] + "" + ")" + ";";
-        _i = _iStmtEnd + 1;
-        _bHandled = True;
+        sResult = sResult + "" + "return (" + "" + mSplit["true"] + "" + " if " + "" + mSplit["cond"] + "" + " else " + "" + mSplit["false"] + "" + ")" + ";";
+        i = iStmtEnd + 1;
+        bHandled = True;
 
 
 
 
     # Trigger 2: a lone "=" (assignment, not "==" / "===" / "<=" / ">=" / "!=")
-    if _bHandled == False and _sCh == "=": 
+    if bHandled == False and sCh == "=": 
 
-      _sPrevCh = _sMaskedCode[( _i - 1):( _i - 1)+( 1)];
-      _sNextCh = _sMaskedCode[( _i + 1):( _i + 1)+( 1)];
-      _bIsPlainAssign = ((_sNextCh != "=") and
-      (_sPrevCh != "=") and (_sPrevCh != "<") and (_sPrevCh != ">") and (_sPrevCh != "!"));
+      sPrevCh = sMaskedCode[( i - 1):( i - 1)+( 1)];
+      sNextCh = sMaskedCode[( i + 1):( i + 1)+( 1)];
+      bIsPlainAssign = ((sNextCh != "=") and
+      (sPrevCh != "=") and (sPrevCh != "<") and (sPrevCh != ">") and (sPrevCh != "!"));
 
-      if _bIsPlainAssign == True: 
+      if bIsPlainAssign == True: 
 
-        _iRhsStart = _i + 1;
-        _iStmtEnd = _iFindStatementEnd(_sMaskedCode, _iRhsStart);
-        _sRhs = _sMaskedCode[( _iRhsStart):( _iRhsStart)+( _iStmtEnd - _iRhsStart)];
-        _mSplit = _mSplitTernary(_sRhs);
+        iRhsStart = i + 1;
+        iStmtEnd = iFindStatementEnd(sMaskedCode, iRhsStart);
+        sRhs = sMaskedCode[( iRhsStart):( iRhsStart)+( iStmtEnd - iRhsStart)];
+        mSplit = mSplitTernary(sRhs);
 
-        if _mSplit["ok"] == True: 
+        if mSplit["ok"] == True: 
 
-          _sResult = _sResult + "" + "= (" + "" + _mSplit["true"] + "" + " if " + "" + _mSplit["cond"] + "" + " else " + "" + _mSplit["false"] + "" + ")" + ";";
-          _i = _iStmtEnd + 1;
-          _bHandled = True;
-
-
+          sResult = sResult + "" + "= (" + "" + mSplit["true"] + "" + " if " + "" + mSplit["cond"] + "" + " else " + "" + mSplit["false"] + "" + ")" + ";";
+          i = iStmtEnd + 1;
+          bHandled = True;
 
 
 
 
-    if _bHandled == False: 
-
-      _sResult = _sResult + "" + _sCh;
-      _i = _i + 1;
 
 
+    if bHandled == False: 
+
+      sResult = sResult + "" + sCh;
+      i = i + 1;
 
 
-  return _sResult;
+
+
+  return sResult;
 
 

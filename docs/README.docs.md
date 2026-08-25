@@ -20,10 +20,6 @@ FILE: docs/README.docs.md
 | ARCHITECTURE.md | Why the grammar restrictions exist, and what they cost/gain at the engine level. |
 | INTEGRATING.md | How to integrate the JSOL compiler within your own infrastructure, framework, or deployment pipeline (CI/CD). |
 | JSOL_AI_INSTRUCTIONS.md | The system prompt used for AI-assisted JSOL development. |
-| EXTENDING.md | Structural feasibility of new language targets: syntax, closures, memory models, AST-free pipeline rationale. |
-| EXTENDING-TYPES.md | Type system expansion beyond current JSON natives. |
-| EXTENDING-SEMANTIC-PARITY.md | Semantic divergences across target languages that threaten Deterministic Parity. The full catalog with proposed resolutions. |
-| EXTENDING-SEMANTIC-PARITY-table.md | Compact one-line-per-divergence reference for AI-assisted gap analysis. Companion to the full parity doc. |
 | SELF_HOSTING.md | The compiler compiles itself. Explanation of the self-hosting architecture. |
 | AI_ENGINEERING_METHODOLOGY.md | How AI is used to develop JSOL: multi-model triangulation, air-gap control, verification protocols. |
 
@@ -45,8 +41,12 @@ FILE: docs/README.docs.md
 | File/Dir | What it covers |
 | --- | --- |
 | ROADMAP.md | Priority-ordered backlog: what's next (v0.3 and beyond). |
-| LANGUAGE_SPEC_NEXT.md | v0.3 target: namespace revamp, type prefixes, regex. |
-| SPEC_CANDIDATES.md | Proposed new methods (Arr.copy, Str.split) — pending decisions. |
+| 0.3 SPEC CANDIDATE 0.2.96 - 2026 08 23.md | v0.3 target: namespace revamp, semantic parity, type prefixes. |
+| SPEC_CANDIDATES.md | Proposed new methods and pending decisions. |
+| EXTENDING.md | Structural feasibility of new language targets: syntax, closures, memory models, AST-free pipeline rationale. |
+| EXTENDING-TYPES.md | Type system expansion beyond current JSON natives. |
+| EXTENDING-SEMANTIC-PARITY.md | Semantic divergences across target languages that threaten Deterministic Parity. The full catalog with proposed resolutions. |
+| EXTENDING-SEMANTIC-PARITY-table.md | Compact one-line-per-divergence reference for AI-assisted gap analysis. Companion to the full parity doc. |
 | JSOL-X_vision/ | Excel compilation vision (pre-spec). Nothing implemented. |
 
 * * *
@@ -66,4 +66,4 @@ FILE: docs/README.docs.md
 
 ---
 
-*JSOL v0.2.95 — 2026-08-21, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.96 — 2026-08-25, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

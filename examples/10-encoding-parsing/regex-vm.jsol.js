@@ -1,4 +1,33 @@
-// @JSOL v0.2.93 - Pure JSOL Regex Engine (Thompson VM)
+// @JSOL v0.2.96
+
+/**
+ @description
+ Thompson NFA Regular Expression Virtual Machine.
+ Parses a subset of regular expressions (concatenation, alternation,
+ Kleene star, optionals, and capture groups) into bytecode, and evaluates 
+ strings against that automaton in O(N) time.
+ 
+ Originally written to ensure the platform could boot from a JSOL self-hosted compiler. Once proven, the architecture safely migrated to native `Regex.*` engine delegation. This engine remains as a pure-JSOL reference implementation of a bytecode parser and VM.
+
+ TODO: Implement missing features required for parity with the current native safe subset (e.g., {n,m} quantifiers, \b/\B boundaries). Additionally, restrict the . (dot) wildcard so it correctly excludes line terminators (\n, \r) by default, aligning with standard regex behavior. Achieving this parity is strictly required to eventually support Lua as a target, since Lua lacks native POSIX regex support and will rely on this VM at runtime.
+
+@param {string} $sPatternStr - The regex pattern to compile and search.
+@param {string} $sReplacementStr - The replacement string (supports capture group references like $1, $2).
+@param {string} $sStr - The target text to operate on.
+@param {string} $sFlags - Execution flags (e.g., "g" for global replacement).
+@returns {string} - The resulting string after applying the replacements.
+*/
+
+/**
+ @contract
+ {
+   "cases": [
+     { "$sPatternStr": "([a-z]+)-([0-9]+)", "$sReplacementStr": "$2:$1", "$sStr": "id-42 and user-99", "$sFlags": "g" },
+     { "$sPatternStr": "\\s+", "$sReplacementStr": "-", "$sStr": "hello   world", "$sFlags": "g" },
+     { "$sPatternStr": "a(b|c)*d", "$sReplacementStr": "MATCH", "$sStr": "z abbbcd z", "$sFlags": "g" }
+   ]
+ }
+*/
 
 const $mParseAtom = function($sPat, $i, $iN, $iGc, $mFns) {
     const $sC = Str.sub($sPat, $i, 1);
@@ -511,6 +540,7 @@ const $sRegexReplace = function($sPatternStr, $sReplacementStr, $sStr, $sFlags) 
 };
 
 const $bRegexTest = function($sPatternStr, $sStr, $sFlags) {
+    JSOL.use($mRegexMatch);
     const $mR = $mRegexMatch($sPatternStr, $sStr, $sFlags);
     if (Map.has($mR, "matched") && $mR["matched"] === true) {
         return true;

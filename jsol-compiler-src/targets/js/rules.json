@@ -40,6 +40,7 @@
   { "id": "JSOL.JS", "type": "block", "template": "unwrap" },
   { "id": "JSOL.PHP", "type": "block", "template": "strip" },
   { "id": "JSOL.use", "type": "regex", "search": "JSOL\\.use\\s*\\([^)]+\\)\\s*;?", "template": "" },
+  { "id": "JSOL.range", "type": "range", "template": "" },
   { "id": "Math.PI", "type": "replace", "template": "Math.PI" },
   { "id": "isNaN", "type": "call", "template": "isNaN({0})" },
   { "id": "Math.", "type": "replace", "template": "Math." }

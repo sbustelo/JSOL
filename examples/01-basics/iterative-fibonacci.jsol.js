@@ -2,10 +2,12 @@
 
 /**
  @description
+
  Computes the $qN-th Fibonacci number (0-indexed: F(0)=0, F(1)=1,
  F(n) = F(n-1) + F(n-2)) iteratively, using two running accumulators
  instead of recursion.
-  The naive recursive definition recomputes the same sub-values many times
+ 
+ The naive recursive definition recomputes the same sub-values many times
  over (F(n) calls F(n-1) and F(n-2), which each call F(n-2) and F(n-3), and
  so on), so its cost grows exponentially with $qN. Keeping only the
  previous two values and sliding them forward one step at a time solves it

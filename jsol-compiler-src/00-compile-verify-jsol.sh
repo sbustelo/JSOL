@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# SELF-HOSTING FIXED-POINT VERIFICATION SUITE v0.2.95
+# SELF-HOSTING FIXED-POINT VERIFICATION SUITE v0.2.96
 # ============================================================================
 
 # Forzar el directorio de trabajo a jsol-compiler-src independientemente de donde se ejecute
@@ -87,39 +87,31 @@ rm -rf _build_node_gen3 _build_php_gen3 _build_py_gen3
 mkdir -p _build_node_gen3 _build_php_gen3 _build_py_gen3
 log ""
 
+
+
+
+
 log "A.2 Compiling with Node engine (seed)..."
-for f in *.jsol; do
-	case "$f" in
-        _*) continue ;;
-    esac
-    log_only "  - Compiling: $f"
-    node _seed_engine/node/index.js --source="$f" --out-dir="_build_node_gen3" >> "$LOG_FILE" 2>&1
-done
+log_only "  - Compiling directory: ."
+node _seed_engine/node/index.js --source-dir="." --out-dir="_build_node_gen3" >> "$LOG_FILE" 2>&1
 log ""
 
 log "A.3 Compiling with PHP engine (seed)..."
-for f in *.jsol; do
-	case "$f" in
-        _*) continue ;;
-    esac
-    log_only "  - Compiling: $f"
-    php _seed_engine/php/index.php --source="$f" --out-dir="_build_php_gen3" >> "$LOG_FILE" 2>&1
-done
+log_only "  - Compiling directory: ."
+php _seed_engine/php/index.php --source-dir="." --out-dir="_build_php_gen3" >> "$LOG_FILE" 2>&1
 log ""
 
 log "A.4 Compiling with Python engine (seed)..."
-for f in *.jsol; do
-	case "$f" in
-        _*) continue ;;
-    esac
-    log_only "  - Compiling: $f"
-    python3 _seed_engine/py/index.py --source="$f" --out-dir="_build_py_gen3" >> "$LOG_FILE" 2>&1
-done
+log_only "  - Compiling directory: ."
+python3 _seed_engine/py/index.py --source-dir="." --out-dir="_build_py_gen3" >> "$LOG_FILE" 2>&1
 log ""
+
+
+
 
 log "A.5 Copying static orchestrator files..."
 cp index.js index.py targets.json _build_node_gen3/
-cp index.php ui.php index.py targets.json _build_php_gen3/
+cp index.php index_ui.php  index.py targets.json _build_php_gen3/
 cp index.py targets.json _build_py_gen3/
 cp -r dist _build_node_gen3/
 cp -r dist _build_php_gen3/
@@ -139,39 +131,27 @@ rm -rf _build_node_gen4 _build_php_gen4 _build_py_gen4
 mkdir -p _build_node_gen4 _build_php_gen4 _build_py_gen4
 log ""
 
+
 log "B.2 Compiling with Generation 3 Node orchestrator..."
-for f in *.jsol; do
-	case "$f" in
-        _*) continue ;;
-    esac
-    log_only "  - Compiling: $f"
-    node _build_node_gen3/index.js --source="$f" --out-dir="_build_node_gen4" >> "$LOG_FILE" 2>&1
-done
+log_only "  - Compiling directory: ."
+node _build_node_gen3/index.js --source-dir="." --out-dir="_build_node_gen4" >> "$LOG_FILE" 2>&1
 log ""
 
 log "B.3 Compiling with Generation 3 PHP orchestrator..."
-for f in *.jsol; do
-	case "$f" in
-        _*) continue ;;
-    esac
-    log_only "  - Compiling: $f"
-    php _build_php_gen3/index.php --source="$f" --out-dir="_build_php_gen4" >> "$LOG_FILE" 2>&1
-done
+log_only "  - Compiling directory: ."
+php _build_php_gen3/index.php --source-dir="." --out-dir="_build_php_gen4" >> "$LOG_FILE" 2>&1
 log ""
 
 log "B.4 Compiling with Generation 3 Python orchestrator..."
-for f in *.jsol; do
-	case "$f" in
-        _*) continue ;;
-    esac
-    log_only "  - Compiling: $f"
-    python3 _build_py_gen3/index.py --source="$f" --out-dir="_build_py_gen4" >> "$LOG_FILE" 2>&1
-done
+log_only "  - Compiling directory: ."
+python3 _build_py_gen3/index.py --source-dir="." --out-dir="_build_py_gen4" >> "$LOG_FILE" 2>&1
 log ""
+
+
 
 log "B.5 Copying static orchestrator files for Generation 4..."
 cp index.js index.py targets.json _build_node_gen4/
-cp index.php ui.php index.py targets.json _build_php_gen4/
+cp index.php index_ui.php  index.py targets.json _build_php_gen4/
 cp index.py targets.json _build_py_gen4/
 cp -r dist _build_node_gen4/
 cp -r dist _build_php_gen4/
@@ -268,7 +248,7 @@ log ""
 # ============================================================================
 
 log "================================================================"
-log "✅⚡ 𝐒𝐔𝐂𝐂𝐄𝐒𝐒: 𝐍𝐈𝐇𝐈𝐋 𝐎𝐁𝐒𝐓𝐀𝐓 𝐐𝐔𝐎𝐌𝐈𝐍𝐔𝐒 𝐆𝐈𝐓𝐇𝐔𝐁𝐈𝐓𝐔𝐑! 🏛️🚀🎉"
+log "✅⚡ SUCCESS: NIHIL OBSTAT QUOMINUS GITHUBITUR! 🏛️🚀🎉"
 log "All verification steps passed. No issues found that prevent considering this version stable."
 log "Senior developer criteria is required to confirm full completeness and approve publication under your responsibility."
 log ""
@@ -295,7 +275,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     cp -r _build_node_gen4/dist ../jsol-compiler-node/
 
     cp _build_php_gen4/*.php ../jsol-compiler-php/
-    cp _build_php_gen4/index.php _build_php_gen4/ui.php _build_php_gen4/targets.json ../jsol-compiler-php/
+    cp _build_php_gen4/index.php _build_php_gen4/index_ui.php  _build_php_gen4/targets.json ../jsol-compiler-php/
     cp -r _build_php_gen4/dist ../jsol-compiler-php/
 
     cp _build_node_gen4/*.ts ../jsol-compiler-ts/

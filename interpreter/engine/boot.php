@@ -2,24 +2,57 @@
 declare(strict_types=1);
 
 /**
- * JSOL v0.2.95 REPL Controller
+ * JSOL v0.2.96 REPL Controller
  * Handles routing, file scanning, metadata parsing, and in-memory compilation.
  */
 
 $interpreterCoreDir = dirname(__DIR__); // Points to /interpreter
 $compilerPath = null;
 
-// 1. Locate the JSOL Compiler index to find its directory
-if (file_exists($interpreterCoreDir . '/jsol-compiler-php/index.php')) {
-    $compilerPath = $interpreterCoreDir . '/jsol-compiler-php/index.php';
-} else {
-    $searchDir = $runDir; // Inherited from interpreter.php or host
+// Multi-strategy locator for jsol-compiler-php/index.php
+$candidates = [
+    $runDir . '/jsol-compiler-php/index.php',
+    dirname($runDir) . '/jsol-compiler-php/index.php',
+    dirname($interpreterCoreDir) . '/jsol-compiler-php/index.php',
+    $interpreterCoreDir . '/jsol-compiler-php/index.php'
+];
+
+foreach ($candidates as $cand) {
+    if (file_exists($cand)) {
+        $compilerPath = $cand;
+        break;
+    }
+}
+
+if ($compilerPath === null) {
+    // Ascending search from $runDir
+    $search = $runDir;
     for ($i = 0; $i < 6; $i++) {
-        if (file_exists($searchDir . '/jsol-compiler-php/index.php')) {
-            $compilerPath = $searchDir . '/jsol-compiler-php/index.php';
+        if (file_exists($search . '/jsol-compiler-php/index.php')) {
+            $compilerPath = $search . '/jsol-compiler-php/index.php';
             break;
         }
-        $searchDir = dirname($searchDir);
+        $parent = dirname($search);
+        if ($parent === $search) {
+            break;
+        }
+        $search = $parent;
+    }
+}
+
+if ($compilerPath === null) {
+    // Ascending search from $interpreterCoreDir
+    $search = $interpreterCoreDir;
+    for ($i = 0; $i < 6; $i++) {
+        if (file_exists($search . '/jsol-compiler-php/index.php')) {
+            $compilerPath = $search . '/jsol-compiler-php/index.php';
+            break;
+        }
+        $parent = dirname($search);
+        if ($parent === $search) {
+            break;
+        }
+        $search = $parent;
     }
 }
 
@@ -91,7 +124,12 @@ if ($selectedFileAbs && file_exists($selectedFileAbs)) {
     $compilationResult = compileJsolInMemory($selectedFileAbs, $compilerDir, $tempBinDir, $metadata);
 }
 
-// 6. Render View or Return Control (Host Delegation)
+// 6. Action Handler: Downloads (Routed through host app memory to guarantee context)
+if (isset($_GET['action']) && str_starts_with($_GET['action'], 'download-')) {
+    require_once $interpreterCoreDir . '/engine/action-downloads.php';
+}
+
+// 7. Render View or Return Control (Host Delegation)
 if (defined('JSOL_REPL_STANDALONE') && JSOL_REPL_STANDALONE === true) {
     require_once $interpreterCoreDir . '/engine/standalone.php';
 }

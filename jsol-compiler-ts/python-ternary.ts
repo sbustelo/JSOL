@@ -1,7 +1,7 @@
 declare var JSOL: any;
 declare var Rgx: any;
 
-// @JSOL v0.2.95 - Python Ternary Reorderer
+// @JSOL v0.2.96 - Python Ternary Reorderer
 //
 // Runs on MASKED code, BEFORE $sConvertControlFlowToPython (still JS-shaped
 // operators: &&, ||, ===, null, true, false — the next pass handles those
@@ -98,8 +98,19 @@ const $mSplitTernary = function($sExpr: any): Record<string, any> {
     else if ($sCh === "]") {
       $iBracketDepth = $iBracketDepth - 1;
     }
-    else if ($sCh === "?" && $iParenDepth === 0 && $iBracketDepth === 0 && $iQuestionIndex === -1) {
-      $iQuestionIndex = $i;
+    else if ($sCh === "?" && $iParenDepth === 0 && $iBracketDepth === 0) {
+      if ($iQuestionIndex === -1) {
+        $iQuestionIndex = $i;
+      }
+      else {
+        // A second top-level "?" before we've found the matching
+                // ":" means a nested ternary in the true-branch. Taking the
+                // FIRST ":" found from here on would pair with the WRONG
+                // "?" and silently split the expression incorrectly. Bail
+                // instead — the caller leaves the original text untouched,
+                // which is unsupported-but-visible, not silently wrong.
+                return JSOL.dict("ok",  false);
+      }
     }
     else if ($sCh === ":" && $iParenDepth === 0 && $iBracketDepth === 0 && $iQuestionIndex !== -1 && $iColonIndex === -1) {
       $iColonIndex = $i;

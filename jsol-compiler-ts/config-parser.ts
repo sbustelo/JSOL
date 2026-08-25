@@ -1,41 +1,38 @@
 declare var JSOL: any;
 declare var Rgx: any;
 
-// @JSOL v0.2.95 - Targets Configuration Normalizer
+// @JSOL v0.2.96 - Targets Configuration Normalizer (generic, target-agnostic)
+//
+// Iterates over $mBackendRegistry's keys (defined in engine.jsol) instead of
+// one hardcoded block per target. Adding a new compiler target never
+// requires touching this file again — it just needs an entry in the
+// registry, and this picks it up automatically.
+
 const $mNormalizeTargetsConfig = function($mRawConfig: any): Record<string, any> {
-  const $mJsConfig: Record<string, any> = JSOL.dict("default",  "",  "targets",  JSOL.dict());
-    const $mPhpConfig: Record<string, any> = JSOL.dict("default",  "",  "targets",  JSOL.dict());
-    const $mTsConfig: Record<string, any> = JSOL.dict("default",  "",  "targets",  JSOL.dict());
-    const $mPyConfig: Record<string, any> = JSOL.dict("default",  "",  "targets",  JSOL.dict());
-    
-    if ($mRawConfig === null) {
-    return JSOL.dict("js",  $mJsConfig,  "php",  $mPhpConfig,  "ts",  $mTsConfig,  "py",  $mPyConfig);
+  const $aTargetIds: any[] = Object.keys($mBackendRegistry);
+    const $mResult: Record<string, any> = JSOL.dict();
+
+    for (let $i = 0; $i < $aTargetIds.length; $i = $i + 1) {
+    const $sTargetId: string = $aTargetIds[$i];
+        $mResult[$sTargetId] = JSOL.dict("default",  "",  "targets",  JSOL.dict());
   }
-  if (Object.prototype.hasOwnProperty.call($mRawConfig,  "js")) {
-    $mJsConfig["default"] = $mRawConfig["js"]["default"] || "";
-        $mJsConfig["targets"] = $mRawConfig["js"]["targets"] || JSOL.dict();
+  if ($mRawConfig === null) {
+    return $mResult;
   }
-  if (Object.prototype.hasOwnProperty.call($mRawConfig,  "php")) {
-    $mPhpConfig["default"] = $mRawConfig["php"]["default"] || "";
-        $mPhpConfig["targets"] = $mRawConfig["php"]["targets"] || JSOL.dict();
+  for (let $i = 0; $i < $aTargetIds.length; $i = $i + 1) {
+    const $sTargetId: string = $aTargetIds[$i];
+        if (Object.prototype.hasOwnProperty.call($mRawConfig,  $sTargetId) === true) {
+      $mResult[$sTargetId]["default"] = $mRawConfig[$sTargetId]["default"] || "";
+            $mResult[$sTargetId]["targets"] = $mRawConfig[$sTargetId]["targets"] || JSOL.dict();
+    }
   }
-  if (Object.prototype.hasOwnProperty.call($mRawConfig,  "ts")) {
-    $mTsConfig["default"] = $mRawConfig["ts"]["default"] || "";
-        $mTsConfig["targets"] = $mRawConfig["ts"]["targets"] || JSOL.dict();
+  // Global default/targets block applies to every registered target.
+    if (Object.prototype.hasOwnProperty.call($mRawConfig,  "default") === true && Object.prototype.hasOwnProperty.call($mRawConfig,  "targets") === true) {
+    for (let $i = 0; $i < $aTargetIds.length; $i = $i + 1) {
+      const $sTargetId: string = $aTargetIds[$i];
+            $mResult[$sTargetId]["default"] = $mRawConfig["default"];
+            $mResult[$sTargetId]["targets"] = $mRawConfig["targets"];
+    }
   }
-  if (Object.prototype.hasOwnProperty.call($mRawConfig,  "py")) {
-    $mPyConfig["default"] = $mRawConfig["py"]["default"] || "";
-        $mPyConfig["targets"] = $mRawConfig["py"]["targets"] || JSOL.dict();
-  }
-  if (Object.prototype.hasOwnProperty.call($mRawConfig,  "default") && Object.prototype.hasOwnProperty.call($mRawConfig,  "targets")) {
-    $mJsConfig["default"] = $mRawConfig["default"];
-        $mPhpConfig["default"] = $mRawConfig["default"];
-        $mTsConfig["default"] = $mRawConfig["default"];
-        $mJsConfig["targets"] = $mRawConfig["targets"];
-        $mPhpConfig["targets"] = $mRawConfig["targets"];
-        $mTsConfig["targets"] = $mRawConfig["targets"];
-        $mPyConfig["default"] = $mRawConfig["default"];
-        $mPyConfig["targets"] = $mRawConfig["targets"];
-  }
-  return JSOL.dict("js",  $mJsConfig,  "php",  $mPhpConfig,  "ts",  $mTsConfig,  "py",  $mPyConfig);
+  return $mResult;
 };

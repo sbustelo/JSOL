@@ -1,6 +1,6 @@
 [
   { "id": "PY_Header", "type": "regex", "search": "^", "template": "import math\nfrom jsol_core import JSOL\n\n" },
-{ "id": "Str.concat", "type": "call", "template": "\"\".join(JSOL.to_str(_x) for _x in [{*}])" },
+  { "id": "Str.concat", "type": "call", "template": "\"\".join(JSOL.to_str(_x) for _x in [{*}])" },
   { "id": "Str.sub", "type": "call", "template": "{0}[({1}):({1})+({2})]" },
   { "id": "Str.len", "type": "call", "template": "len({0})" },
   { "id": "Str.indexOf", "type": "call", "template": "JSOL.str_index_of({0}, {1})" },
@@ -42,6 +42,7 @@
   { "id": "JSOL.PHP", "type": "block", "template": "strip" },
   { "id": "JSOL.PY", "type": "block", "template": "unwrap" },
   { "id": "JSOL.use", "type": "regex", "search": "JSOL\\.use\\s*\\([^)]+\\)\\s*;?", "template": "" },
+  { "id": "JSOL.range", "type": "range", "template": "" },
   { "id": "Math.PI", "type": "replace", "template": "math.pi" },
   { "id": "Math.round", "type": "call", "template": "round({0})" },
   { "id": "Math.abs", "type": "call", "template": "abs({0})" },

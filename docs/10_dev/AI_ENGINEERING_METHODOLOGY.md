@@ -68,57 +68,9 @@ The protocol strips the LLM of its conversational autonomy and enforces a rigid 
 4.  **Tactical Paralysis & Mechanical Bug Brake:** If the human Architect reports a bug, uses all-caps, or expresses frustration, the engine is physically forbidden from accelerating or guessing code. It must trigger "Tactical Paralysis", emit a Root Cause Analysis (RCA) by reading the DOM/DUMP, and await human validation before compiling.
 5.  **Forced Audit:** If the AI breaks a rule or hallucinates, the human issues an immediate halt command. The AI is forbidden from apologizing or generating excuses. It must halt execution, scan its internal rulebook, print the exact ID of the violated law, explain the failure mechanism, and await purge instructions.
 
-## 3\. Real-World Compiler Case Studies (Honest Pipeline Status)
-
-In keeping with academic honesty, the following case studies detail real architectural issues encountered during JSOL v0.2.x development.
-
-### Case Study A: The Linter / Lexical Masking Paradox
-
--   **Status:** 🟢 **Resolved & Verified (Iterative Chain)**
--   **The Problem:** The JSOL linter enforces strict rules forbidding direct `.length` property access (requiring `JSOL.count()` or `JSOL.len()`). When compiling `js-compiler.jsol` during self-hosting, the linter flagged `.length` contained inside regex string literals (e.g., `.replace(regex, "$1.length")`) as illegal executable code, blocking self-hosting.
--   **The AI Audit:** AI cross-auditing revealed that `engine.jsol` was running the linter on _raw_ source code before `$maskSourceCode` replaced strings and comments with tokens (`__JSOL_TOKEN_N__`).
--   **The Resolution:** Re-architected `linter.jsol` into a two-pass pipeline:
-    
-    1.  _Structural Pass:_ Audits raw code for file-level rules (e.g., mandatory `// @JSOL` pragma on Line 1).
-    2.  _Pattern Pass:_ Audits masked code _after_ string literals and comments are tokenized.
--   **The Value of Iteration:** This fix was not a single-shot victory; fixed-point testing uncovered a subsequent chain of subtle bugs (double-escaping in masking regexes, loop-bound drift in prefix handling, and `mb_strlen` parameter mismatches). The multi-model verification loop caught each regression in sequence.
-
-### Case Study B: Balanced Parenthesis Extraction in Parameter Parsing
-
--   **Status:** 🟢 **Resolved & Verified (Iterative Chain)**
--   **The Problem:** Regex transformations capturing function arguments via non-nesting patterns like `[^)]+` break when arguments contain nested function calls. For example:
-    
-    JavaScript
-    
-    ```
-    Str.sub($result,$startIdx, Str.len($result) -$startIdx)
-    ```
-    
-    The `[^)]+` pattern prematurely stops at the closing parenthesis of `Str.len(...)`, causing `php-compiler.jsol` to emit malformed PHP code (`mb_strlen($result, "UTF-8", "UTF-8")` with an extra illegal parameter under `strict_types=1`).
-    
--   **The AI Audit:** Confirmed that regex quantifiers cannot handle recursive nesting without an AST or structural scanner.
--   **The Resolution:** Adapted the character-by-character balanced counter scanner already built into `$processBlock` (used for `{}`) to handle `()` expression boundaries within `$processCall`.
--   **The Value of Iteration:** By physically integrating this character-by-character scanner into the transpilation engine (`js-compiler.jsol` and `php-compiler.jsol`), the compiler can now safely extract nested arguments without relying on an external AST parser, preserving the zero-dependency promise while guaranteeing isomorphism.
 
 
-### Case Study C: Thompson/Pike VM Regex Engine vs. Closure Elimination
-
--   **Status:** 🟢 **Resolved & Verified (Iterative Chain)**
--   **The Problem:** An early prototype for JSOL's custom regex engine relied on nested JavaScript closures for continuation-passing backtracking. This approach is fragile for self-hosting and unviable for low-level backends like `JSOL-C` (where C lacks native closures and requires complex lambda lifting). Furthermore, the prior `regex.jsol` contained nested closures lacking explicit `JSOL.use()` dependency declarations, causing execution failures when transpiled to PHP.
--   **The AI Audit:** Identified that continuation-passing closures violate the goal of an AST-free, multi-target runtime.
--   **The Resolution:** Re-architected the regex engine (`regex.jsol`) into an explicit, flat Thompson/Pike Virtual Machine. The engine compiles patterns into a linear instruction set (`CHAR`, `ANY`, `CLASS`, `SPLIT`, `JMP`, `SAVE`, `MATCH`) executed via an explicit array-based backtracking stack with zero runtime closures.
--   **The Value of Iteration:** The flat VM algorithm has been fully integrated into the self-hosted JSOL pipeline. By eliminating closure-based continuations, the engine now achieves 20/20 test passes (including complex character classes and multi-group captures) across both Node and PHP targets, definitively proving that JSOL can handle complex string analysis without target-specific escapes.
-
-## 4\. Guidelines for Contributors & AI-Assisted Research
-
-We welcome contributors who wish to extend JSOL or explore new target compilers (e.g., Python, Go, C#) using AI tools. To maintain project standards, all AI-assisted contributions must follow these guidelines:
-
-1.  **Declare AI Usage:** State clearly which models were used and what prompts or protocols were applied.
-2.  **Provide Full Context to the LLM:** Include JSOL's hard constraints in your prompts (AST-free, zero external dependencies, no native array methods, compulsory `JSOL.use()` for closures in target backends).
-3.  **Execute Diagnosis Before Code Generation:** Do not accept immediate code patches from an LLM. Demand a step-by-step diagnostic breakdown first.
-4.  **Enforce Air-Gap Review:** Manually inspect every line of AI-generated code. Ensure it does not introduce native language shortcuts that break cross-target compatibility.
-5.  **Verify Fixed-Point Convergence:** For changes affecting the compiler core, run the self-hosting validation script (`SELF_HOSTING.md`) and verify that JS and PHP backends produce identical, deterministic output.
 
 ---
 
-*JSOL v0.2.95 — 2026-08-21, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*
+*JSOL v0.2.96 — 2026-08-25, [Santiago Bustelo](https://www.bustelo.com.ar/) • [MIT License](../LICENSE)*

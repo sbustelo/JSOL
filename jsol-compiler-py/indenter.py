@@ -23,38 +23,38 @@ from jsol_core import JSOL
 # applied to $sCompiledJS / $sCompiledPHP / $sCompiledTS right before each is passed
 # to $sUnmaskSourceCode.
 
-def _sRepeatUnit(_sUnit, _iCount): 
+def sRepeatUnit(sUnit, iCount): 
 
-  _sOut = "";
-  _i = 0;
-  while _i < _iCount: 
+  sOut = "";
+  i = 0;
+  while i < iCount: 
 
-    _sOut = _sOut + "" + _sUnit;
+    sOut = sOut + "" + sUnit;
 
-    _i = _i + 1;
-
-
-  return _sOut;
+    i = i + 1;
 
 
-def _bIsWhitespaceChar(_sCh): 
-
-  if _sCh == " ": 
-
-    return True;
+  return sOut;
 
 
-  if _sCh == "\t": 
+def bIsWhitespaceChar(sCh): 
+
+  if sCh == " ": 
 
     return True;
 
 
-  if _sCh == "\n": 
+  if sCh == "\t": 
 
     return True;
 
 
-  if _sCh == "\r": 
+  if sCh == "\n": 
+
+    return True;
+
+
+  if sCh == "\r": 
 
     return True;
 
@@ -65,74 +65,74 @@ def _bIsWhitespaceChar(_sCh):
 # Trims only trailing whitespace from an accumulated output buffer, so closing
 # braces don't inherit blank lines or dangling spaces left over from the source's
 # own (irrelevant, about to be discarded) original formatting.
-def _sRTrimBuffer(_sBuf): 
+def sRTrimBuffer(sBuf): 
 
-  _iEnd = len(_sBuf);
-  while _iEnd > 0 and _bIsWhitespaceChar(_sBuf[( _iEnd - 1):( _iEnd - 1)+( 1)]) == True: 
+  iEnd = len(sBuf);
+  while iEnd > 0 and bIsWhitespaceChar(sBuf[( iEnd - 1):( iEnd - 1)+( 1)]) == True: 
 
-    _iEnd = _iEnd - 1;
-
-
-  return _sBuf[( 0):( 0)+( _iEnd)];
+    iEnd = iEnd - 1;
 
 
-def _sIndentCode(_sMaskedCode, _sIndentUnit): 
+  return sBuf[( 0):( 0)+( iEnd)];
 
-  _sResult = "";
-  _iDepth = 0;
-  _i = 0;
-  _iLen = len(_sMaskedCode);
 
-  while _i < _iLen: 
+def sIndentCode(sMaskedCode, sIndentUnit): 
 
-    _sChar = _sMaskedCode[( _i):( _i)+( 1)];
+  sResult = "";
+  iDepth = 0;
+  i = 0;
+  iLen = len(sMaskedCode);
 
-    if _sChar == "{": 
+  while i < iLen: 
 
-      _iDepth = _iDepth + 1;
-      _sResult = _sResult + "" + "{" + "\n" + _sRepeatUnit(_sIndentUnit, _iDepth);
-      _i = _i + 1;
+    sChar = sMaskedCode[( i):( i)+( 1)];
+
+    if sChar == "{": 
+
+      iDepth = iDepth + 1;
+      sResult = sResult + "" + "{" + "\n" + sRepeatUnit(sIndentUnit, iDepth);
+      i = i + 1;
 
       # Swallow whatever whitespace the original source had right after "{" —
       # we just emitted our own newline+indent, so any of it left over would
       # only produce blank lines.
-      _bSkipping = True;
-      while _i < _iLen and _bSkipping == True: 
+      bSkipping = True;
+      while i < iLen and bSkipping == True: 
 
-        if _bIsWhitespaceChar(_sMaskedCode[( _i):( _i)+( 1)]) == True: 
+        if bIsWhitespaceChar(sMaskedCode[( i):( i)+( 1)]) == True: 
 
-          _i = _i + 1;
+          i = i + 1;
 
 
         else: 
 
-          _bSkipping = False;
+          bSkipping = False;
 
 
 
 
 
 
-    elif _sChar == "}": 
+    elif sChar == "}": 
 
-      _iDepth = _iDepth - 1;
-      _sResult = _sRTrimBuffer(_sResult) + "\n" + _sRepeatUnit(_sIndentUnit, _iDepth) + "" + "}";
-      _i = _i + 1;
+      iDepth = iDepth - 1;
+      sResult = sRTrimBuffer(sResult) + "\n" + sRepeatUnit(sIndentUnit, iDepth) + "" + "}";
+      i = i + 1;
 
       # Swallow whitespace right after "}" before deciding what comes next —
       # same reasoning as after "{": the original spacing is irrelevant, we
       # only care about the next real character.
-      _bSkippingAfter = True;
-      while _i < _iLen and _bSkippingAfter == True: 
+      bSkippingAfter = True;
+      while i < iLen and bSkippingAfter == True: 
 
-        if _bIsWhitespaceChar(_sMaskedCode[( _i):( _i)+( 1)]) == True: 
+        if bIsWhitespaceChar(sMaskedCode[( i):( i)+( 1)]) == True: 
 
-          _i = _i + 1;
+          i = i + 1;
 
 
         else: 
 
-          _bSkippingAfter = False;
+          bSkippingAfter = False;
 
 
 
@@ -140,39 +140,39 @@ def _sIndentCode(_sMaskedCode, _sIndentUnit):
       # A ";" immediately following a block close (e.g. "const $mFn = function(){...};")
       # is not a new statement, it's the terminator of THIS one. Glue it onto the
       # same line as "}" instead of stranding it alone on the next line.
-      if _i < _iLen and _sMaskedCode[( _i):( _i)+( 1)] == ";": 
+      if i < iLen and sMaskedCode[( i):( i)+( 1)] == ";": 
 
-        _sResult = _sResult + "" + ";";
-        _i = _i + 1;
+        sResult = sResult + "" + ";";
+        i = i + 1;
 
-        _bSkippingAfterSemi = True;
-        while _i < _iLen and _bSkippingAfterSemi == True: 
+        bSkippingAfterSemi = True;
+        while i < iLen and bSkippingAfterSemi == True: 
 
-          if _bIsWhitespaceChar(_sMaskedCode[( _i):( _i)+( 1)]) == True: 
+          if bIsWhitespaceChar(sMaskedCode[( i):( i)+( 1)]) == True: 
 
-            _i = _i + 1;
+            i = i + 1;
 
 
           else: 
 
-            _bSkippingAfterSemi = False;
+            bSkippingAfterSemi = False;
 
 
 
 
 
 
-      _sResult = _sResult + "\n" + _sRepeatUnit(_sIndentUnit, _iDepth);
+      sResult = sResult + "\n" + sRepeatUnit(sIndentUnit, iDepth);
 
 
     else: 
 
-      _sResult = _sResult + "" + _sChar;
-      _i = _i + 1;
+      sResult = sResult + "" + sChar;
+      i = i + 1;
 
 
 
 
-  return _sResult;
+  return sResult;
 
 

@@ -2,17 +2,19 @@
 
 /**
  @description
+ 
  Computes the greatest common divisor (GCD) of two non-negative integers
  using the Euclidean algorithm: gcd(a, b) = gcd(b, a mod b), repeated until
  the remainder reaches 0, at which point the other value is the answer.
-  One of the oldest algorithms on record (Euclid's Elements, Book VII,
+ 
+ One of the oldest algorithms on record (Euclid's Elements, Book VII,
  c. 300 BCE) and still the standard way to compute a GCD: each step
  replaces the pair (a, b) with the strictly smaller pair (b, a mod b), so
  it terminates in a bounded number of steps without enumerating divisors.
 
-@param {integer} $qA - First non-negative integer.
-@param {integer} $qB - Second non-negative integer.
-@returns {integer} - The greatest common divisor of $qA and $qB.
+- @param {integer} $qA - First non-negative integer.
+- @param {integer} $qB - Second non-negative integer.
+- @returns {integer} - The greatest common divisor of $qA and $qB.
 */
 
 /**

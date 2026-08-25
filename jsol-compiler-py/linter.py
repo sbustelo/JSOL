@@ -1,31 +1,32 @@
 import math
 from jsol_core import JSOL
 
-# @JSOL v0.2.94 - Self-Hosted Compiler Linter Module (Dynamic SSOT Validation)
-def _bIsWordChar(_sCh): 
 
-  if _sCh == "": 
+# @JSOL v0.2.96 - Self-Hosted Compiler Linter Module (Dynamic SSOT Validation)
+def bIsLinterWordChar(sCh): 
+
+  if sCh == "": 
 
     return False;
 
 
-  _iCode = ord(_sCh[ 0]);
-  if _iCode >= 48 and _iCode <= 57: 
+  iCode = ord(sCh[ 0]);
+  if iCode >= 48 and iCode <= 57: 
 
     return True;
 
 
-  if _iCode >= 65 and _iCode <= 90: 
+  if iCode >= 65 and iCode <= 90: 
 
     return True;
 
 
-  if _iCode >= 97 and _iCode <= 122: 
+  if iCode >= 97 and iCode <= 122: 
 
     return True;
 
 
-  if _iCode == 95: 
+  if iCode == 95: 
 
     return True;
 
@@ -33,168 +34,329 @@ def _bIsWordChar(_sCh):
   return False;
 
 
-def _mAuditPragma(_sSourceCode): 
+def mAuditPragma(sSourceCode): 
 
-  _aErrors = [];
-  _bHasPragma = False;
-  _iLen = len(_sSourceCode);
+  aErrors = [];
+  bHasPragma = False;
 
-  _i = 0;
-  _bSkipping = True;
-  while _i < _iLen and _bSkipping == True: 
+  # Perfil-agnóstico: acepta @JSOL, JSOL, y sufijos de perfil como JSOL-X, JSOL-C, etc.
+  # sin requerir cambios en el parser por cada perfil nuevo.
+  if JSOL.regex_test("^\\s*//\\s*@?JSOL(-[A-Z]+)?\\b",  sSourceCode,  "") == True: 
 
-    _sC = _sSourceCode[( _i):( _i)+( 1)];
-    if _sC == " " or _sC == "\t" or _sC == "\n" or _sC == "\r": 
-
-      _i = _i + 1;
+    bHasPragma = True;
 
 
-    else: 
+  if bHasPragma == False: 
 
-      _bSkipping = False;
-
-
+    aErrors.append( "Fatal: Missing MANDATORY @JSOL pragma on Line 1.");
 
 
-  if _sSourceCode[( _i):( _i)+( 2)] == "//": 
-
-    _iLineEnd = _i;
-    _bScanning = True;
-    while _iLineEnd < _iLen and _bScanning == True: 
-
-      if _sSourceCode[( _iLineEnd):( _iLineEnd)+( 1)] == "\n": 
-
-        _bScanning = False;
+  return JSOL.dict("valid",  len(aErrors) == 0,  "errors",  aErrors);
 
 
-      else: 
+def mAuditForbiddenPatterns(sMaskedCode): 
 
-        _iLineEnd = _iLineEnd + 1;
+  aErrors = [];
+  aWarnings = [];
 
+  aFunctionalMethods = [".map(", ".filter(", ".reduce(", ".forEach(", ".find("];
+  bHasFunctionalMethods = False;
+  iFmCount = len(aFunctionalMethods);
+  iFm = 0;
+  while iFm < iFmCount: 
 
+    if JSOL.str_index_of(sMaskedCode,  aFunctionalMethods[iFm]) != -1: 
 
-
-    _sFirstLine = _sSourceCode[( _i):( _i)+( _iLineEnd - _i)];
-    if JSOL.str_index_of(_sFirstLine,  "@JSOL") != -1 or JSOL.str_index_of(_sFirstLine,  "// JSOL") != -1: 
-
-      _bHasPragma = True;
-
-
-
-
-  if _bHasPragma == False: 
-
-    _aErrors.append( "Fatal: Missing MANDATORY @JSOL pragma on Line 1.");
+      bHasFunctionalMethods = True;
 
 
-  return JSOL.dict("valid",  len(_aErrors) == 0,  "errors",  _aErrors);
+    iFm = iFm + 1;
 
 
-def _mAuditForbiddenPatterns(_sMaskedCode): 
+  if bHasFunctionalMethods == True: 
 
-  _aErrors = [];
-
-  _aFunctionalMethods = [".map(", ".filter(", ".reduce(", ".forEach(", ".find("];
-  _bHasFunctionalMethods = False;
-  _iFmCount = len(_aFunctionalMethods);
-  _iFm = 0;
-  while _iFm < _iFmCount: 
-
-    if JSOL.str_index_of(_sMaskedCode,  _aFunctionalMethods[_iFm]) != -1: 
-
-      _bHasFunctionalMethods = True;
+    aErrors.append( "Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.");
 
 
-    _iFm = _iFm + 1;
+  bHasLengthProperty = False;
+  iMLen = len(sMaskedCode);
+  iP = 0;
+  while iP < iMLen: 
 
+    if sMaskedCode[( iP):( iP)+( 7)] == ".length": 
 
-  if _bHasFunctionalMethods == True: 
+      sNextChar = sMaskedCode[( iP + 7):( iP + 7)+( 1)];
+      if bIsLinterWordChar(sNextChar) == False: 
 
-    _aErrors.append( "Linter Error: Functional array methods (.map, .filter, etc.) are FORBIDDEN. Use imperative for/while loops.");
-
-
-  _bHasLengthProperty = False;
-  _iMLen = len(_sMaskedCode);
-  _iP = 0;
-  while _iP < _iMLen: 
-
-    if _sMaskedCode[( _iP):( _iP)+( 7)] == ".length": 
-
-      _sNextChar = _sMaskedCode[( _iP + 7):( _iP + 7)+( 1)];
-      if _bIsWordChar(_sNextChar) == False: 
-
-        _bHasLengthProperty = True;
+        bHasLengthProperty = True;
         break;
 
 
 
 
-    _iP = _iP + 1;
+    iP = iP + 1;
 
 
-  if _bHasLengthProperty == True: 
+  if bHasLengthProperty == True: 
 
-    _aErrors.append( "Linter Error: Accessing .length is FORBIDDEN. Use Arr.count() for arrays or Str.len() for strings.");
-
-
-  if JSOL.str_index_of(_sMaskedCode,  "with (") != -1 or JSOL.str_index_of(_sMaskedCode,  "with(") != -1: 
-
-    _aErrors.append( "Linter Error: The 'with' statement is FORBIDDEN.");
+    aErrors.append( "Linter Error: Accessing .length is FORBIDDEN. Use Arr.count() for arrays or Str.len() for strings.");
 
 
-  return JSOL.dict("valid",  len(_aErrors) == 0,  "errors",  _aErrors);
+  if JSOL.str_index_of(sMaskedCode,  "with (") != -1 or JSOL.str_index_of(sMaskedCode,  "with(") != -1: 
+
+    aErrors.append( "Linter Error: The 'with' statement is FORBIDDEN.");
 
 
-def _mAuditStrictTyping(_sMaskedCode, _mSSOT): 
+  if JSOL.str_index_of(sMaskedCode,  "JSOL.use(") != -1: 
 
-  _aErrors = [];
-  _iLen = len(_sMaskedCode);
-
-  _i = 0;
-  while _i < _iLen: 
-
-    if _sMaskedCode[( _i):( _i)+( 1)] == "$": 
-
-      _iJ = _i + 1;
-      while _iJ < _iLen and _bIsWordChar(_sMaskedCode[( _iJ):( _iJ)+( 1)]): 
-
-        _iJ = _iJ + 1;
+    aWarnings.append( "Linter Warning: JSOL.use() is DEPRECATED. Auto-use injection handles scope transparency now.");
 
 
-      _sVarName = _sMaskedCode[( _i):( _i)+( _iJ - _i)];
+  if JSOL.str_index_of(sMaskedCode,  "JSOL.JS") != -1 or JSOL.str_index_of(sMaskedCode,  "JSOL.PHP") != -1 or JSOL.str_index_of(sMaskedCode,  "JSOL.PY") != -1: 
 
-      if JSOL.str_index_of(_sVarName,  '$_') == 0: 
-
-        _iBack = _i - 1;
-        while _iBack >= 0 and (_sMaskedCode[( _iBack):( _iBack)+( 1)] == " " or _sMaskedCode[( _iBack):( _iBack)+( 1)] == "\t" or _sMaskedCode[( _iBack):( _iBack)+( 1)] == "\n"): 
-
-          _iBack = _iBack - 1;
+    aWarnings.append( "Linter Warning: Asymmetric target blocks (JSOL.JS/PHP/PY) break isomorphic guarantees. Migrate to pure JSOL or native wrappers.");
 
 
-        if _iBack >= 2 and _sMaskedCode[( _iBack - 2):( _iBack - 2)+( 3)] == "let": 
-
-          _aErrors.append( "Linter Error: Variable '" + _sVarName + "' uses reserved internal prefix '" + '$_' + "' in declaration.");
+  return JSOL.dict("valid",  len(aErrors) == 0,  "errors",  aErrors,  "warnings",  aWarnings);
 
 
-        elif _iBack >= 4 and _sMaskedCode[( _iBack - 4):( _iBack - 4)+( 5)] == "const": 
+def mAuditStrictTyping(sMaskedCode, mSSOT): 
 
-          _aErrors.append( "Linter Error: Variable '" + _sVarName + "' uses reserved internal prefix '" + '$_' + "' in declaration.");
+  aErrors = [];
+  aWarnings = [];
+  iLen = len(sMaskedCode);
+
+  iBraceDepth = 0;
+  aActiveLoops = [];
+
+  i = 0;
+  while i < iLen: 
+
+    sCh = sMaskedCode[( i):( i)+( 1)];
+
+    if sCh == "{": 
+
+      iBraceDepth = iBraceDepth + 1;
 
 
-        _i = _iJ - 1;
+    elif sCh == "}": 
+
+      aNewLoops = [];
+      iCount = len(aActiveLoops);
+      iK = 0;
+      while iK < iCount: 
+
+        if aActiveLoops[iK]["depth"] < iBraceDepth: 
+
+          aNewLoops.append( aActiveLoops[iK]);
+
+
+        iK = iK + 1;
+
+
+      aActiveLoops = aNewLoops;
+      iBraceDepth = iBraceDepth - 1;
+
+
+    elif sMaskedCode[( i):( i)+( 4)] == "for ": 
+
+      iPeek = i + 4;
+      while iPeek < iLen and (sMaskedCode[( iPeek):( iPeek)+( 1)] == " " or sMaskedCode[( iPeek):( iPeek)+( 1)] == "("): 
+
+        iPeek = iPeek + 1;
+
+
+      if sMaskedCode[( iPeek):( iPeek)+( 4)] == "let ": 
+
+        iPeek = iPeek + 4;
+        iV = iPeek;
+        while iV < iLen and bIsLinterWordChar(sMaskedCode[( iV):( iV)+( 1)]): 
+
+          iV = iV + 1;
+
+
+        sVarName = sMaskedCode[( iPeek):( iPeek)+( iV - iPeek)];
+
+        iOf = iV;
+        while iOf < iLen and sMaskedCode[( iOf):( iOf)+( 1)] == " ": 
+
+          iOf = iOf + 1;
+
+
+        if sMaskedCode[( iOf):( iOf)+( 2)] == "of": 
+
+          iR = iOf + 2;
+          while iR < iLen and sMaskedCode[( iR):( iR)+( 1)] == " ": 
+
+            iR = iR + 1;
+
+
+          if sMaskedCode[( iR):( iR)+( 11)] == "JSOL.range(": 
+
+            bShadow = False;
+            iK = 0;
+            while iK < len(aActiveLoops): 
+
+              if aActiveLoops[iK]["var"] == sVarName: 
+
+                bShadow = True; break;
+
+
+              iK = iK + 1;
+
+
+            if bShadow == True: 
+
+              aErrors.append( "Linter Fatal Error: Shadowing of loop variable '" + sVarName + "' is forbidden.");
+
+
+            aActiveLoops.append( JSOL.dict("var",  sVarName,  "depth",  iBraceDepth + 1));
+
+            iParenDepth = 0;
+            iArgsEnd = -1;
+            iK = iR + 10;
+            while iK < iLen: 
+
+              if sMaskedCode[( iK):( iK)+( 1)] == "(": 
+
+                iParenDepth = iParenDepth + 1;
+
+
+              elif sMaskedCode[( iK):( iK)+( 1)] == ")": 
+
+                iParenDepth = iParenDepth - 1;
+                if iParenDepth == 0: 
+
+                  iArgsEnd = iK; break;
+
+
+
+
+              iK = iK + 1;
+
+
+            if iArgsEnd != -1: 
+
+              sArgs = sMaskedCode[( iR + 11):( iR + 11)+( iArgsEnd - iR - 11)];
+              iCommas = 0;
+              iADepth = 0;
+              bInStr = False;
+              iK = 0;
+              while iK < len(sArgs): 
+
+                sC = sArgs[( iK):( iK)+( 1)];
+                if sC == '"': 
+
+                  bInStr = not bInStr;
+
+
+                if bInStr == False: 
+
+                  if sC == "(" or sC == "[" or sC == "{": 
+
+                    iADepth = iADepth + 1;
+
+
+                  if sC == ")" or sC == "]" or sC == "}": 
+
+                    iADepth = iADepth - 1;
+
+
+                  if sC == "," and iADepth == 0: 
+
+                    iCommas = iCommas + 1;
+
+
+
+
+                iK = iK + 1;
+
+
+              if iCommas < 3: 
+
+                aWarnings.append( "Linter Warning: JSOL.range lacks $qMaxTimes argument (4th arg). Recommended for JSOL-X profile.");
+
+
+
+
+
+
+
+
+
+
+
+
+    elif sMaskedCode[( i):( i)+( 8)] == "".join(JSOL.to_str(_x) for _x in ["$",  "JSOL_i_"]): 
+
+      iV = i + 8;
+      while iV < iLen and bIsLinterWordChar(sMaskedCode[( iV):( iV)+( 1)]): 
+
+        iV = iV + 1;
+
+
+      sBaseVar = "".join(JSOL.to_str(_x) for _x in ["$",  sMaskedCode[( i + 8):( i + 8)+( iV - i - 8)]]);
+      bFound = False;
+      iK = 0;
+      while iK < len(aActiveLoops): 
+
+        if aActiveLoops[iK]["var"] == sBaseVar: 
+
+          bFound = True; break;
+
+
+        iK = iK + 1;
+
+
+      if bFound == False: 
+
+        aErrors.append( "".join(JSOL.to_str(_x) for _x in ["Linter Fatal Error: Invalid reference to '$",  "JSOL_i_",  sMaskedCode[( i + 8):( i + 8)+( iV - i - 8)],  "'. Loop variable '",  sBaseVar,  "' is not active in this scope."]));
+
+
+
+
+    if sCh == "$": 
+
+      iJ = i + 1;
+      while iJ < iLen and bIsLinterWordChar(sMaskedCode[( iJ):( iJ)+( 1)]): 
+
+        iJ = iJ + 1;
+
+
+      sVarName = sMaskedCode[( i):( i)+( iJ - i)];
+
+      if JSOL.str_index_of(sVarName,  "".join(JSOL.to_str(_x) for _x in ["$",  "_"])) == 0 or JSOL.str_index_of(sVarName,  "".join(JSOL.to_str(_x) for _x in ["$",  "JSOL_"])) == 0: 
+
+        iBack = i - 1;
+        while iBack >= 0 and (sMaskedCode[( iBack):( iBack)+( 1)] == " " or sMaskedCode[( iBack):( iBack)+( 1)] == "\t" or sMaskedCode[( iBack):( iBack)+( 1)] == "\n" or sMaskedCode[( iBack):( iBack)+( 1)] == "("): 
+
+          iBack = iBack - 1;
+
+
+        if iBack >= 2 and sMaskedCode[( iBack - 2):( iBack - 2)+( 3)] == "let": 
+
+          aErrors.append( "".join(JSOL.to_str(_x) for _x in ["Linter Error: Variable '",  sVarName,  "' uses reserved internal prefix in declaration."]));
+
+
+        elif iBack >= 4 and sMaskedCode[( iBack - 4):( iBack - 4)+( 5)] == "const": 
+
+          aErrors.append( "".join(JSOL.to_str(_x) for _x in ["Linter Error: Variable '",  sVarName,  "' uses reserved internal prefix in declaration."]));
+
+
+        i = iJ - 1;
         continue;
 
 
-      _sPrefix = "";
-      _iK = 1;
-      _iVarLen = len(_sVarName);
-      while _iK < _iVarLen: 
+      sPrefix = "";
+      iK = 1;
+      iVarLen = len(sVarName);
+      while iK < iVarLen: 
 
-        _iCode = ord(_sVarName[ _iK]);
-        if _iCode >= 97 and _iCode <= 122: 
+        iCode = ord(sVarName[ iK]);
+        if iCode >= 97 and iCode <= 122: 
 
-          _sPrefix = _sPrefix + "" + chr(_iCode);
-          _iK = _iK + 1;
+          sPrefix = sPrefix + "" + chr(iCode);
+          iK = iK + 1;
 
 
         else: 
@@ -204,58 +366,78 @@ def _mAuditStrictTyping(_sMaskedCode, _mSSOT):
 
 
 
-      if len(_sPrefix) == 0: 
+      if len(sPrefix) == 0: 
 
-        if len(_sVarName) > 1: 
+        if len(sVarName) > 1: 
 
-          _aErrors.append( "Linter Error: Variable '" + _sVarName + "' lacks a valid lowercase type prefix.");
+          aErrors.append( "Linter Error: Variable '" + sVarName + "' lacks a valid lowercase type prefix.");
 
 
 
 
       else: 
 
-        _bValid = False;
-        _aTypes = list(_mSSOT["types"]["core"].keys());
-        _iTCount = len(_aTypes);
+        bValid = False;
+        aTypes = list(mSSOT["types"]["core"].keys());
+        iTCount = len(aTypes);
 
-        _iT = 0;
-        while _iT < _iTCount: 
+        iT = 0;
+        while iT < iTCount: 
 
-          _aAliases = _mSSOT["types"]["core"][_aTypes[_iT]];
-          if JSOL.arr_index_of(_aAliases,  _sPrefix) != -1: 
+          aAliases = mSSOT["types"]["core"][aTypes[iT]];
+          if JSOL.arr_index_of(aAliases,  sPrefix) != -1: 
 
-            _bValid = True;
+            bValid = True;
             break;
 
 
-          _iT = _iT + 1;
+          iT = iT + 1;
 
 
-        if _bValid == False: 
+        if bValid == False: 
 
-          _aReserved = _mSSOT["types"]["reserved"];
-          if JSOL.arr_index_of(_aReserved,  _sPrefix) != -1: 
+          aReserved = mSSOT["types"]["reserved"];
+          if JSOL.arr_index_of(aReserved,  sPrefix) != -1: 
 
-            _aErrors.append( "Linter Error: Type prefix '" + _sPrefix + "' in variable '" + _sVarName + "' is RESERVED and not implemented.");
-            _bValid = True;
-
-
-
-
-        if _bValid == False: 
-
-          _aErrors.append( "Linter Error: Unknown type prefix '" + _sPrefix + "' in variable '" + _sVarName + "'. No truncation fallback allowed.");
+            aErrors.append( "Linter Error: Type prefix '" + sPrefix + "' in variable '" + sVarName + "' is RESERVED and not implemented.");
+            bValid = True;
 
 
 
 
-      _i = _iJ - 1;
+        if bValid == False and ( "custom" in mSSOT["types"]) == True: 
+
+          aCustom = mSSOT["types"]["custom"];
+          if JSOL.arr_index_of(aCustom,  sPrefix) != -1: 
+
+            if len(sPrefix) >= 3: 
+
+              bValid = True;
 
 
-    _i = _i + 1;
+            else: 
+
+              aErrors.append( "Linter Error: Custom type prefix '" + sPrefix + "' in variable '" + sVarName + "' must be 3 or more characters.");
+              bValid = True;
 
 
-  return JSOL.dict("valid",  len(_aErrors) == 0,  "errors",  _aErrors);
+
+
+
+
+        if bValid == False: 
+
+          aErrors.append( "Linter Error: Unknown or unregistered type prefix '" + sPrefix + "' in variable '" + sVarName + "'. No truncation fallback allowed.");
+
+
+
+
+      i = iJ - 1;
+
+
+    i = i + 1;
+
+
+  return JSOL.dict("valid",  len(aErrors) == 0,  "errors",  aErrors,  "warnings",  aWarnings);
 
 

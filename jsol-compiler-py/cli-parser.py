@@ -1,143 +1,126 @@
 import math
 from jsol_core import JSOL
 
-# @JSOL v0.2.95 - CLI Arguments Parser
-def _mParseRawCliArgs(_aRawArgs): 
+# @JSOL v0.2.96 - CLI Arguments Parser (generic, target-agnostic)
+#
+# No target id is hardcoded here. Any "--<id>-target=", "--<id>-prefix=",
+# "--<id>-suffix=" flag is parsed generically into $mOptions[id + "Target"/
+# "Prefix"/"Suffix"], for ANY id — adding a new compiler target never
+# requires touching this file again.
 
-  _mOptions = JSOL.dict(
+def bEndsWith(sStr, sSuffix): 
+
+  iStrLen = len(sStr);
+  iSufLen = len(sSuffix);
+  if iSufLen > iStrLen: 
+
+    return False;
+
+
+  return sStr[( iStrLen - iSufLen):( iStrLen - iSufLen)+( iSufLen)] == sSuffix;
+
+
+# The ONLY place "py" gets normalized to "python" in the whole compiler.
+# "python" is canonical everywhere else (matches targets/python/rules.json,
+# $mSSOT["targets"]["python"], $mBackendRegistry). "py" survives only as the
+# CLI's short spelling and the output file extension (handled elsewhere).
+def sNormalizeTargetId(sId): 
+
+  if sId == "py": 
+
+    return "python";
+
+
+  return sId;
+
+
+def mParseRawCliArgs(aRawArgs): 
+
+  mOptions = JSOL.dict(
   "source",  "", 
+  "sourceDir",  "", 
   "outDir",  "", 
   "target",  "", 
-  "jsTarget",  "", 
-  "jsPrefix",  "", 
-  "jsSuffix",  "", 
-  "phpTarget",  "", 
-  "phpPrefix",  "", 
-  "phpSuffix",  "", 
-  "tsTarget",  "", 
-  "tsPrefix",  "", 
-  "tsSuffix",  "", 
-  "pyTarget",  "", 
-  "pyPrefix",  "", 
-  "pySuffix",  "", 
   "targets",  ""
   );
 
-  _iCount = len(_aRawArgs);
-  _i = 0;
-  while _i < _iCount: 
+  iCount = len(aRawArgs);
+  i = 0;
+  while i < iCount: 
 
-    _sArg = _aRawArgs[_i];
-    _bIsFlag = (JSOL.str_index_of(_sArg,  "--") == 0);
+    sArg = aRawArgs[i];
+    bIsFlag = (JSOL.str_index_of(sArg,  "--") == 0);
 
-    if _bIsFlag == True: 
+    if bIsFlag == True: 
 
-      _sClean = _sArg[( 2):( 2)+( len(_sArg) - 2)];
-      _iEqIndex = JSOL.str_index_of(_sClean,  "=");
-      _sKey = "";
-      _sVal = "";
+      sClean = sArg[( 2):( 2)+( len(sArg) - 2)];
+      iEqIndex = JSOL.str_index_of(sClean,  "=");
+      sKey = "";
+      sVal = "";
 
-      if _iEqIndex != -1: 
+      if iEqIndex != -1: 
 
-        _sKey = _sClean[( 0):( 0)+( _iEqIndex)];
-        _sVal = _sClean[( _iEqIndex + 1):( _iEqIndex + 1)+( len(_sClean) - (_iEqIndex + 1))];
+        sKey = sClean[( 0):( 0)+( iEqIndex)];
+        sVal = sClean[( iEqIndex + 1):( iEqIndex + 1)+( len(sClean) - (iEqIndex + 1))];
 
 
       else: 
 
-        _sKey = _sClean;
-        _sVal = "true";
+        sKey = sClean;
+        sVal = "true";
 
 
-      if _sKey == "source": 
+      if sKey == "source": 
 
-        _mOptions["source"] = _sVal;
-
-
-      if _sKey == "out-dir": 
-
-        _mOptions["outDir"] = _sVal;
+        mOptions["source"] = sVal;
 
 
-      if _sKey == "targets": 
+      elif sKey == "source-dir": 
 
-        _mOptions["targets"] = _sVal;
-
-
-      if _sKey == "target": 
-
-        _mOptions["target"] = _sVal;
-        _mOptions["jsTarget"] = _sVal;
-        _mOptions["phpTarget"] = _sVal;
-        _mOptions["tsTarget"] = _sVal;
-        _mOptions["pyTarget"] = _sVal;
+        mOptions["sourceDir"] = sVal;
 
 
-      if _sKey == "js-target": 
+      elif sKey == "out-dir": 
 
-        _mOptions["jsTarget"] = _sVal;
-
-
-      if _sKey == "js-prefix": 
-
-        _mOptions["jsPrefix"] = _sVal;
+        mOptions["outDir"] = sVal;
 
 
-      if _sKey == "js-suffix": 
+      elif sKey == "targets": 
 
-        _mOptions["jsSuffix"] = _sVal;
-
-
-      if _sKey == "php-target": 
-
-        _mOptions["phpTarget"] = _sVal;
+        mOptions["targets"] = sVal;
 
 
-      if _sKey == "php-prefix": 
+      elif sKey == "target": 
 
-        _mOptions["phpPrefix"] = _sVal;
-
-
-      if _sKey == "php-suffix": 
-
-        _mOptions["phpSuffix"] = _sVal;
+        mOptions["target"] = sVal;
 
 
-      if _sKey == "ts-target": 
+      elif bEndsWith(sKey, "-target") == True: 
 
-        _mOptions["tsTarget"] = _sVal;
-
-
-      if _sKey == "ts-prefix": 
-
-        _mOptions["tsPrefix"] = _sVal;
+        sRawId = sKey[( 0):( 0)+( len(sKey) - 7)];
+        sId = sNormalizeTargetId(sRawId);
+        mOptions[sId + "" + "Target"] = sVal;
 
 
-      if _sKey == "ts-suffix": 
+      elif bEndsWith(sKey, "-prefix") == True: 
 
-        _mOptions["tsSuffix"] = _sVal;
-
-
-      if _sKey == "py-target": 
-
-        _mOptions["pyTarget"] = _sVal;
+        sRawId = sKey[( 0):( 0)+( len(sKey) - 7)];
+        sId = sNormalizeTargetId(sRawId);
+        mOptions[sId + "" + "Prefix"] = sVal;
 
 
-      if _sKey == "py-prefix": 
+      elif bEndsWith(sKey, "-suffix") == True: 
 
-        _mOptions["pyPrefix"] = _sVal;
-
-
-      if _sKey == "py-suffix": 
-
-        _mOptions["pySuffix"] = _sVal;
+        sRawId = sKey[( 0):( 0)+( len(sKey) - 7)];
+        sId = sNormalizeTargetId(sRawId);
+        mOptions[sId + "" + "Suffix"] = sVal;
 
 
 
 
-    _i = _i + 1;
+    i = i + 1;
 
 
-  return _mOptions;
+  return mOptions;
 
 

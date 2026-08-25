@@ -1,112 +1,116 @@
 import math
 from jsol_core import JSOL
 
-# @JSOL v0.2.94 - Self-Hosted JS Target Compiler (Dynamic SSOT Iteration)
-def _sCompileToJS(_sMaskedCode, _sPrefix, _sSuffix, _aRules): 
+# @JSOL v0.2.96 - JavaScript Target Compiler
+# [!] ARCHITECTURE NOTICE: The TypeScript and Python compilers have a strict structural dependency 
+# on this JavaScript compiler. TypeScript extends these JS rules, and Python relies on the AST 
+# cleanups and ternary transformations defined here. Do NOT decouple without architectural review.
 
-  def _fProcessBlock(_sCode, _sKeyword, _bUnwrap): 
+def sCompileToJS(sMaskedCode, sPrefix, sSuffix, aRules): 
 
-    _sResult = _sCode;
-    _bContinue = True;
-    _iOffset = 0;
-    while _bContinue == True: 
+  def fProcessBlock(sCode, sKeyword, bUnwrap): 
 
-      _iSearchLen = len(_sResult) - _iOffset;
-      if _iSearchLen <= 0: 
+    sResult = sCode;
+    bContinue = True;
+    iOffset = 0;
+    while bContinue == True: 
 
-        _bContinue = False;
+      iSearchLen = len(sResult) - iOffset;
+      if iSearchLen <= 0: 
+
+        bContinue = False;
         continue;
 
 
-      _sSearchArea = _sResult[( _iOffset):( _iOffset)+( _iSearchLen)];
-      _iRelIdx = JSOL.str_index_of(_sSearchArea,  _sKeyword);
+      sSearchArea = sResult[( iOffset):( iOffset)+( iSearchLen)];
+      iRelIdx = JSOL.str_index_of(sSearchArea,  sKeyword);
 
-      if _iRelIdx == -1: 
+      if iRelIdx == -1: 
 
-        _bContinue = False;
+        bContinue = False;
 
 
       else: 
 
-        _iStartIdx = _iOffset + _iRelIdx;
-        _iTailLen = len(_sResult) - _iStartIdx;
-        _sTail = _sResult[( _iStartIdx):( _iStartIdx)+( _iTailLen)];
-        _iRelOpenBrace = JSOL.str_index_of(_sTail,  "{");
-        _iOpenBrace = (-1 if _iRelOpenBrace == -1 else _iStartIdx + _iRelOpenBrace);
+        iStartIdx = iOffset + iRelIdx;
+        iTailLen = len(sResult) - iStartIdx;
+        sTail = sResult[( iStartIdx):( iStartIdx)+( iTailLen)];
+        iRelOpenBrace = JSOL.str_index_of(sTail,  "{");
+        iOpenBrace = (-1 if iRelOpenBrace == -1 else iStartIdx + iRelOpenBrace);
 
-        if _iOpenBrace == -1: 
+        if iOpenBrace == -1: 
 
-          _bContinue = False;
+          bContinue = False;
 
 
         else: 
 
-          _iBraceCount = 1;
-          _iCloseBrace = -1;
-          _iRLen = len(_sResult);
-          _i = _iOpenBrace + 1;
-          while _i < _iRLen: 
+          iBraceCount = 1;
+          iCloseBrace = -1;
+          iRLen = len(sResult);
+          i = iOpenBrace + 1;
+          while i < iRLen: 
 
-            _sChar = _sResult[( _i):( _i)+( 1)];
-            if _sChar == "{": 
+            sChar = sResult[( i):( i)+( 1)];
+            if sChar == "{": 
 
-              _iBraceCount = _iBraceCount + 1;
-
-
-            if _sChar == "}": 
-
-              _iBraceCount = _iBraceCount - 1;
+              iBraceCount = iBraceCount + 1;
 
 
-            if _iBraceCount == 0: 
+            if sChar == "}": 
 
-              _iCloseBrace = _i;
+              iBraceCount = iBraceCount - 1;
+
+
+            if iBraceCount == 0: 
+
+              iCloseBrace = i;
               break;
 
 
-            _i = _i + 1;
+            i = i + 1;
 
 
-          if _iCloseBrace == -1: 
+          if iCloseBrace == -1: 
 
-            _bContinue = False;
+            bContinue = False;
 
 
           else: 
 
-            _iEndIdx = _iCloseBrace + 1;
-            _bFindingEnd = True;
-            while _iEndIdx < _iRLen and _bFindingEnd == True: 
+            iEndIdx = iCloseBrace + 1;
+            bFindingEnd = True;
+            while iEndIdx < iRLen and bFindingEnd == True: 
 
-              _sChar = _sResult[( _iEndIdx):( _iEndIdx)+( 1)];
-              if _sChar == " " or _sChar == "\n" or _sChar == "\r" or _sChar == ")" or _sChar == ";": 
+              sChar = sResult[( iEndIdx):( iEndIdx)+( 1)];
+              if sChar == " " or sChar == "\n" or sChar == "\r" or sChar == ")" or sChar == ";": 
 
-                _iEndIdx = _iEndIdx + 1;
+                iEndIdx = iEndIdx + 1;
 
 
               else: 
 
-                _bFindingEnd = False;
+                bFindingEnd = False;
 
 
 
 
-            _sBefore = _sResult[( 0):( 0)+( _iStartIdx)];
-            _iAfterLen = len(_sResult) - _iEndIdx;
-            _sAfter = _sResult[( _iEndIdx):( _iEndIdx)+( _iAfterLen)];
+            sBefore = sResult[( 0):( 0)+( iStartIdx)];
+            iAfterLen = len(sResult) - iEndIdx;
+            sAfter = sResult[( iEndIdx):( iEndIdx)+( iAfterLen)];
 
-            if _bUnwrap == True: 
+            if bUnwrap == True: 
 
-              _iInnerLen = _iCloseBrace - _iOpenBrace - 1;
-              _sInner = _sResult[( _iOpenBrace + 1):( _iOpenBrace + 1)+( _iInnerLen)];
-              _sResult = _sBefore + "" + _sInner + "" + _sAfter;
-              _iOffset = len(_sBefore) + len(_sInner);
+              iInnerLen = iCloseBrace - iOpenBrace - 1;
+              sInner = sResult[( iOpenBrace + 1):( iOpenBrace + 1)+( iInnerLen)];
+              sResult = sBefore + "" + sInner + "" + sAfter;
+              iOffset = len(sBefore) + len(sInner);
 
 
             else: 
 
-              _sResult = _sBefore + "" + _sAfter;
-              _iOffset = len(_sBefore);
+              sResult = sBefore + "" + sAfter;
+              iOffset = len(sBefore);
 
 
 
@@ -117,150 +121,150 @@ def _sCompileToJS(_sMaskedCode, _sPrefix, _sSuffix, _aRules):
 
 
 
-    return _sResult;
+    return sResult;
 
 
-  def _fProcessCall(_sCode, _sKeyword, _sTemplate): 
+  def fProcessCall(sCode, sKeyword, sTemplate): 
 
-    _sResult = _sCode;
-    _bContinue = True;
-    _iOffset = 0;
-    while _bContinue == True: 
+    sResult = sCode;
+    bContinue = True;
+    iOffset = 0;
+    while bContinue == True: 
 
-      _iSearchLen = len(_sResult) - _iOffset;
-      if _iSearchLen <= 0: 
+      iSearchLen = len(sResult) - iOffset;
+      if iSearchLen <= 0: 
 
-        _bContinue = False;
+        bContinue = False;
         continue;
 
 
-      _sSearchArea = _sResult[( _iOffset):( _iOffset)+( _iSearchLen)];
-      _iRelIdx = JSOL.str_index_of(_sSearchArea,  _sKeyword);
+      sSearchArea = sResult[( iOffset):( iOffset)+( iSearchLen)];
+      iRelIdx = JSOL.str_index_of(sSearchArea,  sKeyword);
 
-      if _iRelIdx == -1: 
+      if iRelIdx == -1: 
 
-        _bContinue = False;
+        bContinue = False;
 
 
       else: 
 
-        _iStartIdx = _iOffset + _iRelIdx;
-        _iKwLen = len(_sKeyword);
-        _iOpenParen = _iStartIdx + _iKwLen - 1;
-        _iParenCount = 1;
-        _iBracketCount = 0;
-        _iBraceCount = 0;
-        _bInStr = False;
-        _iCloseParen = -1;
-        _aArgs = [];
-        _iCurrentArgStart = _iOpenParen + 1;
-        _iRLen = len(_sResult);
+        iStartIdx = iOffset + iRelIdx;
+        iKwLen = len(sKeyword);
+        iOpenParen = iStartIdx + iKwLen - 1;
+        iParenCount = 1;
+        iBracketCount = 0;
+        iBraceCount = 0;
+        bInStr = False;
+        iCloseParen = -1;
+        aArgs = [];
+        iCurrentArgStart = iOpenParen + 1;
+        iRLen = len(sResult);
 
-        _i = _iOpenParen + 1;
-        while _i < _iRLen: 
+        i = iOpenParen + 1;
+        while i < iRLen: 
 
-          _sChar = _sResult[( _i):( _i)+( 1)];
-          _sPrev = _sResult[( _i - 1):( _i - 1)+( 1)];
+          sChar = sResult[( i):( i)+( 1)];
+          sPrev = sResult[( i - 1):( i - 1)+( 1)];
 
-          if _sChar == "\"" and _sPrev != "\\": 
+          if sChar == "\"" and sPrev != "\\": 
 
-            _bInStr = not _bInStr;
-
-
-          if _bInStr == False: 
-
-            if _sChar == "(": 
-
-              _iParenCount = _iParenCount + 1;
+            bInStr = not bInStr;
 
 
-            if _sChar == ")": 
+          if bInStr == False: 
 
-              _iParenCount = _iParenCount - 1;
+            if sChar == "(": 
 
-
-            if _sChar == "[": 
-
-              _iBracketCount = _iBracketCount + 1;
+              iParenCount = iParenCount + 1;
 
 
-            if _sChar == "]": 
+            if sChar == ")": 
 
-              _iBracketCount = _iBracketCount - 1;
-
-
-            if _sChar == "{": 
-
-              _iBraceCount = _iBraceCount + 1;
+              iParenCount = iParenCount - 1;
 
 
-            if _sChar == "}": 
+            if sChar == "[": 
 
-              _iBraceCount = _iBraceCount - 1;
-
-
+              iBracketCount = iBracketCount + 1;
 
 
-          if _sChar == "," and _iParenCount == 1 and _iBracketCount == 0 and _iBraceCount == 0 and _bInStr == False: 
+            if sChar == "]": 
 
-            _iArgLen1 = _i - _iCurrentArgStart;
-            _sArgVal1 = _sResult[( _iCurrentArgStart):( _iCurrentArgStart)+( _iArgLen1)];
-            _aArgs.append( _sArgVal1);
-            _iCurrentArgStart = _i + 1;
+              iBracketCount = iBracketCount - 1;
 
 
-          elif _iParenCount == 0: 
+            if sChar == "{": 
 
-            _iArgLen2 = _i - _iCurrentArgStart;
-            _sArgVal2 = _sResult[( _iCurrentArgStart):( _iCurrentArgStart)+( _iArgLen2)];
-            _aArgs.append( _sArgVal2);
-            _iCloseParen = _i;
+              iBraceCount = iBraceCount + 1;
+
+
+            if sChar == "}": 
+
+              iBraceCount = iBraceCount - 1;
+
+
+
+
+          if sChar == "," and iParenCount == 1 and iBracketCount == 0 and iBraceCount == 0 and bInStr == False: 
+
+            iArgLen1 = i - iCurrentArgStart;
+            sArgVal1 = sResult[( iCurrentArgStart):( iCurrentArgStart)+( iArgLen1)];
+            aArgs.append( sArgVal1);
+            iCurrentArgStart = i + 1;
+
+
+          elif iParenCount == 0: 
+
+            iArgLen2 = i - iCurrentArgStart;
+            sArgVal2 = sResult[( iCurrentArgStart):( iCurrentArgStart)+( iArgLen2)];
+            aArgs.append( sArgVal2);
+            iCloseParen = i;
             break;
 
 
-          _i = _i + 1;
+          i = i + 1;
 
 
-        if _iCloseParen == -1: 
+        if iCloseParen == -1: 
 
-          _bContinue = False;
+          bContinue = False;
 
 
         else: 
 
-          _sBefore = _sResult[( 0):( 0)+( _iStartIdx)];
-          _iAfterLen = len(_sResult) - _iCloseParen - 1;
-          _sAfter = _sResult[( _iCloseParen + 1):( _iCloseParen + 1)+( _iAfterLen)];
+          sBefore = sResult[( 0):( 0)+( iStartIdx)];
+          iAfterLen = len(sResult) - iCloseParen - 1;
+          sAfter = sResult[( iCloseParen + 1):( iCloseParen + 1)+( iAfterLen)];
 
-          _sRep = _sTemplate;
-          if JSOL.str_index_of(_sTemplate,  "{*}") != -1: 
+          sRep = sTemplate;
+          if JSOL.str_index_of(sTemplate,  "{*}") != -1: 
 
-            _sRep = _sRep.replace( "{*}",   ", ".join(str(_x) for _x in _aArgs));
+            sRep = sRep.replace( "{*}",   ", ".join(str(_x) for _x in aArgs));
 
 
           else: 
 
-            _iArgsCount = len(_aArgs);
-            _iK = 0;
-            while _iK < _iArgsCount: 
+            iArgsCount = len(aArgs);
+            iK = 0;
+            while iK < iArgsCount: 
 
-              _sPlaceholder = "".join(JSOL.to_str(_x) for _x in ["{",  _iK,  "}"]);
-              _sRep = _sRep.replace( _sPlaceholder,  _aArgs[_iK]);
+              sPlaceholder = "".join(JSOL.to_str(_x) for _x in ["{",  iK,  "}"]);
+              sRep = sRep.replace( sPlaceholder,  aArgs[iK]);
 
-              _iK = _iK + 1;
-
-
-
-
-          _sResult = _sBefore + "" + _sRep + "" + _sAfter;
-          _iOffset = _iStartIdx;
+              iK = iK + 1;
 
 
 
 
+          sResult = sBefore + "" + sRep + "" + sAfter;
+          iOffset = iStartIdx;
 
 
-    return _sResult;
+
+
+
+
+    return sResult;
 
 
   # NEW (v0.2.95): scans literal "function(" occurrences and appends ": any"
@@ -268,152 +272,398 @@ def _sCompileToJS(_sMaskedCode, _sPrefix, _sSuffix, _aRules):
   # JSOL params are always plain identifiers (no destructuring, no defaults),
   # so a top-level comma split is sufficient — no bracket counting needed
   # inside the parameter list itself, only to find where it closes.
-  def _fProcessParams(_sCode): 
+  def fProcessParams(sCode): 
 
-    _sKeyword = "function(";
-    _sResult = _sCode;
-    _bContinue = True;
-    _iOffset = 0;
-    while _bContinue == True: 
+    sResult = sCode;
+    bContinue = True;
+    iOffset = 0;
+    while bContinue == True: 
 
-      _iSearchLen = len(_sResult) - _iOffset;
-      if _iSearchLen <= 0: 
+      iSearchLen = len(sResult) - iOffset;
+      if iSearchLen <= 0: 
 
-        _bContinue = False;
+        bContinue = False;
         continue;
 
 
-      _sSearchArea = _sResult[( _iOffset):( _iOffset)+( _iSearchLen)];
-      _iRelIdx = JSOL.str_index_of(_sSearchArea,  _sKeyword);
+      sSearchArea = sResult[( iOffset):( iOffset)+( iSearchLen)];
+      iRelIdx = JSOL.str_index_of(sSearchArea,  "function");
 
-      if _iRelIdx == -1: 
+      if iRelIdx == -1: 
 
-        _bContinue = False;
+        bContinue = False;
 
 
       else: 
 
-        _iStartIdx = _iOffset + _iRelIdx;
-        _iKwLen = len(_sKeyword);
-        _iOpenParen = _iStartIdx + _iKwLen - 1;
-        _iParenCount = 1;
-        _iCloseParen = -1;
-        _iRLen = len(_sResult);
+        iStartIdx = iOffset + iRelIdx;
+        iParenScan = iStartIdx + 8;
+        iRLen = len(sResult);
 
-        _i = _iOpenParen + 1;
-        while _i < _iRLen: 
+        while iParenScan < iRLen and (sResult[( iParenScan):( iParenScan)+( 1)] == " " or sResult[( iParenScan):( iParenScan)+( 1)] == "\t" or sResult[( iParenScan):( iParenScan)+( 1)] == "\n" or sResult[( iParenScan):( iParenScan)+( 1)] == "\r"): 
 
-          _sChar = _sResult[( _i):( _i)+( 1)];
-          if _sChar == "(": 
-
-            _iParenCount = _iParenCount + 1;
+          iParenScan = iParenScan + 1;
 
 
-          if _sChar == ")": 
+        if iParenScan < iRLen and sResult[( iParenScan):( iParenScan)+( 1)] == "(": 
 
-            _iParenCount = _iParenCount - 1;
+          iOpenParen = iParenScan;
+          iParenCount = 1;
+          iCloseParen = -1;
+
+          i = iOpenParen + 1;
+          while i < iRLen: 
+
+            sChar = sResult[( i):( i)+( 1)];
+            if sChar == "(": 
+
+              iParenCount = iParenCount + 1;
 
 
-          if _iParenCount == 0: 
+            if sChar == ")": 
 
-            _iCloseParen = _i;
-            break;
-
-
-          _i = _i + 1;
+              iParenCount = iParenCount - 1;
 
 
-        if _iCloseParen == -1: 
+            if iParenCount == 0: 
 
-          _bContinue = False;
+              iCloseParen = i;
+              break;
+
+
+            i = i + 1;
+
+
+          if iCloseParen == -1: 
+
+            bContinue = False;
+
+
+          else: 
+
+            iRawLen = iCloseParen - iOpenParen - 1;
+            sRawParams = sResult[( iOpenParen + 1):( iOpenParen + 1)+( iRawLen)];
+            sTrimmedParams = sRawParams.strip();
+
+            sTypedParams = "";
+            if len(sTrimmedParams) > 0: 
+
+              aParts = sTrimmedParams.split( ",");
+              iPartsCount = len(aParts);
+              aTypedParts = [];
+              iP = 0;
+              while iP < iPartsCount: 
+
+                sRawPart = aParts[iP].strip();
+                sTypedPart = sRawPart;
+                if len(sRawPart) > 0 and JSOL.str_index_of(sRawPart,  ":") == -1: 
+
+                  sTypedPart = sRawPart + ": any";
+
+
+                aTypedParts.append( sTypedPart);
+
+                iP = iP + 1;
+
+
+              sTypedParams =  ", ".join(str(_x) for _x in aTypedParts);
+
+
+            sBefore = sResult[( 0):( 0)+( iOpenParen + 1)];
+            iAfterLen = len(sResult) - iCloseParen;
+            sAfter = sResult[( iCloseParen):( iCloseParen)+( iAfterLen)];
+
+            sResult = sBefore + "" + sTypedParams + "" + sAfter;
+            iOffset = iOpenParen + 1 + len(sTypedParams) + 1;
+
+
 
 
         else: 
 
-          _iRawLen = _iCloseParen - _iOpenParen - 1;
-          _sRawParams = _sResult[( _iOpenParen + 1):( _iOpenParen + 1)+( _iRawLen)];
-          _sTrimmedParams = _sRawParams.strip();
-
-          _sTypedParams = "";
-          if len(_sTrimmedParams) > 0: 
-
-            _aParts = _sTrimmedParams.split( ",");
-            _iPartsCount = len(_aParts);
-            _aTypedParts = [];
-            _iP = 0;
-            while _iP < _iPartsCount: 
-
-              _sRawPart = _aParts[_iP].strip();
-              _sTypedPart = _sRawPart;
-              if len(_sRawPart) > 0 and JSOL.str_index_of(_sRawPart,  ":") == -1: 
-
-                _sTypedPart = _sRawPart + ": any";
-
-
-              _aTypedParts.append( _sTypedPart);
-
-              _iP = _iP + 1;
-
-
-            _sTypedParams =  ", ".join(str(_x) for _x in _aTypedParts);
-
-
-          _sBefore = _sResult[( 0):( 0)+( _iOpenParen + 1)];
-          _iAfterLen = len(_sResult) - _iCloseParen;
-          _sAfter = _sResult[( _iCloseParen):( _iCloseParen)+( _iAfterLen)];
-
-          _sResult = _sBefore + "" + _sTypedParams + "" + _sAfter;
-          _iOffset = _iStartIdx + _iKwLen + len(_sTypedParams);
+          iOffset = iStartIdx + 8;
 
 
 
 
 
 
-    return _sResult;
+    return sResult;
 
 
-  _sTransformed = _sMaskedCode;
+  def fProcessRange(sCode): 
+
+    if JSOL.str_index_of(sCode,  "JSOL.range") == -1: 
+
+      return sCode;
+
+
+    sResult = sCode;
+    bContinue = True;
+
+    while bContinue == True: 
+
+      iRelIdx = JSOL.str_index_of(sResult,  "for");
+      if iRelIdx == -1: 
+
+        bContinue = False;
+
+
+      else: 
+
+        iStartIdx = iRelIdx;
+        i = iStartIdx + 3;
+        while i < len(sResult) and (sResult[( i):( i)+( 1)] == " " or sResult[( i):( i)+( 1)] == "\n" or sResult[( i):( i)+( 1)] == "\t" or sResult[( i):( i)+( 1)] == "\r" or sResult[( i):( i)+( 1)] == "("): 
+
+          i = i + 1;
+
+
+        if sResult[( i):( i)+( 4)] == "let ": 
+
+          i = i + 4;
+
+
+        iV = i;
+        if sResult[( iV):( iV)+( 1)] == "$": 
+
+          while iV < len(sResult): 
+
+            sC = sResult[( iV):( iV)+( 1)];
+            if sC == "_" or sC == "$" or (sC >= "a" and sC <= "z") or (sC >= "A" and sC <= "Z") or (sC >= "0" and sC <= "9"): 
+
+              iV = iV + 1;
+
+
+            else: 
+
+              break;
+
+
+
+
+          sVarName = sResult[( i):( i)+( iV - i)];
+          i = iV;
+
+          while i < len(sResult) and (sResult[( i):( i)+( 1)] == " " or sResult[( i):( i)+( 1)] == "\n" or sResult[( i):( i)+( 1)] == "\t" or sResult[( i):( i)+( 1)] == "\r"): 
+
+            i = i + 1;
+
+
+          if sResult[( i):( i)+( 2)] == "of": 
+
+            i = i + 2;
+            while i < len(sResult) and (sResult[( i):( i)+( 1)] == " " or sResult[( i):( i)+( 1)] == "\n" or sResult[( i):( i)+( 1)] == "\t" or sResult[( i):( i)+( 1)] == "\r"): 
+
+              i = i + 1;
+
+
+            if sResult[( i):( i)+( 11)] == "JSOL.range(": 
+
+              i = i + 10;
+              iParenDepth = 0;
+              iParenClose = -1;
+              iK = i;
+              while iK < len(sResult): 
+
+                if sResult[( iK):( iK)+( 1)] == "(": 
+
+                  iParenDepth = iParenDepth + 1;
+
+
+                elif sResult[( iK):( iK)+( 1)] == ")": 
+
+                  iParenDepth = iParenDepth - 1;
+                  if iParenDepth == 0: 
+
+                    iParenClose = iK; break;
+
+
+
+
+                iK = iK + 1;
+
+
+              if iParenClose != -1: 
+
+                sArgs = sResult[( i + 1):( i + 1)+( iParenClose - i - 1)];
+                iB = iParenClose + 1;
+                while iB < len(sResult) and (sResult[( iB):( iB)+( 1)] == " " or sResult[( iB):( iB)+( 1)] == "\n" or sResult[( iB):( iB)+( 1)] == "\t" or sResult[( iB):( iB)+( 1)] == "\r" or sResult[( iB):( iB)+( 1)] == ")"): 
+
+                  iB = iB + 1;
+
+
+                if sResult[( iB):( iB)+( 1)] == "{": 
+
+                  iBraceDepth = 0;
+                  iBraceClose = -1;
+                  iK = iB;
+                  while iK < len(sResult): 
+
+                    if sResult[( iK):( iK)+( 1)] == "{": 
+
+                      iBraceDepth = iBraceDepth + 1;
+
+
+                    elif sResult[( iK):( iK)+( 1)] == "}": 
+
+                      iBraceDepth = iBraceDepth - 1;
+                      if iBraceDepth == 0: 
+
+                        iBraceClose = iK; break;
+
+
+
+
+                    iK = iK + 1;
+
+
+                  if iBraceClose != -1: 
+
+                    sBody = sResult[( iB + 1):( iB + 1)+( iBraceClose - iB - 1)];
+
+                    aArgs = [];
+                    iADepth = 0;
+                    iAStart = 0;
+                    bInStr = False;
+                    iK = 0;
+                    while iK < len(sArgs): 
+
+                      sC = sArgs[( iK):( iK)+( 1)];
+                      if sC == '"': 
+
+                        bInStr = not bInStr;
+
+
+                      if bInStr == False: 
+
+                        if sC == "(" or sC == "[" or sC == "{": 
+
+                          iADepth = iADepth + 1;
+
+
+                        if sC == ")" or sC == "]" or sC == "}": 
+
+                          iADepth = iADepth - 1;
+
+
+                        if sC == "," and iADepth == 0: 
+
+                          aArgs.append( sArgs[( iAStart):( iAStart)+( iK - iAStart)].strip());
+                          iAStart = iK + 1;
+
+
+
+
+                      iK = iK + 1;
+
+
+                    aArgs.append( sArgs[( iAStart):( iAStart)+( len(sArgs) - iAStart)].strip());
+
+                    sCleanVar = sVarName[( 1):( 1)+( len(sVarName) - 1)];
+                    sFromVar = '$JSOL_from_' + sCleanVar;
+                    sToVar = '$JSOL_to_' + sCleanVar;
+                    sStepVar = '$JSOL_step_' + sCleanVar;
+                    sIncVar = '$JSOL_inc_' + sCleanVar;
+                    sIxVar = '$JSOL_i_' + sCleanVar;
+
+                    sSetup = "let " + sFromVar + " = (" + aArgs[0] + ");\n";
+                    sSetup = sSetup + "let " + sToVar + " = (" + aArgs[1] + ");\n";
+                    if len(aArgs) > 2 and len(aArgs[2]) > 0: 
+
+                      sSetup = sSetup + "let " + sStepVar + " = (" + aArgs[2] + ");\n";
+
+
+                    else: 
+
+                      sSetup = sSetup + "let " + sStepVar + " = 1;\n";
+
+
+                    sSetup = sSetup + "let " + sIncVar + " = Math.abs(" + sStepVar + ");\n";
+                    sSetup = sSetup + "if (" + sFromVar + " > " + sToVar + ") { " + sIncVar + " = -" + sIncVar + "; }\n";
+                    sSetup = sSetup + "let " + sVarName + " = " + sFromVar + ";\n";
+                    sSetup = sSetup + "let " + sIxVar + " = 1;\n";
+
+                    sCond = "((" + sIncVar + " > 0 && " + sVarName + " <= " + sToVar + ") || (" + sIncVar + " <= 0 && " + sVarName + " >= " + sToVar + "))";
+
+                    sNewBody = 'let $JSOL_i = ' + sIxVar + ';\n';
+                    sNewBody = sNewBody + sBody + "\n";
+                    sNewBody = sNewBody + sVarName + " = " + sVarName + " + " + sIncVar + ";\n";
+                    sNewBody = sNewBody + sIxVar + " = " + sIxVar + " + 1;\n";
+
+                    sReplace = "if (true) {\n" + sSetup + "while (" + sCond + ") {\n" + sNewBody + "}\n}";
+
+                    sBefore = sResult[( 0):( 0)+( iStartIdx)];
+                    sAfter = sResult[( iBraceClose + 1):( iBraceClose + 1)+( len(sResult) - iBraceClose - 1)];
+                    sResult = sBefore + "" + sReplace + "" + sAfter;
+
+                    continue;
+
+
+
+
+
+
+
+
+
+
+
+
+        sResult = sResult[( 0):( 0)+( iStartIdx)] + "__JSOL_FOR__" + sResult[( iStartIdx + 3):( iStartIdx + 3)+( len(sResult) - iStartIdx - 3)];
+
+
+
+
+    sResult = sResult.replace( "__JSOL_FOR__",  "for");
+    return sResult;
+
+
+  sTransformed = sMaskedCode;
 
   # Dynamic SSOT Rules Iterator
-  _iRulesCount = len(_aRules);
-  _iR = 0;
-  while _iR < _iRulesCount: 
+  iRulesCount = len(aRules);
+  iR = 0;
+  while iR < iRulesCount: 
 
-    _mRule = _aRules[_iR];
-    _sType = _mRule["type"];
-    _sId = _mRule["id"];
-    _sTemplate = _mRule["template"];
+    mRule = aRules[iR];
+    sType = mRule["type"];
+    sId = mRule["id"];
+    sTemplate = mRule["template"];
 
-    if _sType == "block": 
+    if sType == "block": 
 
-      _sTransformed = _fProcessBlock(_sTransformed, _sId, _sTemplate == "unwrap");
-
-
-    elif _sType == "regex": 
-
-      _sTransformed = _sRegexReplace(_mRule["search"], _sTemplate, _sTransformed, "g");
+      sTransformed = fProcessBlock(sTransformed, sId, sTemplate == "unwrap");
 
 
-    elif _sType == "replace": 
+    elif sType == "regex": 
 
-      _sTransformed = _sTransformed.replace( _sId,  _sTemplate);
-
-
-    elif _sType == "call": 
-
-      _sTransformed = _fProcessCall(_sTransformed, _sId + "(", _sTemplate);
+      sTransformed = JSOL.regex_replace(mRule["search"],  sTemplate,  sTransformed,  "g");
 
 
-    elif _sType == "paramtype": 
+    elif sType == "replace": 
 
-      _sTransformed = _fProcessParams(_sTransformed);
-
-
-    _iR = _iR + 1;
+      sTransformed = sTransformed.replace( sId,  sTemplate);
 
 
-  _sFinalOutput = _sPrefix + "" + _sTransformed + "" + _sSuffix;
-  return _sFinalOutput;
+    elif sType == "call": 
+
+      sTransformed = fProcessCall(sTransformed, sId + "(", sTemplate);
+
+
+    elif sType == "paramtype": 
+
+      sTransformed = fProcessParams(sTransformed);
+
+
+    elif sType == "range": 
+
+      sTransformed = fProcessRange(sTransformed);
+
+
+    iR = iR + 1;
+
+
+  sFinalOutput = sPrefix + "" + sTransformed + "" + sSuffix;
+  return sFinalOutput;
 
 

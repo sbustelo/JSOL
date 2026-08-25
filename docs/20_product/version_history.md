@@ -1,5 +1,14 @@
 # JSOL Version History
 
+## v0.2.96 (2026-08-25)
+
+* **Unified Backend Registry:** Replaced hardcoded per-target logic with pattern-based parsing and a unified backend registry. Adding a new target now requires only a new $fCompileBackendX function plus one line in the registry.
+* **Dynamic Compiler Loading (OCP):** Host runners (index.js/php/py) no longer hardcode the list of compiler parts. Files are discovered via directory scan at load time; any filename containing an underscore (_) is excluded, honoring the project-wide "_ = ignore" convention. Dropping in a new compiler module now requires zero changes to the host files.
+* **Dynamic Linter SSOT:** Type prefixes moved out of the linter's hardcoded logic into types.json (Single Source of Truth). The linter now supports type aliases and validates custom prefixes of 3+ characters, laying the groundwork for domain-specific type systems (e.g. Color Science).
+* **QA Batch Mode:** Refactored test-runner.sh and contract-runner.js to compile and validate examples in batch instead of one at a time, and isolated TypeScript validation from the main loop. QA suite runtime dropped from minutes to seconds.
+* **Interactive REPL Overhaul:** The visual interpreter now shows the compiled output for every target side by side, renders the @description block as Markdown, and applies syntax highlighting to code samples. Comments in code samples can be toggled show/hide. Code samples can be copied or downloaded individually, and each case now has a button to download the source .jsol plus every compiled target in one shot.
+
+
 ## v0.2.95 (2026-08-21)
 Official Python Target and 4-Way Isomorphic Parity.
 

@@ -1,39 +1,36 @@
 <?php
-// @JSOL v0.2.95 - Targets Configuration Normalizer
-$mNormalizeTargetsConfig = function($mRawConfig) {
-  $mJsConfig = JSOL::dict("default",  "",  "targets",  JSOL::dict());
-    $mPhpConfig = JSOL::dict("default",  "",  "targets",  JSOL::dict());
-    $mTsConfig = JSOL::dict("default",  "",  "targets",  JSOL::dict());
-    $mPyConfig = JSOL::dict("default",  "",  "targets",  JSOL::dict());
-    
-    if ($mRawConfig === null) {
-    return JSOL::dict("js",  $mJsConfig,  "php",  $mPhpConfig,  "ts",  $mTsConfig,  "py",  $mPyConfig);
+// @JSOL v0.2.96 - Targets Configuration Normalizer (generic, target-agnostic)
+//
+// Iterates over $mBackendRegistry's keys (defined in engine.jsol) instead of
+// one hardcoded block per target. Adding a new compiler target never
+// requires touching this file again — it just needs an entry in the
+// registry, and this picks it up automatically.
+
+$mNormalizeTargetsConfig = function($mRawConfig) use (&$mBackendRegistry) {
+  $aTargetIds = array_keys($mBackendRegistry);
+    $mResult = JSOL::dict();
+
+    for ($i = 0; $i < count($aTargetIds); $i = $i + 1) {
+    $sTargetId = $aTargetIds[$i];
+        $mResult[$sTargetId] = JSOL::dict("default",  "",  "targets",  JSOL::dict());
   }
-  if (isset($mRawConfig[ "js"])) {
-    $mJsConfig["default"] = $mRawConfig["js"]["default"] || "";
-        $mJsConfig["targets"] = $mRawConfig["js"]["targets"] || JSOL::dict();
+  if ($mRawConfig === null) {
+    return $mResult;
   }
-  if (isset($mRawConfig[ "php"])) {
-    $mPhpConfig["default"] = $mRawConfig["php"]["default"] || "";
-        $mPhpConfig["targets"] = $mRawConfig["php"]["targets"] || JSOL::dict();
+  for ($i = 0; $i < count($aTargetIds); $i = $i + 1) {
+    $sTargetId = $aTargetIds[$i];
+        if (isset($mRawConfig[ $sTargetId]) === true) {
+      $mResult[$sTargetId]["default"] = $mRawConfig[$sTargetId]["default"] || "";
+            $mResult[$sTargetId]["targets"] = $mRawConfig[$sTargetId]["targets"] || JSOL::dict();
+    }
   }
-  if (isset($mRawConfig[ "ts"])) {
-    $mTsConfig["default"] = $mRawConfig["ts"]["default"] || "";
-        $mTsConfig["targets"] = $mRawConfig["ts"]["targets"] || JSOL::dict();
+  // Global default/targets block applies to every registered target.
+    if (isset($mRawConfig[ "default"]) === true && isset($mRawConfig[ "targets"]) === true) {
+    for ($i = 0; $i < count($aTargetIds); $i = $i + 1) {
+      $sTargetId = $aTargetIds[$i];
+            $mResult[$sTargetId]["default"] = $mRawConfig["default"];
+            $mResult[$sTargetId]["targets"] = $mRawConfig["targets"];
+    }
   }
-  if (isset($mRawConfig[ "py"])) {
-    $mPyConfig["default"] = $mRawConfig["py"]["default"] || "";
-        $mPyConfig["targets"] = $mRawConfig["py"]["targets"] || JSOL::dict();
-  }
-  if (isset($mRawConfig[ "default"]) && isset($mRawConfig[ "targets"])) {
-    $mJsConfig["default"] = $mRawConfig["default"];
-        $mPhpConfig["default"] = $mRawConfig["default"];
-        $mTsConfig["default"] = $mRawConfig["default"];
-        $mJsConfig["targets"] = $mRawConfig["targets"];
-        $mPhpConfig["targets"] = $mRawConfig["targets"];
-        $mTsConfig["targets"] = $mRawConfig["targets"];
-        $mPyConfig["default"] = $mRawConfig["default"];
-        $mPyConfig["targets"] = $mRawConfig["targets"];
-  }
-  return JSOL::dict("js",  $mJsConfig,  "php",  $mPhpConfig,  "ts",  $mTsConfig,  "py",  $mPyConfig);
+  return $mResult;
 };

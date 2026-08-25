@@ -6,5 +6,5 @@
   "Bit.and", "Bit.or", "Bit.xor", "Bit.not", "Bit.shiftL", "Bit.shiftR",
   "Regex.match", "Regex.replace", "Regex.test",
   "JSOL.hasKey", "JSOL.len", "JSOL.count", "JSOL.set", "JSOL.unset",
-  "JSOL.JS", "JSOL.PHP", "JSOL.use", "Math.PI", "isNaN", "Math."
+  "JSOL.JS", "JSOL.PHP", "JSOL.use", "JSOL.range", "Math.PI", "isNaN", "Math."
 ]

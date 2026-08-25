@@ -1,93 +1,9 @@
 <?php
-// JSOL v0.2.95
+/* PATH: interpreter/engine/compiler-bridge.php */
+/* REEMPLAZAR ARCHIVO COMPLETO */
+// JSOL v0.2.98
 
 declare(strict_types=1);
-
-// 1. PHP Polyfills required by the JSOL Compiler to run natively in memory
-if (!class_exists('JSOL')) {
-	class JSOL
-	{
-		public static function dict(...$args)
-		{
-			$obj = [];
-			for ($i = 0; $i < count($args); $i += 2) {
-				if (array_key_exists($i + 1, $args)) {
-					$obj[$args[$i]] = $args[$i + 1];
-				}
-			}
-			return $obj;
-		}
-		public static function use(...$args) {}
-		public static function strIndexOf($haystack, $needle)
-		{
-			$r = strpos($haystack, $needle);
-			return $r === false ? -1 : $r;
-		}
-		public static function arrIndexOf($arr, $item)
-		{
-			$r = array_search($item, $arr, true);
-			return $r === false ? -1 : $r;
-		}
-	}
-}
-if (!class_exists('Str')) {
-	class Str
-	{
-		public static function indexOf($h, $n)
-		{
-			$r = strpos($h, $n);
-			return $r === false ? -1 : $r;
-		}
-		public static function len($s)
-		{
-			return mb_strlen($s, "UTF-8");
-		}
-		public static function sub($s, $start, $len)
-		{
-			return mb_substr($s, $start, $len, "UTF-8");
-		}
-		public static function char($s, $idx)
-		{
-			return mb_ord(mb_substr($s, $idx, 1, "UTF-8"));
-		}
-		public static function fromChar($c)
-		{
-			return mb_chr($c, "UTF-8");
-		}
-		public static function replace($s, $search, $replace)
-		{
-			return str_replace($search, $replace, $s);
-		}
-	}
-}
-if (!class_exists('Arr')) {
-	class Arr
-	{
-		public static function count($a)
-		{
-			return count($a);
-		}
-		public static function push(&$a, $i)
-		{
-			$a[] = $i;
-			return $a;
-		}
-	}
-}
-if (!class_exists('Map')) {
-	class Map
-	{
-		public static function create(...$args)
-		{
-			return JSOL::dict(...$args);
-		}
-		public static function has($obj, $key)
-		{
-			return isset($obj[$key]);
-		}
-	}
-}
-
 
 function parseJsolMetadata(string $filePath): array
 {
@@ -100,9 +16,11 @@ function parseJsolMetadata(string $filePath): array
 	];
 
 	$sourceCode = file_get_contents($filePath);
+	if ($sourceCode === false) {
+		return $metadata;
+	}
 	$metadata['sourceCode'] = $sourceCode;
 
-	// Extract @contract block
 	if (preg_match('/\/\*\*[\s\*]*@contract\s*\n(.*?)\*\//s', $sourceCode, $matches)) {
 		$jsonStr = preg_replace('/^\s*\*\s?/m', '', $matches[1]);
 		$parsedJson = json_decode($jsonStr, true);
@@ -111,7 +29,6 @@ function parseJsolMetadata(string $filePath): array
 		}
 	}
 
-	// Extract documentation
 	if (preg_match_all('/\/\*(.*?)\*\//s', $sourceCode, $docMatches)) {
 		foreach ($docMatches[1] as $docContent) {
 			if (strpos($docContent, '@contract') === false) {
@@ -121,109 +38,151 @@ function parseJsolMetadata(string $filePath): array
 		}
 	}
 
-	// Extract function signature
 	if (preg_match('/const\s+(\$[a-zA-Z0-9_]+)\s*=\s*function\s*\(([^)]*)\)/', $sourceCode, $matches)) {
 		$metadata['funcName'] = $matches[1];
 		$rawParams = explode(',', $matches[2]);
 		foreach ($rawParams as $p) {
 			$p = trim($p);
-			if ($p !== '') $metadata['params'][] = $p;
+			if ($p !== '') {
+				$metadata['params'][] = $p;
+			}
 		}
 	}
 
 	return $metadata;
 }
 
-
 function compileJsolInMemory(string $sourcePath, string $compilerDir, string $outDir, array $metadata): array
 {
-	// Load all compiler parts into the current function scope
-$parts = [
-		'lexer.php',
-		'linter.php',
-		'cli-parser.php',
-		'config-parser.php',
-		'regex.php',
-		'indenter.php',
-		'js-compiler.php',
-		'php-compiler.php',
-		'python-compiler.php',
-		'python-ternary.php',
-		'python-brace-strip.php',
-		'engine.php'
-	];
-	
-	
-	
-foreach ($parts as $part) {
-		require rtrim($compilerDir, '/') . '/' . $part;
+	$polyfillPath = rtrim($compilerDir, '/') . '/dist/stdlib/jsol-core.php';
+	if (file_exists($polyfillPath)) {
+		require_once $polyfillPath;
+	} else {
+		return [
+			'success' => false,
+			'outputLog' => "FATAL: Polyfill jsol-core.php not found at {$polyfillPath}. Run bootstrapper first.",
+			'compiledFilename' => null,
+			'targets' => []
+		];
+	}
+
+	$parts = [];
+	$scanned = scandir($compilerDir);
+	if ($scanned !== false) {
+		foreach ($scanned as $f) {
+			if (str_ends_with($f, '.php') && $f !== 'index.php' && !str_contains($f, '_') && is_file($compilerDir . '/' . $f)) {
+				$parts[] = $f;
+			}
+		}
+		sort($parts);
+
+        // [!] TRAMPA DE OUTPUT BUFFERING: Captura y destruye cualquier HTML escupido por los archivos del compilador
+		ob_start();
+		foreach ($parts as $part) {
+			require_once rtrim($compilerDir, '/') . '/' . $part;
+		}
+		ob_end_clean();
 	}
 
 	foreach (get_defined_vars() as $varName => $varVal) {
-		if ($varName !== 'sourcePath' && $varName !== 'compilerDir' && $varName !== 'outDir' && $varName !== 'metadata' && $varName !== 'parts') {
+		if ($varName !== 'sourcePath' && $varName !== 'compilerDir' && $varName !== 'outDir' && $varName !== 'metadata' && $varName !== 'parts' && $varName !== 'scanned' && $varName !== 'f' && $varName !== 'polyfillPath') {
 			$GLOBALS[$varName] = $varVal;
 		}
 	}
 
 	$sourceCode = file_get_contents($sourcePath);
+	if ($sourceCode === false) {
+		return [
+			'success' => false,
+			'outputLog' => "FATAL: Cannot read source file at {$sourcePath}.",
+			'compiledFilename' => null,
+			'targets' => []
+		];
+	}
 
-	// Resolve target configuration
+	/** @var callable|null $mNormalizeTargetsConfig */
+	$mNormalizeTargetsConfig = $GLOBALS['mNormalizeTargetsConfig'] ?? null;
+	/** @var callable|null $mExecuteCompilationPipeline */
+	$mExecuteCompilationPipeline = $GLOBALS['mExecuteCompilationPipeline'] ?? null;
+
+	if (!is_callable($mNormalizeTargetsConfig) || !is_callable($mExecuteCompilationPipeline)) {
+		return [
+			'success' => false,
+			'outputLog' => "FATAL: Compiler pipeline functions not initialized from {$compilerDir}.",
+			'compiledFilename' => null,
+			'targets' => []
+		];
+	}
+
 	$targetsConfig = $mNormalizeTargetsConfig(null);
 
-	// Load Compiled SSOT directly from JSON as per index.php logic
 	$ssotPath = rtrim($compilerDir, '/') . '/dist/compiler/jsol-spec.json';
 	if (!file_exists($ssotPath)) {
 		return [
 			'success' => false,
 			'outputLog' => "FATAL: SSOT spec file not found at {$ssotPath}. Run bootstrapper first.",
-			'compiledFilename' => null
+			'compiledFilename' => null,
+			'targets' => []
 		];
 	}
-	$mSSOTData = json_decode(file_get_contents($ssotPath), true);
+	$ssotContent = file_get_contents($ssotPath);
+	if ($ssotContent === false) {
+		return [
+			'success' => false,
+			'outputLog' => "FATAL: Unable to read SSOT spec file at {$ssotPath}.",
+			'compiledFilename' => null,
+			'targets' => []
+		];
+	}
+	$mSSOTData = json_decode($ssotContent, true);
 
-	// Export the compiled function explicitly to the browser's window object
 	$jsSuffix = "";
 	if (!empty($metadata['funcName'])) {
 		$jsSuffix = "\nwindow['" . $metadata['funcName'] . "'] = " . $metadata['funcName'] . ";\n";
 	}
 
 	$cliOpts = [
-		'jsTarget' => '',
-		'jsPrefix' => '',
-		'jsSuffix' => $jsSuffix,
-		'phpTarget' => '',
-		'phpPrefix' => '',
-		'phpSuffix' => '',
-		'tsTarget' => '',
-		'tsPrefix' => '',
-		'tsSuffix' => '',
-		'pyTarget' => '',
-		'pyPrefix' => '',
-		'pySuffix' => ''
+		'jsTarget' => '', 'jsPrefix' => '', 'jsSuffix' => $jsSuffix,
+		'phpTarget' => '', 'phpPrefix' => '', 'phpSuffix' => '',
+		'tsTarget' => '', 'tsPrefix' => '', 'tsSuffix' => '',
+		'pyTarget' => '', 'pyPrefix' => '', 'pySuffix' => ''
 	];
 
-
-
-
-
-	// Execute compilation passing the decoded SSOT data array as argument #4
 	$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOpts, $mSSOTData);
 
 	$baseName = preg_replace('/\.jsol(\.js)?$/', '', basename($sourcePath));
 	$compiledJsFilename = $baseName . '.js';
 
-	if ($result['success'] !== false) {
-		file_put_contents($outDir . '/' . $compiledJsFilename, $result['js']);
+	if (is_array($result) && isset($result['success']) && $result['success'] !== false) {
+        // Volcar TODOS los lenguajes generados al disco para habilitar endpoints de descarga
+		file_put_contents($outDir . '/' . $baseName . '.js', $result['js'] ?? '');
+        if (isset($result['php']) && is_string($result['php'])) file_put_contents($outDir . '/' . $baseName . '.php', $result['php']);
+        if (isset($result['ts']) && is_string($result['ts'])) file_put_contents($outDir . '/' . $baseName . '.ts', $result['ts']);
+        if (isset($result['py']) && is_string($result['py'])) file_put_contents($outDir . '/' . $baseName . '.py', $result['py']);
+
+		$targets = [
+			'jsol' => $sourceCode
+		];
+
+		foreach ($result as $key => $code) {
+			if ($key !== 'success' && $key !== 'outputLog' && $key !== 'errors' && is_string($code)) {
+				$targets[$key] = $code;
+			}
+		}
+
 		return [
 			'success' => true,
 			'outputLog' => '',
-			'compiledFilename' => $compiledJsFilename
+			'compiledFilename' => $compiledJsFilename,
+			'targets' => $targets
 		];
 	} else {
+		$errors = (is_array($result) && isset($result['errors']) && is_array($result['errors'])) ? $result['errors'] : ['Unknown compilation error'];
 		return [
 			'success' => false,
-			'outputLog' => implode("\n", $result['errors'] ?? ['Unknown compilation error']),
-			'compiledFilename' => null
+			'outputLog' => implode("\n", $errors),
+			'compiledFilename' => null,
+			'targets' => []
 		];
 	}
 }

@@ -1,0 +1,66 @@
+/* =============================================================================
+   c0141-j0ui-toolbar.css
+   TOOLBAR — Barra de herramientas de componente o ventana.
+   Package: 0140-j0ui-navigation--public-web
+   Problema: CONTENER + ACCIONAR
+   ============================================================================= */
+
+.j0ui-toolbar {
+    display:       flex;
+    align-items:   center;
+    gap:           2px;
+    padding:       4px var(--j0ui-space-sm);
+    background:    var(--j0ui-bg-header);
+    border-bottom: 1px solid var(--j0ui-border-subtle);
+    flex-shrink:   0;
+}
+
+.j0ui-toolbar-btn {
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    width:           var(--j0ui-size-input);
+    height:          var(--j0ui-size-input);
+    background:      transparent;
+    border:          1px solid transparent;
+    border-radius:   var(--j0ui-radius-sm);
+    color:           var(--j0ui-text-muted);
+    cursor:          pointer;
+    font-size:       var(--j0ui-size-font-sm);
+    transition:      background 0.15s, color 0.15s, border-color 0.15s;
+    flex-shrink:     0;
+    white-space:     nowrap;
+    gap:             4px;
+}
+
+.j0ui-toolbar-btn:hover {
+    background:   var(--j0ui-bg-hover);
+    color:        var(--j0ui-text-main);
+    border-color: var(--j0ui-border-input);
+}
+
+.j0ui-toolbar-btn.j0ui-active {
+    background:   var(--j0ui-accent-bg);
+    color:        var(--j0ui-accent);
+    border-color: var(--j0ui-accent);
+}
+
+/* Botón con texto además de icono */
+.j0ui-toolbar-btn.has-label {
+    width:   auto;
+    padding: 0 10px;
+}
+
+/* Separador vertical */
+.j0ui-toolbar-sep {
+    width:      1px;
+    height:     16px;
+    background: var(--j0ui-border-subtle);
+    margin:     0 2px;
+    flex-shrink: 0;
+}
+
+/* Spacer flexible — empuja lo que sigue al extremo derecho */
+.j0ui-toolbar-spacer {
+    flex-grow: 1;
+}

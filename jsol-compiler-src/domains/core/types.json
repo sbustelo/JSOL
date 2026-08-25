@@ -1,6 +1,6 @@
 {
   "core": {
-    "i": ["i", "idx", "index"],
+    "i": ["i", "idx", "index", "int"],
     "q": ["q", "qty", "quantity"],
     "n": ["n", "num", "number", "float"],
     "s": ["s", "str", "string", "text"],
@@ -11,5 +11,8 @@
     "x": ["x", "rgx", "regex", "pattern"],
     "y": ["y", "bin", "byte", "binary"]
   },
-  "reserved": ["c", "p", "g", "t", "d"]
+  "reserved": ["c", "p", "g", "t", "d"],
+  "custom": [
+    "col", "cs", "csrgb", "cscmyk", "csxyz", "cslab", "csoklch", "csoklab", "cswcagy", "csapcay"
+  ]
 }

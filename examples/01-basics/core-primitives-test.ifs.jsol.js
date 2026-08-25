@@ -1,17 +1,31 @@
-// @JSOL v0.2.93
+// @JSOL v0.2.96
 
 /**
  @description
- A complete validation suite that tests every primitive domain method specified in JSOL v0.3.
- Designed using a conservative IF-ELSE routing pattern. This structure is used exclusively 
- to test the successful execution of the core domain primitives without introducing unverified 
- control flow mechanisms. A separate file (.switch.jsol.js) handles strict switch testing.
- Each method is evaluated in isolation as a separate row in the JSOL REPL Interpreter, 
- preventing a single unimplemented function from crashing the entire test suite.
 
-@param {string} $sMethod - The name of the method to evaluate.
-@returns {string} - The stringified result of the evaluation.
-*/
+ # Core Primitives Test Suite
+ 
+ A complete validation suite that tests every primitive domain method specified in **JSOL v0.3**.
+ Designed using a conservative **IF-ELSE routing pattern**. This structure is used exclusively 
+ to test the successful execution of the core domain primitives without introducing unverified 
+ control flow mechanisms. A separate file (`.switch.jsol.js`) handles strict switch testing.
+ Each method is evaluated in isolation as a separate row in the **JSOL REPL Interpreter**, 
+ preventing a single unimplemented function from crashing the entire test suite.
+ 
+ ## Key Design Decisions
+ 
+ - **Conservative Routing**: Uses IF-ELSE pattern to avoid unverified control flow
+ - **Isolation**: Each method runs independently to prevent cascade failures
+ - **Separate Testing**: Switch statements handled in dedicated `.switch.jsol.js` file
+ 
+ ## Parameters
+ 
+ - **@param {string} $sMethod** - The name of the method to evaluate.
+ 
+ ## Returns
+ 
+ - **@returns {string}** - The stringified result of the evaluation.
+ */
 
 /**
  @contract

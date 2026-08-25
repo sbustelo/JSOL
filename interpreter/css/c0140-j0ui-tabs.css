@@ -1,0 +1,158 @@
+/* =============================================================================
+   c0140-j0ui-tabs.css
+   TABS — Navegación horizontal entre paneles.
+   Package: 0140-j0ui-navigation--public-web
+   Problema: NAVEGAR
+
+   Variantes de presentación del tab item:
+     default          → solo texto
+     .has-icon        → icono + texto (horizontal)
+     .has-icon-stack  → icono arriba + texto abajo (estilo paleta FlowStyler)
+     .icon-only       → solo icono (sin texto)
+
+   Overflow cuando los tabs no entran:
+     .j0ui-tabs-row[data-overflow="scroll"]   → scroll horizontal silencioso
+     .j0ui-tabs-row[data-overflow="menu"]     → botón … con dropdown
+     default (sin atributo)                  → scroll + botón … combinados
+   ============================================================================= */
+
+/* ─── TAB ROW ────────────────────────────────────────────────────────────────── */
+
+.j0ui-tabs-row {
+    display:        flex;
+    align-items:    stretch;
+    border-bottom:  1px solid var(--j0ui-border-subtle);
+    background:     var(--j0ui-bg-panel);
+    flex-shrink:    0;
+    overflow-x:     auto;
+    scrollbar-width: none;
+    position:       relative;
+}
+.j0ui-tabs-row::-webkit-scrollbar { display: none; }
+
+
+/* ─── TAB ITEM — base ────────────────────────────────────────────────────────── */
+
+.j0ui-tab-item {
+    display:        flex;
+    align-items:    center;
+    justify-content: center;
+    gap:            6px;
+    padding:        0 12px;
+    height:         var(--j0ui-size-input);
+    font-size:      var(--j0ui-size-font-ui);
+    font-weight:    500;
+    color:          var(--j0ui-text-muted);
+    border-bottom:  2px solid transparent;
+    cursor:         pointer;
+    white-space:    nowrap;
+    user-select:    none;
+    flex-shrink:    0;
+    position:       relative;
+    bottom:         -1px;
+    transition:     color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.j0ui-tab-item:hover   { color: var(--j0ui-text-main); }
+
+.j0ui-tab-item.j0ui-active {
+    color:              var(--j0ui-text-main);
+    border-bottom-color: var(--j0ui-tab-indicator, var(--j0ui-core-accent));
+}
+
+
+/* ─── VARIANTE: icono + texto horizontal ─────────────────────────────────────── */
+
+.j0ui-tab-item.has-icon {
+    gap: 6px;
+}
+
+.j0ui-tab-icon {
+    font-size:   17px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.j0ui-tab-label {
+    font-size: var(--j0ui-size-font-ui);
+}
+
+
+/* ─── VARIANTE: icono arriba + texto abajo (stack) ───────────────────────────── */
+
+.j0ui-tab-item.has-icon-stack {
+    flex-direction: column;
+    height:         auto;
+    padding:        6px 12px 5px;
+    gap:            2px;
+    border-bottom:  none;
+    border-radius:  var(--j0ui-radius-sm) var(--j0ui-radius-sm) 0 0;
+    min-width:      56px;
+}
+
+.j0ui-tab-item.has-icon-stack .j0ui-tab-icon  { font-size: 17px; }
+.j0ui-tab-item.has-icon-stack .j0ui-tab-label {
+    font-size:      9px;
+    font-weight:    600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.j0ui-tab-item.has-icon-stack.j0ui-active {
+    background:    var(--j0ui-accent-bg);
+    color:         var(--j0ui-accent);
+    border-bottom-color: transparent;
+}
+
+html[data-theme="light"] .j0ui-tab-item.has-icon-stack.j0ui-active {
+    background: var(--j0ui-core-accent);
+    color:      #fff;
+}
+
+
+/* ─── VARIANTE: solo icono ───────────────────────────────────────────────────── */
+
+.j0ui-tab-item.icon-only {
+    padding:   0;
+    width:     var(--j0ui-size-input);
+    min-width: var(--j0ui-size-input);
+}
+
+.j0ui-tab-item.icon-only .j0ui-tab-label { display: none; }
+
+
+/* ─── OVERFLOW — botón … ─────────────────────────────────────────────────────── */
+
+.j0ui-tabs-overflow-btn {
+    display:         none;   /* JS lo muestra cuando hay overflow */
+    align-items:     center;
+    justify-content: center;
+    width:           var(--j0ui-size-input);
+    height:          var(--j0ui-size-input);
+    flex-shrink:     0;
+    position:        sticky;
+    right:           0;
+    background:      linear-gradient(to right,
+                       transparent,
+                       var(--j0ui-bg-panel) 40%);
+    border:          none;
+    color:           var(--j0ui-text-muted);
+    cursor:          pointer;
+    font-size:       var(--j0ui-size-font-lg);
+    padding:         0 6px 0 16px;
+    transition:      color 0.15s;
+}
+
+.j0ui-tabs-overflow-btn:hover { color: var(--j0ui-text-main); }
+
+/* JS agrega .has-overflow al row cuando los items no entran */
+.j0ui-tabs-row.has-overflow .j0ui-tabs-overflow-btn { display: flex; }
+
+
+/* ─── TAB PANE ───────────────────────────────────────────────────────────────── */
+
+.j0ui-tab-pane                { display: none; flex-direction: column; gap: var(--j0ui-space-sm); padding: 8px 0; }
+.j0ui-tab-pane.j0ui-active    { display: flex; }
+
+[data-j0-panel]               { display: none; }
+[data-j0-panel].j0ui-active   { display: flex; flex-direction: column; gap: var(--j0ui-space-sm); padding: 8px 0; }

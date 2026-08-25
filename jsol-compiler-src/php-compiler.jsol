@@ -1,243 +1,570 @@
-// @JSOL v0.2.94 - Self-Hosted PHP Target Compiler (Dynamic SSOT Iteration)
-const $sCompileToPHP = function($sMaskedCode, $sPrefix, $sSuffix, $aRules) {
-    JSOL.use($sRegexReplace);
-    
-    const $fProcessBlock = function($sCode, $sKeyword, $bUnwrap) {
+// @JSOL v0.2.96 - Self-Hosted PHP Target Compiler (Dynamic SSOT Iteration)
+const $sCompileToPHP = function ($sMaskedCode, $sPrefix, $sSuffix, $aRules) {
+
+	const $fProcessBlock = function ($sCode, $sKeyword, $bUnwrap) {
+		let $sResult = $sCode;
+		let $bContinue = true;
+		let $iOffset = 0;
+		while ($bContinue === true) {
+			const $iSearchLen = Str.len($sResult) - $iOffset;
+			if ($iSearchLen <= 0) {
+				$bContinue = false;
+				continue;
+			}
+			const $sSearchArea = Str.sub($sResult, $iOffset, $iSearchLen);
+			const $iRelIdx = Str.indexOf($sSearchArea, $sKeyword);
+
+			if ($iRelIdx === -1) {
+				$bContinue = false;
+			} else {
+				const $iStartIdx = $iOffset + $iRelIdx;
+				const $iTailLen = Str.len($sResult) - $iStartIdx;
+				const $sTail = Str.sub($sResult, $iStartIdx, $iTailLen);
+				const $iRelOpenBrace = Str.indexOf($sTail, "{");
+				const $iOpenBrace = $iRelOpenBrace === -1 ? -1 : $iStartIdx + $iRelOpenBrace;
+
+				if ($iOpenBrace === -1) {
+					$bContinue = false;
+				} else {
+					let $iBraceCount = 1;
+					let $iCloseBrace = -1;
+					const $iRLen = Str.len($sResult);
+					for (let $i = $iOpenBrace + 1; $i < $iRLen; $i = $i + 1) {
+						const $sChar = Str.sub($sResult, $i, 1);
+						if ($sChar === "{") { $iBraceCount = $iBraceCount + 1; }
+						if ($sChar === "}") { $iBraceCount = $iBraceCount - 1; }
+						if ($iBraceCount === 0) {
+							$iCloseBrace = $i;
+							break;
+						}
+					}
+
+					if ($iCloseBrace === -1) {
+						$bContinue = false;
+					} else {
+						let $iEndIdx = $iCloseBrace + 1;
+						let $bFindingEnd = true;
+						while ($iEndIdx < $iRLen && $bFindingEnd === true) {
+							const $sChar = Str.sub($sResult, $iEndIdx, 1);
+							if ($sChar === " " || $sChar === "\n" || $sChar === "\r" || $sChar === ")" || $sChar === ";") {
+								$iEndIdx = $iEndIdx + 1;
+							} else {
+								$bFindingEnd = false;
+							}
+						}
+
+						const $sBefore = Str.sub($sResult, 0, $iStartIdx);
+						const $iAfterLen = Str.len($sResult) - $iEndIdx;
+						const $sAfter = Str.sub($sResult, $iEndIdx, $iAfterLen);
+
+						if ($bUnwrap === true) {
+							const $iInnerLen = $iCloseBrace - $iOpenBrace - 1;
+							const $sInner = Str.sub($sResult, $iOpenBrace + 1, $iInnerLen);
+							$sResult = $sBefore + "" + $sInner + "" + $sAfter;
+							$iOffset = Str.len($sBefore) + Str.len($sInner);
+						} else {
+							$sResult = $sBefore + "" + $sAfter;
+							$iOffset = Str.len($sBefore);
+						}
+					}
+				}
+			}
+		}
+		return $sResult;
+	};
+
+	const $fProcessCall = function ($sCode, $sKeyword, $sTemplate) {
+		let $sResult = $sCode;
+		let $bContinue = true;
+		let $iOffset = 0;
+		while ($bContinue === true) {
+			const $iSearchLen = Str.len($sResult) - $iOffset;
+			if ($iSearchLen <= 0) {
+				$bContinue = false;
+				continue;
+			}
+			const $sSearchArea = Str.sub($sResult, $iOffset, $iSearchLen);
+			const $iRelIdx = Str.indexOf($sSearchArea, $sKeyword);
+
+			if ($iRelIdx === -1) {
+				$bContinue = false;
+			} else {
+				const $iStartIdx = $iOffset + $iRelIdx;
+				const $iKwLen = Str.len($sKeyword);
+				const $iOpenParen = $iStartIdx + $iKwLen - 1;
+				let $iParenCount = 1;
+				let $iBracketCount = 0;
+				let $iBraceCount = 0;
+				let $bInStr = false;
+				let $iCloseParen = -1;
+				let $aArgs = [];
+				let $iCurrentArgStart = $iOpenParen + 1;
+				const $iRLen = Str.len($sResult);
+
+				for (let $i = $iOpenParen + 1; $i < $iRLen; $i = $i + 1) {
+					const $sChar = Str.sub($sResult, $i, 1);
+					const $sPrev = Str.sub($sResult, $i - 1, 1);
+
+					if ($sChar === "\"" && $sPrev !== "\\") { $bInStr = !$bInStr; }
+
+					if ($bInStr === false) {
+						if ($sChar === "(") { $iParenCount = $iParenCount + 1; }
+						if ($sChar === ")") { $iParenCount = $iParenCount - 1; }
+						if ($sChar === "[") { $iBracketCount = $iBracketCount + 1; }
+						if ($sChar === "]") { $iBracketCount = $iBracketCount - 1; }
+						if ($sChar === "{") { $iBraceCount = $iBraceCount + 1; }
+						if ($sChar === "}") { $iBraceCount = $iBraceCount - 1; }
+					}
+
+					if ($sChar === "," && $iParenCount === 1 && $iBracketCount === 0 && $iBraceCount === 0 && $bInStr === false) {
+						const $iArgLen1 = $i - $iCurrentArgStart;
+						const $sArgVal1 = Str.sub($sResult, $iCurrentArgStart, $iArgLen1);
+						Arr.push($aArgs, $sArgVal1);
+						$iCurrentArgStart = $i + 1;
+					} else if ($iParenCount === 0) {
+						const $iArgLen2 = $i - $iCurrentArgStart;
+						const $sArgVal2 = Str.sub($sResult, $iCurrentArgStart, $iArgLen2);
+						Arr.push($aArgs, $sArgVal2);
+						$iCloseParen = $i;
+						break;
+					}
+				}
+
+				if ($iCloseParen === -1) {
+					$bContinue = false;
+				} else {
+					const $sBefore = Str.sub($sResult, 0, $iStartIdx);
+					const $iAfterLen = Str.len($sResult) - $iCloseParen - 1;
+					const $sAfter = Str.sub($sResult, $iCloseParen + 1, $iAfterLen);
+
+					let $sRep = $sTemplate;
+					if (Str.indexOf($sTemplate, "{*}") !== -1) {
+						$sRep = Str.replace($sRep, "{*}", Arr.join($aArgs, ", "));
+					} else {
+						const $iArgsCount = Arr.count($aArgs);
+						for (let $iK = 0; $iK < $iArgsCount; $iK = $iK + 1) {
+							const $sPlaceholder = Str.concat("{", $iK, "}");
+							$sRep = Str.replace($sRep, $sPlaceholder, $aArgs[$iK]);
+						}
+					}
+
+					$sResult = $sBefore + "" + $sRep + "" + $sAfter;
+					$iOffset = $iStartIdx;
+				}
+			}
+		}
+		return $sResult;
+	};
+
+	const $sExtractPHPUse = function ($sCode) {
+		const $bIsIdentChar = function ($sCh) {
+			if ($sCh === "_") { return true; }
+			if ($sCh === "$") { return true; }
+			if ($sCh >= "a" && $sCh <= "z") { return true; }
+			if ($sCh >= "A" && $sCh <= "Z") { return true; }
+			if ($sCh >= "0" && $sCh <= "9") { return true; }
+			return false;
+		};
+
+		const $mReadWord = function ($sCodeText, $iStart) {
+			JSOL.use($bIsIdentChar);
+			const $iLen = Str.len($sCodeText);
+			let $i = $iStart;
+			while ($i < $iLen && $bIsIdentChar(Str.sub($sCodeText, $i, 1))) {
+				$i = $i + 1;
+			}
+			return Map.create("word", Str.sub($sCodeText, $iStart, $i - $iStart), "end", $i);
+		};
+
+		let $sResult = $sCode;
+		let $iFunc = Str.len($sResult) - 8;
+
+		while ($iFunc >= 0) {
+			if (Str.sub($sResult, $iFunc, 8) === "function") {
+				const $bPrev = $iFunc === 0 || !$bIsIdentChar(Str.sub($sResult, $iFunc - 1, 1));
+				const $bNext = $iFunc + 8 === Str.len($sResult) || !$bIsIdentChar(Str.sub($sResult, $iFunc + 8, 1));
+
+				if ($bPrev && $bNext) {
+					let $iParenOpen = $iFunc + 8;
+					while ($iParenOpen < Str.len($sResult) && Str.sub($sResult, $iParenOpen, 1) !== "(" && Str.sub($sResult, $iParenOpen, 1) !== "{") {
+						$iParenOpen = $iParenOpen + 1;
+					}
+
+					if ($iParenOpen < Str.len($sResult) && Str.sub($sResult, $iParenOpen, 1) === "(") {
+						let $iParenDepth = 0;
+						let $iParenClose = -1;
+						for (let $iK = $iParenOpen; $iK < Str.len($sResult); $iK = $iK + 1) {
+							if (Str.sub($sResult, $iK, 1) === "(") { $iParenDepth = $iParenDepth + 1; }
+							else if (Str.sub($sResult, $iK, 1) === ")") {
+								$iParenDepth = $iParenDepth - 1;
+								if ($iParenDepth === 0) {
+									$iParenClose = $iK;
+									break;
+								}
+							}
+						}
+
+						if ($iParenClose !== -1) {
+							let $iBraceOpen = $iParenClose + 1;
+							while ($iBraceOpen < Str.len($sResult) && Str.sub($sResult, $iBraceOpen, 1) !== "{" && Str.sub($sResult, $iBraceOpen, 1) !== "(") {
+								$iBraceOpen = $iBraceOpen + 1;
+							}
+
+							if ($iBraceOpen < Str.len($sResult) && Str.sub($sResult, $iBraceOpen, 1) === "{") {
+								let $iBraceDepth = 0;
+								let $iBraceClose = -1;
+								for (let $iK = $iBraceOpen; $iK < Str.len($sResult); $iK = $iK + 1) {
+									if (Str.sub($sResult, $iK, 1) === "{") { $iBraceDepth = $iBraceDepth + 1; }
+									else if (Str.sub($sResult, $iK, 1) === "}") {
+										$iBraceDepth = $iBraceDepth - 1;
+										if ($iBraceDepth === 0) {
+											$iBraceClose = $iK;
+											break;
+										}
+									}
+								}
+
+								if ($iBraceClose !== -1) {
+									const $sParams = Str.sub($sResult, $iParenOpen + 1, $iParenClose - $iParenOpen - 1);
+									const $sBody = Str.sub($sResult, $iBraceOpen + 1, $iBraceClose - $iBraceOpen - 1);
+
+									if (Str.indexOf($sBody, "JSOL.use") === -1) {
+										let $aParams = [];
+										let $aLocals = [];
+										let $aAllVars = [];
+
+										let $iP = 0;
+										while ($iP < Str.len($sParams)) {
+											if (Str.sub($sParams, $iP, 1) === "$") {
+												const $mWord = $mReadWord($sParams, $iP);
+												Arr.push($aParams, $mWord["word"]);
+												$iP = $mWord["end"];
+											} else {
+												$iP = $iP + 1;
+											}
+										}
+
+										let $iB = 0;
+										while ($iB < Str.len($sBody)) {
+											if (Str.sub($sBody, $iB, 8) === "function" && !$bIsIdentChar(Str.sub($sBody, $iB + 8, 1))) {
+												let $iParen = $iB + 8;
+												while ($iParen < Str.len($sBody) && Str.sub($sBody, $iParen, 1) !== "(") { $iParen = $iParen + 1; }
+												if ($iParen < Str.len($sBody)) {
+													let $iPDepth = 0;
+													let $iPClose = -1;
+													for (let $iK = $iParen; $iK < Str.len($sBody); $iK = $iK + 1) {
+														if (Str.sub($sBody, $iK, 1) === "(") { $iPDepth = $iPDepth + 1; }
+														else if (Str.sub($sBody, $iK, 1) === ")") {
+															$iPDepth = $iPDepth - 1;
+															if ($iPDepth === 0) { $iPClose = $iK; break; }
+														}
+													}
+													if ($iPClose !== -1) {
+														const $sInnerParams = Str.sub($sBody, $iParen + 1, $iPClose - $iParen - 1);
+														let $iIP = 0;
+														while ($iIP < Str.len($sInnerParams)) {
+															if (Str.sub($sInnerParams, $iIP, 1) === "$") {
+																const $mWord = $mReadWord($sInnerParams, $iIP);
+																Arr.push($aLocals, $mWord["word"]);
+																$iIP = $mWord["end"];
+															} else {
+																$iIP = $iIP + 1;
+															}
+														}
+													}
+												}
+												$iB = $iB + 8;
+												continue;
+											}
+
+											let $bIsDecl = false;
+											let $iAfterDecl = $iB;
+											if (Str.sub($sBody, $iB, 6) === "const ") {
+												$bIsDecl = true;
+												$iAfterDecl = $iB + 6;
+											} else if (Str.sub($sBody, $iB, 4) === "let ") {
+												$bIsDecl = true;
+												$iAfterDecl = $iB + 4;
+											}
+
+											if ($bIsDecl) {
+												while ($iAfterDecl < Str.len($sBody) && (Str.sub($sBody, $iAfterDecl, 1) === " " || Str.sub($sBody, $iAfterDecl, 1) === "\t" || Str.sub($sBody, $iAfterDecl, 1) === "\n" || Str.sub($sBody, $iAfterDecl, 1) === "\r")) {
+													$iAfterDecl = $iAfterDecl + 1;
+												}
+												if (Str.sub($sBody, $iAfterDecl, 1) === "$") {
+													const $mWord = $mReadWord($sBody, $iAfterDecl);
+													Arr.push($aLocals, $mWord["word"]);
+												}
+												$iB = $iAfterDecl;
+												continue;
+											}
+
+											if (Str.sub($sBody, $iB, 1) === "$") {
+												const $mWord = $mReadWord($sBody, $iB);
+												if ($mWord["word"] !== '$_') {
+													Arr.push($aAllVars, $mWord["word"]);
+												}
+												$iB = $mWord["end"];
+											} else {
+												$iB = $iB + 1;
+											}
+										}
+
+										let $aFree = [];
+										const $iAllCount = Arr.count($aAllVars);
+										for (let $iV = 0; $iV < $iAllCount; $iV = $iV + 1) {
+											const $sVar = $aAllVars[$iV];
+											if (Arr.indexOf($aParams, $sVar) === -1 && Arr.indexOf($aLocals, $sVar) === -1 && Arr.indexOf($aFree, $sVar) === -1) {
+												Arr.push($aFree, $sVar);
+											}
+										}
+
+										if (Arr.count($aFree) > 0) {
+											let $aRefFree = [];
+											const $iFreeCount = Arr.count($aFree);
+											for (let $iF = 0; $iF < $iFreeCount; $iF = $iF + 1) {
+												Arr.push($aRefFree, "&$" + Str.sub($aFree[$iF], 1, Str.len($aFree[$iF]) - 1));
+											}
+											const $sUseClause = " use (" + Arr.join($aRefFree, ", ") + ")";
+											const $sBefore = Str.sub($sResult, 0, $iParenClose + 1);
+											const $sAfter = Str.sub($sResult, $iParenClose + 1, Str.len($sResult) - ($iParenClose + 1));
+											$sResult = $sBefore + "" + $sUseClause + "" + $sAfter;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			$iFunc = $iFunc - 1;
+		}
+		return $sResult;
+	};
+
+const $fProcessRange = function($sCode) {
+        if (Str.indexOf($sCode, "JSOL.range") === -1) { return $sCode; }
         let $sResult = $sCode;
         let $bContinue = true;
-        let $iOffset = 0;
+
         while ($bContinue === true) {
-            const $iSearchLen = Str.len($sResult) - $iOffset;
-            if ($iSearchLen <= 0) {
-                $bContinue = false;
-                continue;
-            }
-            const $sSearchArea = Str.sub($sResult, $iOffset, $iSearchLen);
-            const $iRelIdx = Str.indexOf($sSearchArea, $sKeyword);
-            
+            const $iRelIdx = Str.indexOf($sResult, "for");
             if ($iRelIdx === -1) {
                 $bContinue = false;
             } else {
-                const $iStartIdx = $iOffset + $iRelIdx;
-                const $iTailLen = Str.len($sResult) - $iStartIdx;
-                const $sTail = Str.sub($sResult, $iStartIdx, $iTailLen);
-                const $iRelOpenBrace = Str.indexOf($sTail, "{");
-                const $iOpenBrace = $iRelOpenBrace === -1 ? -1 : $iStartIdx + $iRelOpenBrace;
+                const $iStartIdx = $iRelIdx;
+                let $i = $iStartIdx + 3;
+                while ($i < Str.len($sResult) && (Str.sub($sResult, $i, 1) === " " || Str.sub($sResult, $i, 1) === "\n" || Str.sub($sResult, $i, 1) === "\t" || Str.sub($sResult, $i, 1) === "\r" || Str.sub($sResult, $i, 1) === "(")) {
+                    $i = $i + 1;
+                }
                 
-                if ($iOpenBrace === -1) {
-                    $bContinue = false;
-                } else {
-                    let $iBraceCount = 1;
-                    let $iCloseBrace = -1;
-                    const $iRLen = Str.len($sResult);
-                    for (let $i = $iOpenBrace + 1; $i < $iRLen; $i = $i + 1) {
-                        const $sChar = Str.sub($sResult, $i, 1);
-                        if ($sChar === "{") { $iBraceCount = $iBraceCount + 1; }
-                        if ($sChar === "}") { $iBraceCount = $iBraceCount - 1; }
-                        if ($iBraceCount === 0) {
-                            $iCloseBrace = $i;
+                if (Str.sub($sResult, $i, 4) === "let ") {
+                    $i = $i + 4;
+                }
+                
+                let $iV = $i;
+                if (Str.sub($sResult, $iV, 1) === "$") {
+                    while ($iV < Str.len($sResult)) {
+                        const $sC = Str.sub($sResult, $iV, 1);
+                        if ($sC === "_" || $sC === "$" || ($sC >= "a" && $sC <= "z") || ($sC >= "A" && $sC <= "Z") || ($sC >= "0" && $sC <= "9")) {
+                            $iV = $iV + 1;
+                        } else {
                             break;
                         }
                     }
+                    const $sVarName = Str.sub($sResult, $i, $iV - $i);
+                    $i = $iV;
                     
-                    if ($iCloseBrace === -1) {
-                        $bContinue = false;
-                    } else {
-                        let $iEndIdx = $iCloseBrace + 1;
-                        let $bFindingEnd = true;
-                        while ($iEndIdx < $iRLen && $bFindingEnd === true) {
-                            const $sChar = Str.sub($sResult, $iEndIdx, 1);
-                            if ($sChar === " " || $sChar === "\n" || $sChar === "\r" || $sChar === ")" || $sChar === ";") {
-                                $iEndIdx = $iEndIdx + 1;
-                            } else {
-                                $bFindingEnd = false;
+                    while ($i < Str.len($sResult) && (Str.sub($sResult, $i, 1) === " " || Str.sub($sResult, $i, 1) === "\n" || Str.sub($sResult, $i, 1) === "\t" || Str.sub($sResult, $i, 1) === "\r")) {
+                        $i = $i + 1;
+                    }
+                    
+                    if (Str.sub($sResult, $i, 2) === "of") {
+                        $i = $i + 2;
+                        while ($i < Str.len($sResult) && (Str.sub($sResult, $i, 1) === " " || Str.sub($sResult, $i, 1) === "\n" || Str.sub($sResult, $i, 1) === "\t" || Str.sub($sResult, $i, 1) === "\r")) {
+                            $i = $i + 1;
+                        }
+                        
+                        if (Str.sub($sResult, $i, 11) === "JSOL.range(") {
+                            $i = $i + 10;
+                            let $iParenDepth = 0;
+                            let $iParenClose = -1;
+                            for (let $iK = $i; $iK < Str.len($sResult); $iK = $iK + 1) {
+                                if (Str.sub($sResult, $iK, 1) === "(") { $iParenDepth = $iParenDepth + 1; }
+                                else if (Str.sub($sResult, $iK, 1) === ")") {
+                                    $iParenDepth = $iParenDepth - 1;
+                                    if ($iParenDepth === 0) { $iParenClose = $iK; break; }
+                                }
+                            }
+                            
+                            if ($iParenClose !== -1) {
+                                const $sArgs = Str.sub($sResult, $i + 1, $iParenClose - $i - 1);
+                                let $iB = $iParenClose + 1;
+                                while ($iB < Str.len($sResult) && (Str.sub($sResult, $iB, 1) === " " || Str.sub($sResult, $iB, 1) === "\n" || Str.sub($sResult, $iB, 1) === "\t" || Str.sub($sResult, $iB, 1) === "\r" || Str.sub($sResult, $iB, 1) === ")")) {
+                                    $iB = $iB + 1;
+                                }
+                                
+                                if (Str.sub($sResult, $iB, 1) === "{") {
+                                    let $iBraceDepth = 0;
+                                    let $iBraceClose = -1;
+                                    for (let $iK = $iB; $iK < Str.len($sResult); $iK = $iK + 1) {
+                                        if (Str.sub($sResult, $iK, 1) === "{") { $iBraceDepth = $iBraceDepth + 1; }
+                                        else if (Str.sub($sResult, $iK, 1) === "}") {
+                                            $iBraceDepth = $iBraceDepth - 1;
+                                            if ($iBraceDepth === 0) { $iBraceClose = $iK; break; }
+                                        }
+                                    }
+                                    
+                                    if ($iBraceClose !== -1) {
+                                        const $sBody = Str.sub($sResult, $iB + 1, $iBraceClose - $iB - 1);
+                                        
+                                        let $aArgs = [];
+                                        let $iADepth = 0;
+                                        let $iAStart = 0;
+                                        let $bInStr = false;
+                                        for (let $iK = 0; $iK < Str.len($sArgs); $iK = $iK + 1) {
+                                            const $sC = Str.sub($sArgs, $iK, 1);
+                                            if ($sC === '"') { $bInStr = !$bInStr; }
+                                            if ($bInStr === false) {
+                                                if ($sC === "(" || $sC === "[" || $sC === "{") { $iADepth = $iADepth + 1; }
+                                                if ($sC === ")" || $sC === "]" || $sC === "}") { $iADepth = $iADepth - 1; }
+                                                if ($sC === "," && $iADepth === 0) {
+                                                    Arr.push($aArgs, Str.trim(Str.sub($sArgs, $iAStart, $iK - $iAStart)));
+                                                    $iAStart = $iK + 1;
+                                                }
+                                            }
+                                        }
+                                        Arr.push($aArgs, Str.trim(Str.sub($sArgs, $iAStart, Str.len($sArgs) - $iAStart)));
+                                        
+                                        const $sCleanVar = Str.sub($sVarName, 1, Str.len($sVarName) - 1);
+                                        const $sFromVar = '$JSOL_from_' + $sCleanVar;
+                                        const $sToVar = '$JSOL_to_' + $sCleanVar;
+                                        const $sStepVar = '$JSOL_step_' + $sCleanVar;
+                                        const $sIncVar = '$JSOL_inc_' + $sCleanVar;
+                                        const $sIxVar = '$JSOL_i_' + $sCleanVar;
+                                        
+                                        let $sSetup = $sFromVar + " = (" + $aArgs[0] + ");\n";
+                                        $sSetup = $sSetup + $sToVar + " = (" + $aArgs[1] + ");\n";
+                                        if (Arr.count($aArgs) > 2 && Str.len($aArgs[2]) > 0) {
+                                            $sSetup = $sSetup + $sStepVar + " = (" + $aArgs[2] + ");\n";
+                                        } else {
+                                            $sSetup = $sSetup + $sStepVar + " = 1;\n";
+                                        }
+                                        $sSetup = $sSetup + $sIncVar + " = Math.abs(" + $sStepVar + ");\n";
+                                        $sSetup = $sSetup + "if (" + $sFromVar + " > " + $sToVar + ") { " + $sIncVar + " = -" + $sIncVar + "; }\n";
+                                        $sSetup = $sSetup + $sVarName + " = " + $sFromVar + ";\n";
+                                        $sSetup = $sSetup + $sIxVar + " = 1;\n";
+                                        
+                                        const $sCond = "((" + $sIncVar + " > 0 && " + $sVarName + " <= " + $sToVar + ") || (" + $sIncVar + " <= 0 && " + $sVarName + " >= " + $sToVar + "))";
+                                        
+                                        let $sNewBody = '$JSOL_i = ' + $sIxVar + ';\n';
+                                        $sNewBody = $sNewBody + $sBody + "\n";
+                                        $sNewBody = $sNewBody + $sVarName + " = " + $sVarName + " + " + $sIncVar + ";\n";
+                                        $sNewBody = $sNewBody + $sIxVar + " = " + $sIxVar + " + 1;\n";
+                                        
+                                        const $sReplace = "if (true) {\n" + $sSetup + "while (" + $sCond + ") {\n" + $sNewBody + "}\n}";
+                                        
+                                        const $sBefore = Str.sub($sResult, 0, $iStartIdx);
+                                        const $sAfter = Str.sub($sResult, $iBraceClose + 1, Str.len($sResult) - $iBraceClose - 1);
+                                        $sResult = $sBefore + "" + $sReplace + "" + $sAfter;
+                                        
+                                        continue;
+                                    }
+                                }
                             }
                         }
-                        
-                        const $sBefore = Str.sub($sResult, 0, $iStartIdx);
-                        const $iAfterLen = Str.len($sResult) - $iEndIdx;
-                        const $sAfter = Str.sub($sResult, $iEndIdx, $iAfterLen);
-                        
-                        if ($bUnwrap === true) {
-                            const $iInnerLen = $iCloseBrace - $iOpenBrace - 1;
-                            const $sInner = Str.sub($sResult, $iOpenBrace + 1, $iInnerLen);
-                            $sResult = $sBefore + "" + $sInner + "" + $sAfter;
-                            $iOffset = Str.len($sBefore) + Str.len($sInner);
-                        } else {
-                            $sResult = $sBefore + "" + $sAfter;
-                            $iOffset = Str.len($sBefore);
-                        }
                     }
                 }
+                $sResult = Str.sub($sResult, 0, $iStartIdx) + "__JSOL_FOR__" + Str.sub($sResult, $iStartIdx + 3, Str.len($sResult) - $iStartIdx - 3);
             }
         }
+        $sResult = Str.replace($sResult, "__JSOL_FOR__", "for");
         return $sResult;
     };
 
-const $fProcessCall = function($sCode, $sKeyword, $sTemplate) {
-        let $sResult = $sCode;
-        let $bContinue = true;
-        let $iOffset = 0;
-        while ($bContinue === true) {
-            const $iSearchLen = Str.len($sResult) - $iOffset;
-            if ($iSearchLen <= 0) {
-                $bContinue = false;
-                continue;
-            }
-            const $sSearchArea = Str.sub($sResult, $iOffset, $iSearchLen);
-            const $iRelIdx = Str.indexOf($sSearchArea, $sKeyword);
-            
-            if ($iRelIdx === -1) {
-                $bContinue = false;
-            } else {
-                const $iStartIdx = $iOffset + $iRelIdx;
-                const $iKwLen = Str.len($sKeyword);
-                const $iOpenParen = $iStartIdx + $iKwLen - 1;
-                let $iParenCount = 1;
-                let $iBracketCount = 0;
-                let $iBraceCount = 0;
-                let $bInStr = false;
-                let $iCloseParen = -1;
-                let $aArgs = [];
-                let $iCurrentArgStart = $iOpenParen + 1;
-                const $iRLen = Str.len($sResult);
-                
-                for (let $i = $iOpenParen + 1; $i < $iRLen; $i = $i + 1) {
-                    const $sChar = Str.sub($sResult, $i, 1);
-                    const $sPrev = Str.sub($sResult, $i - 1, 1);
-                    
-                    if ($sChar === "\"" && $sPrev !== "\\") { $bInStr = !$bInStr; }
-                    
-                    if ($bInStr === false) {
-                        if ($sChar === "(") { $iParenCount = $iParenCount + 1; }
-                        if ($sChar === ")") { $iParenCount = $iParenCount - 1; }
-                        if ($sChar === "[") { $iBracketCount = $iBracketCount + 1; }
-                        if ($sChar === "]") { $iBracketCount = $iBracketCount - 1; }
-                        if ($sChar === "{") { $iBraceCount = $iBraceCount + 1; }
-                        if ($sChar === "}") { $iBraceCount = $iBraceCount - 1; }
-                    }
-                    
-                    if ($sChar === "," && $iParenCount === 1 && $iBracketCount === 0 && $iBraceCount === 0 && $bInStr === false) {
-                        const $iArgLen1 = $i - $iCurrentArgStart;
-                        const $sArgVal1 = Str.sub($sResult, $iCurrentArgStart, $iArgLen1);
-                        Arr.push($aArgs, $sArgVal1);
-                        $iCurrentArgStart = $i + 1;
-                    } else if ($iParenCount === 0) {
-                        const $iArgLen2 = $i - $iCurrentArgStart;
-                        const $sArgVal2 = Str.sub($sResult, $iCurrentArgStart, $iArgLen2);
-                        Arr.push($aArgs, $sArgVal2);
-                        $iCloseParen = $i;
-                        break;
-                    }
-                }
-                
-                if ($iCloseParen === -1) {
-                    $bContinue = false;
-                } else {
-                    const $sBefore = Str.sub($sResult, 0, $iStartIdx);
-                    const $iAfterLen = Str.len($sResult) - $iCloseParen - 1;
-                    const $sAfter = Str.sub($sResult, $iCloseParen + 1, $iAfterLen);
-                    
-                    let $sRep = $sTemplate;
-                    if (Str.indexOf($sTemplate, "{*}") !== -1) {
-                        $sRep = Str.replace($sRep, "{*}", Arr.join($aArgs, ", "));
-                    } else {
-                        const $iArgsCount = Arr.count($aArgs);
-                        for (let $iK = 0; $iK < $iArgsCount; $iK = $iK + 1) {
-                            const $sPlaceholder = Str.concat("{", $iK, "}");
-                            $sRep = Str.replace($sRep, $sPlaceholder, $aArgs[$iK]);
-                        }
-                    }
-                    
-                    $sResult = $sBefore + "" + $sRep + "" + $sAfter;
-                    $iOffset = $iStartIdx;
-                }
-            }
-        }
-        return $sResult;
-    };
+	let $sTransformed = $sMaskedCode;
 
-    let $sTransformed = $sMaskedCode;
-    
-    // PHP Target Pre-Processing (Native raw manipulations not mapped in SSOT)
-    const $aPrefixes = ["\n", "\r\n", "\t", " ", "("];
-    for (let $iP = 0; $iP < 5; $iP = $iP + 1) {
-        $sTransformed = Str.replace($sTransformed, $aPrefixes[$iP] + "const ", $aPrefixes[$iP]);
-        $sTransformed = Str.replace($sTransformed, $aPrefixes[$iP] + "let ", $aPrefixes[$iP]);
-        $sTransformed = Str.replace($sTransformed, $aPrefixes[$iP] + "var ", $aPrefixes[$iP]);
-    }
-    if (Str.indexOf($sTransformed, "const ") === 0) { $sTransformed = Str.sub($sTransformed, 6, Str.len($sTransformed) - 6); }
-    if (Str.indexOf($sTransformed, "let ") === 0) { $sTransformed = Str.sub($sTransformed, 4, Str.len($sTransformed) - 4); }
-    if (Str.indexOf($sTransformed, "var ") === 0) { $sTransformed = Str.sub($sTransformed, 4, Str.len($sTransformed) - 4); }
+	// Auto-generate use (...) clauses before native stripping
+	$sTransformed = $sExtractPHPUse($sTransformed);
 
-    // Dynamic SSOT Rules Iterator
-    const $iRulesCount = Arr.count($aRules);
-    for (let $iR = 0; $iR < $iRulesCount; $iR = $iR + 1) {
-        const $mRule = $aRules[$iR];
-        const $sType = $mRule["type"];
-        const $sId = $mRule["id"];
-        const $sTemplate = $mRule["template"];
+	// PHP Target Pre-Processing (Native raw manipulations not mapped in SSOT)
+	const $aPrefixes = ["\n", "\r\n", "\t", " ", "("];
+	for (let $iP = 0; $iP < 5; $iP = $iP + 1) {
+		$sTransformed = Str.replace($sTransformed, $aPrefixes[$iP] + "const ", $aPrefixes[$iP]);
+		$sTransformed = Str.replace($sTransformed, $aPrefixes[$iP] + "let ", $aPrefixes[$iP]);
+		$sTransformed = Str.replace($sTransformed, $aPrefixes[$iP] + "var ", $aPrefixes[$iP]);
+	}
+	if (Str.indexOf($sTransformed, "const ") === 0) { $sTransformed = Str.sub($sTransformed, 6, Str.len($sTransformed) - 6); }
+	if (Str.indexOf($sTransformed, "let ") === 0) { $sTransformed = Str.sub($sTransformed, 4, Str.len($sTransformed) - 4); }
+	if (Str.indexOf($sTransformed, "var ") === 0) { $sTransformed = Str.sub($sTransformed, 4, Str.len($sTransformed) - 4); }
 
-        if ($sType === "block") {
-            $sTransformed = $fProcessBlock($sTransformed, $sId, $sTemplate === "unwrap");
-        } else if ($sType === "regex") {
-            $sTransformed = $sRegexReplace($mRule["search"], $sTemplate, $sTransformed, 'g');
-        } else if ($sType === "replace") {
-            $sTransformed = Str.replace($sTransformed, $sId, $sTemplate);
-        } else if ($sType === "call") {
-            $sTransformed = $fProcessCall($sTransformed, $sId + "(", $sTemplate);
-        }
-    }
+	// Dynamic SSOT Rules Iterator
+	const $iRulesCount = Arr.count($aRules);
+	for (let $iR = 0; $iR < $iRulesCount; $iR = $iR + 1) {
+		const $mRule = $aRules[$iR];
+		const $sType = $mRule["type"];
+		const $sId = $mRule["id"];
+		const $sTemplate = $mRule["template"];
+
+		if ($sType === "block") {
+			$sTransformed = $fProcessBlock($sTransformed, $sId, $sTemplate === "unwrap");
+		} else if ($sType === "regex") {
+			$sTransformed = Regex.replace($mRule["search"], $sTemplate, $sTransformed, 'g');
+		} else if ($sType === "replace") {
+			$sTransformed = Str.replace($sTransformed, $sId, $sTemplate);
+		} else if ($sType === "call") {
+			$sTransformed = $fProcessCall($sTransformed, $sId + "(", $sTemplate);
+		} else if ($sType === "range") {
+			$sTransformed = $fProcessRange($sTransformed);
+		}
+	}
 
 	// PHP Target Post-Processing
-    $sTransformed = Str.replace($sTransformed, 'JSOL.', 'JSOL::');
+	$sTransformed = Str.replace($sTransformed, 'JSOL.', 'JSOL::');
 
-    $sTransformed = $sRegexReplace('(__JSOL_(TOKEN|STR|COM)_[0-9]+__)\\s*\\+', '$1 .', $sTransformed, 'g');
-    $sTransformed = $sRegexReplace('\\+\\s*(__JSOL_(TOKEN|STR|COM)_[0-9]+__)', '. $1', $sTransformed, 'g');
+	$sTransformed = Regex.replace('(__JSOL_(TOKEN|STR|COM)_[0-9]+__)\\s*\\+', '$1 .', $sTransformed, 'g');
+	$sTransformed = Regex.replace('\\+\\s*(__JSOL_(TOKEN|STR|COM)_[0-9]+__)', '. $1', $sTransformed, 'g');
 
-    $sTransformed = $sRegexReplace('(\\$s[A-Za-z0-9_]*)\\s*\\+', '$1 .', $sTransformed, 'g');
-    $sTransformed = $sRegexReplace('\\+\\s*(\\$s[A-Za-z0-9_]*)', '. $1', $sTransformed, 'g');
+	$sTransformed = Regex.replace('(\\$s[A-Za-z0-9_]*)\\s*\\+', '$1 .', $sTransformed, 'g');
+	$sTransformed = Regex.replace('\\+\\s*(\\$s[A-Za-z0-9_]*)', '. $1', $sTransformed, 'g');
 
-// ANTI-SABOTAGE: Post-processor to forcibly inject pass-by-reference (&$)
-    // to all variables listed inside a PHP `use (...)` block, allowing
-    // closures to see themselves and sibling functions upon instantiation.
-    let $bFixUse = true;
-    let $iUseOffset = 0;
-    while ($bFixUse === true) {
-        const $iSearchLen = Str.len($sTransformed) - $iUseOffset;
-        if ($iSearchLen <= 0) {
-            $bFixUse = false;
-            continue;
-        }
-        const $sSearchArea = Str.sub($sTransformed, $iUseOffset, $iSearchLen);
-        const $iUseRel = Str.indexOf($sSearchArea, "use (");
-        
-        if ($iUseRel === -1) {
-            $bFixUse = false;
-        } else {
-            const $iStart = $iUseOffset + $iUseRel + 5;
-            const $iTailLen = Str.len($sTransformed) - $iStart;
-            const $sTail = Str.sub($sTransformed, $iStart, $iTailLen);
-            const $iEndRel = Str.indexOf($sTail, ")");
-            const $iEnd = $iStart + $iEndRel;
-            
-            const $sArgs = Str.sub($sTransformed, $iStart, $iEnd - $iStart);
-            let $sRefArgs = $sRegexReplace("\\$", "&$", $sArgs, "g");
-            $sRefArgs = $sRegexReplace("&&\\$", "&$", $sRefArgs, "g"); // Previene duplicar si ya tenía &
-            
-            const $sBefore = Str.sub($sTransformed, 0, $iStart);
-            const $iAfterLen = Str.len($sTransformed) - $iEnd;
-            const $sAfter = Str.sub($sTransformed, $iEnd, $iAfterLen);
-            
-            $sTransformed = $sBefore + "" + $sRefArgs + "" + $sAfter;
-            $iUseOffset = $iStart + Str.len($sRefArgs) + 1; // Avanza el puntero
-        }
-    }
+	// ANTI-SABOTAGE: Post-processor to forcibly inject pass-by-reference (&$)
+	let $bFixUse = true;
+	let $iUseOffset = 0;
+	while ($bFixUse === true) {
+		const $iSearchLen = Str.len($sTransformed) - $iUseOffset;
+		if ($iSearchLen <= 0) {
+			$bFixUse = false;
+			continue;
+		}
+		const $sSearchArea = Str.sub($sTransformed, $iUseOffset, $iSearchLen);
+		const $iUseRel = Str.indexOf($sSearchArea, "use (");
 
-    let $sFinalOutput = $sPrefix + "" + $sTransformed + "" + $sSuffix;
-    if (Str.indexOf($sFinalOutput, "<?php") === -1) {
-        $sFinalOutput = "<?php\n" + $sFinalOutput;
-    }
-    return $sFinalOutput;
+		if ($iUseRel === -1) {
+			$bFixUse = false;
+		} else {
+			const $iStart = $iUseOffset + $iUseRel + 5;
+			const $iTailLen = Str.len($sTransformed) - $iStart;
+			const $sTail = Str.sub($sTransformed, $iStart, $iTailLen);
+			const $iEndRel = Str.indexOf($sTail, ")");
+			const $iEnd = $iStart + $iEndRel;
 
+			const $sArgs = Str.sub($sTransformed, $iStart, $iEnd - $iStart);
+			let $sRefArgs = Regex.replace("\\$", "&$", $sArgs, "g");
+			$sRefArgs = Regex.replace("&&\\$", "&$", $sRefArgs, "g"); // Previene duplicar si ya tenía &
+
+			const $sBefore = Str.sub($sTransformed, 0, $iStart);
+			const $iAfterLen = Str.len($sTransformed) - $iEnd;
+			const $sAfter = Str.sub($sTransformed, $iEnd, $iAfterLen);
+
+			$sTransformed = $sBefore + "" + $sRefArgs + "" + $sAfter;
+			$iUseOffset = $iStart + Str.len($sRefArgs) + 1; // Avanza el puntero
+		}
+	}
+
+	let $sFinalOutput = $sPrefix + "" + $sTransformed + "" + $sSuffix;
+	if (Str.indexOf($sFinalOutput, "<?php") === -1) {
+		$sFinalOutput = "<?php\n" + $sFinalOutput;
+	}
+	return $sFinalOutput;
 };

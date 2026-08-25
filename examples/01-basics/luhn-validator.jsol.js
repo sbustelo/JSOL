@@ -2,17 +2,40 @@
 
 /**
  @description
- Validates a card number using the Luhn algorithm (mod 10 checksum), used
- to catch single-digit typos and transpositions in credit card numbers and
- other identification numbers.
 
-@param {string} $sCardNumber - Card number, may contain spaces or dashes.
-@returns {boolean} - True if $sCardNumber passes the Luhn check, false otherwise.
-  Standard test cards (source: Mercado Pago and Adyen public test-card docs):
-   VISA:       4509 9535 6623 3704
-   Mastercard: 5555 5555 5555 4444
-*/
+ # Validate Luhn
+ Validates a card number using the **Luhn algorithm** (modulus 10 algorithm).
+ This checksum formula is used to validate various identification numbers,
+ primarily credit card numbers.
+ 
+ - **@param {string} $sCardNumber** - The card number to validate (may contain spaces, dashes, etc.)
+- **@returns {boolean}** - True if the card number passes the Luhn check, false otherwise.
+ 
+ ## Standard Test Card Examples
+ 
+ ### Visa
+ - `4509 9535 6623 3704`
+ - `4000 6200 0000 0007`
+ 
+ ### Mastercard
+ - `5555 5555 5555 4444`
+ - `5031 7557 3453 0604`
+ 
+ ### American Express
+ - `3700 000000 00002`
+ - `3711 803032 57522`
+ 
+ ### Diners Club
+ - `3600 6666 3333 44`
+ 
+ ## Sources
+ - [Mercado Pago Test Cards](https://www.mercadopago.com.ar/developers/es/docs/your-integrations/test/cards)
+ - [Adyen Test Card Numbers](https://docs.adyen.com/development-resources/test-cards-and-credentials/test-card-numbers)
 
+ */
+
+// The @contract block specifies test cases and default values for the REPL.
+// The "in" and "expect" wrappers are optional; a test case can state input parameters directly:
 /**
  @contract
  {

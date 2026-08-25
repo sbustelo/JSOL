@@ -1,67 +1,87 @@
-// @JSOL v0.2.95 - CLI Arguments Parser
-const $mParseRawCliArgs = function($aRawArgs) {
-    const $mOptions = Map.create(
-        "source", "",
-        "outDir", "",
-        "target", "",
-        "jsTarget", "",
-        "jsPrefix", "",
-        "jsSuffix", "",
-        "phpTarget", "",
-        "phpPrefix", "",
-        "phpSuffix", "",
-        "tsTarget", "",
-        "tsPrefix", "",
-        "tsSuffix", "",
-        "pyTarget", "",
-        "pyPrefix", "",
-        "pySuffix", "",
-        "targets", ""
-    );
+// @JSOL v0.2.96 - CLI Arguments Parser (generic, target-agnostic)
+//
+// No target id is hardcoded here. Any "--<id>-target=", "--<id>-prefix=",
+// "--<id>-suffix=" flag is parsed generically into $mOptions[id + "Target"/
+// "Prefix"/"Suffix"], for ANY id — adding a new compiler target never
+// requires touching this file again.
 
-    const $iCount = Arr.count($aRawArgs);
-    for (let $i = 0; $i < $iCount; $i = $i + 1) {
-        const $sArg = $aRawArgs[$i];
-        const $bIsFlag = (Str.indexOf($sArg, "--") === 0);
+const $bEndsWith = function ($sStr, $sSuffix) {
+	const $iStrLen = Str.len($sStr);
+	const $iSufLen = Str.len($sSuffix);
+	if ($iSufLen > $iStrLen) { return false; }
+	return Str.sub($sStr, $iStrLen - $iSufLen, $iSufLen) === $sSuffix;
+};
 
-        if ($bIsFlag === true) {
-            const $sClean = Str.sub($sArg, 2, Str.len($sArg) - 2);
-            const $iEqIndex = Str.indexOf($sClean, "=");
-            let $sKey = "";
-            let $sVal = "";
+// The ONLY place "py" gets normalized to "python" in the whole compiler.
+// "python" is canonical everywhere else (matches targets/python/rules.json,
+// $mSSOT["targets"]["python"], $mBackendRegistry). "py" survives only as the
+// CLI's short spelling and the output file extension (handled elsewhere).
+const $sNormalizeTargetId = function ($sId) {
+	if ($sId === "py") { return "python"; }
+	return $sId;
+};
 
-            if ($iEqIndex !== -1) {
-                $sKey = Str.sub($sClean, 0, $iEqIndex);
-                $sVal = Str.sub($sClean, $iEqIndex + 1, Str.len($sClean) - ($iEqIndex + 1));
-            } else {
-                $sKey = $sClean;
-                $sVal = "true";
-            }
+const $mParseRawCliArgs = function ($aRawArgs) {
+	JSOL.use($bEndsWith, $sNormalizeTargetId);
 
-            if ($sKey === "source") { $mOptions["source"] = $sVal; }
-            if ($sKey === "out-dir") { $mOptions["outDir"] = $sVal; }
-            if ($sKey === "targets") { $mOptions["targets"] = $sVal; }
+	const $mOptions = Map.create(
+		"source", "",
+		"sourceDir", "",
+		"outDir", "",
+		"target", "",
+		"targets", ""
+	);
 
-            if ($sKey === "target") {
-                $mOptions["target"] = $sVal;
-                $mOptions["jsTarget"] = $sVal;
-                $mOptions["phpTarget"] = $sVal;
-                $mOptions["tsTarget"] = $sVal;
-                $mOptions["pyTarget"] = $sVal;
-            }
-            if ($sKey === "js-target") { $mOptions["jsTarget"] = $sVal; }
-            if ($sKey === "js-prefix") { $mOptions["jsPrefix"] = $sVal; }
-            if ($sKey === "js-suffix") { $mOptions["jsSuffix"] = $sVal; }
-            if ($sKey === "php-target") { $mOptions["phpTarget"] = $sVal; }
-            if ($sKey === "php-prefix") { $mOptions["phpPrefix"] = $sVal; }
-            if ($sKey === "php-suffix") { $mOptions["phpSuffix"] = $sVal; }
-            if ($sKey === "ts-target") { $mOptions["tsTarget"] = $sVal; }
-            if ($sKey === "ts-prefix") { $mOptions["tsPrefix"] = $sVal; }
-            if ($sKey === "ts-suffix") { $mOptions["tsSuffix"] = $sVal; }
-            if ($sKey === "py-target") { $mOptions["pyTarget"] = $sVal; }
-            if ($sKey === "py-prefix") { $mOptions["pyPrefix"] = $sVal; }
-            if ($sKey === "py-suffix") { $mOptions["pySuffix"] = $sVal; }
-        }
-    }
-    return $mOptions;
+	const $iCount = Arr.count($aRawArgs);
+	for (let $i = 0; $i < $iCount; $i = $i + 1) {
+		const $sArg = $aRawArgs[$i];
+		const $bIsFlag = (Str.indexOf($sArg, "--") === 0);
+
+		if ($bIsFlag === true) {
+			const $sClean = Str.sub($sArg, 2, Str.len($sArg) - 2);
+			const $iEqIndex = Str.indexOf($sClean, "=");
+			let $sKey = "";
+			let $sVal = "";
+
+			if ($iEqIndex !== -1) {
+				$sKey = Str.sub($sClean, 0, $iEqIndex);
+				$sVal = Str.sub($sClean, $iEqIndex + 1, Str.len($sClean) - ($iEqIndex + 1));
+			} else {
+				$sKey = $sClean;
+				$sVal = "true";
+			}
+
+			if ($sKey === "source") {
+				$mOptions["source"] = $sVal;
+
+			} else if ($sKey === "source-dir") {
+				$mOptions["sourceDir"] = $sVal;
+
+			} else if ($sKey === "out-dir") {
+				$mOptions["outDir"] = $sVal;
+
+			} else if ($sKey === "targets") {
+				$mOptions["targets"] = $sVal;
+
+			} else if ($sKey === "target") {
+				$mOptions["target"] = $sVal;
+
+			} else if ($bEndsWith($sKey, "-target") === true) {
+				const $sRawId = Str.sub($sKey, 0, Str.len($sKey) - 7);
+				const $sId = $sNormalizeTargetId($sRawId);
+				$mOptions[$sId + "" + "Target"] = $sVal;
+
+			} else if ($bEndsWith($sKey, "-prefix") === true) {
+				const $sRawId = Str.sub($sKey, 0, Str.len($sKey) - 7);
+				const $sId = $sNormalizeTargetId($sRawId);
+				$mOptions[$sId + "" + "Prefix"] = $sVal;
+
+			} else if ($bEndsWith($sKey, "-suffix") === true) {
+				const $sRawId = Str.sub($sKey, 0, Str.len($sKey) - 7);
+				const $sId = $sNormalizeTargetId($sRawId);
+				$mOptions[$sId + "" + "Suffix"] = $sVal;
+			}
+		}
+	}
+	return $mOptions;
 };

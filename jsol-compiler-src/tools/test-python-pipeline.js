@@ -1,28 +1,10 @@
+/* PATH: tools/test-python-pipeline.js */
+/* REEMPLAZAR ARCHIVO COMPLETO */
 /**
- * JSOL Python Pipeline — Standalone Validator
+ * JSOL Python Pipeline — Standalone Validator v0.2.96
  *
  * Chains the 5 not-yet-wired Python passes by hand, exactly in the order
- * they'd run inside $mExecuteCompilationPipeline once integrated:
- *
- *   1. $mMaskSourceCode          (lexer.jsol)
- *   2. $sCompileToJS w/ python rules.json  (js-compiler.jsol — reused as a
- *      generic primitive-substitution engine, same trick TS already uses)
- *   3. $sConvertTernaries        (python-ternary.jsol)
- *   4. $sConvertControlFlowToPython (python-compiler.jsol)
- *   5. $sIndentCode              (indenter.jsol — already deployed/stable)
- *   6. $sStripPythonBraces       (python-brace-strip.jsol)
- *   7. $sUnmaskSourceCode        (lexer.jsol)
- *
- * Then runs the result with a REAL `python3`, feeding it the same @contract
- * cases, and compares against the already-trusted JS output (compiled with
- * the real, deployed compiler) as ground truth.
- *
- * Nothing here touches engine.jsol or any deployed distribution.
- *
- * Usage:
- *   node tools/test-python-pipeline.js --source=../examples/07-math-numeric/some-example.jsol.js
- *
- * Requires: python3 on PATH.
+ * they'd run inside $mExecuteCompilationPipeline once integrated.
  */
 
 const fs = require('fs');
@@ -60,14 +42,39 @@ const outBase = path.join(distRoot, '_python_test_bin', basename);
 if (fs.existsSync(outBase)) fs.rmSync(outBase, { recursive: true, force: true });
 fs.mkdirSync(outBase, { recursive: true });
 
-const sigMatch = fs.readFileSync(sourceFile, 'utf8')
-    .match(/const\s+(\$[a-zA-Z0-9_]+)\s*=\s*function\s*\(([^)]*)\)/);
-if (!sigMatch) {
+const rawSource = fs.readFileSync(sourceFile, 'utf8');
+const earlyContractMatch = rawSource.match(/\/\*\*[\s\*]*@contract\s*\n([\s\S]*?)\*\//);
+let parsedCases = [];
+if (earlyContractMatch) {
+    try {
+        const jsonStr = earlyContractMatch[1].replace(/^\s*\*\s?/gm, '');
+        parsedCases = JSON.parse(jsonStr).cases || [];
+    } catch (e) {}
+}
+
+const sigMatches = [...rawSource.matchAll(/const\s+(\$[a-zA-Z0-9_]+)\s*=\s*function\s*\(([^)]*)\)/g)];
+if (!sigMatches || sigMatches.length === 0) {
     console.error(`❌ FATAL: Could not parse function signature from ${fileName}.`);
     process.exit(1);
 }
-const funcName = sigMatch[1];
-const params = sigMatch[2].split(',').map(s => s.trim()).filter(Boolean);
+
+let selectedSig = sigMatches[sigMatches.length - 1]; 
+if (parsedCases.length > 0) {
+    const firstCase = parsedCases[0] || {};
+    const inKeys = firstCase.in ? Object.keys(firstCase.in) : Object.keys(firstCase);
+    const contractKeys = inKeys.filter(k => k !== 'expect').map(k => k.startsWith('$') ? k : `$${k}`);
+
+    for (const match of sigMatches) {
+        const fnParams = match[2].split(',').map(s => s.trim()).filter(Boolean);
+        if (fnParams.length > 0 && fnParams.every(p => contractKeys.includes(p))) {
+            selectedSig = match;
+            break;
+        }
+    }
+}
+
+const funcName = selectedSig[1];
+const params = selectedSig[2].split(',').map(s => s.trim()).filter(Boolean);
 const jsExportSuffix = `; module.exports = { ${funcName}: ${funcName} };`;
 
 const resBefore = spawnSync('node', [
@@ -83,11 +90,10 @@ console.log('  🛠️  JS baseline OK (real, deployed compiler)');
 
 // --- 2. Load the raw, not-yet-wired Python pipeline modules ---
 const polyfillPath = path.join(srcRoot, 'dist', 'stdlib', 'jsol-core.js');
-require(polyfillPath); // Str/Arr/Map/JSOL globals, needed to RUN the .jsol modules directly
+require(polyfillPath);
 
 const modulePaths = [
     'lexer.jsol',
-    'regex.jsol',
     'js-compiler.jsol',
     'python-ternary.jsol',
     'python-compiler.jsol',
@@ -101,11 +107,6 @@ for (const p of modulePaths) {
         process.exit(1);
     }
 }
-
-
-
-
-
 
 const context = vm.createContext(global);
 const rawCode = modulePaths.map(p => fs.readFileSync(p, 'utf8')).join('\n') + `
@@ -130,8 +131,6 @@ if (missing.length > 0) {
 console.log('  🛠️  Python pipeline modules loaded directly (no compilation needed)');
 
 
-
-
 // --- 3. Run the chain by hand ---
 const pythonRulesPath = path.join(srcRoot, 'targets', 'python', 'rules.json');
 if (!fs.existsSync(pythonRulesPath)) {
@@ -139,8 +138,6 @@ if (!fs.existsSync(pythonRulesPath)) {
     process.exit(1);
 }
 const pythonRules = JSON.parse(fs.readFileSync(pythonRulesPath, 'utf8'));
-
-
 
 const sourceCode = fs.readFileSync(sourceFile, 'utf8');
 const masked = global.$mMaskSourceCode(sourceCode);
@@ -158,8 +155,6 @@ fs.writeFileSync(pyOutPath, finalPy, 'utf8');
 console.log(`  🐍  Python output written: ${pyOutPath}`);
 
 
-
-
 // --- 4. Copy jsol_core.py next to it so the import resolves ---
 const jsolCorePyPath = path.join(srcRoot, 'dist', 'stdlib', 'jsol_core.py');
 if (!fs.existsSync(jsolCorePyPath)) {
@@ -169,7 +164,8 @@ if (!fs.existsSync(jsolCorePyPath)) {
 fs.copyFileSync(jsolCorePyPath, path.join(outBase, 'jsol_core.py'));
 
 // --- 5. Small Python driver: import the module, call the function, print JSON ---
-const pythonFuncName = funcName.replace(/\$/g, '_');
+// FIX: El compilador de Python ELIMINA el $, NO LO REEMPLAZA POR _
+const pythonFuncName = funcName.replace(/\$/g, '');
 const driverPath = path.join(outBase, '_driver.py');
 const driverCode = `
 import sys, json, importlib.util

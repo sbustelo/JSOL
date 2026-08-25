@@ -1,31 +1,91 @@
-// JSOL v0.2.92 Core Polyfill for Browser Execution
-window.JSOL = {
-	dict: function (...args) { let o = {}; for (let i = 0; i < args.length; i += 2) o[args[i]] = args[i + 1]; return o; },
-	use: function () { }
-};
-window.Arr = {
-	count: function (a) { return a ? a.length : 0; },
-	push: function (a, i) { if (a) a.push(i); return a; },
-	pop: function (a) { return a ? a.pop() : null; },
-	shift: function (a) { return a ? a.shift() : null; },
-	indexOf: function (a, i) { return a ? a.indexOf(i) : -1; },
-	join: function (a, d) { return a ? a.join(d) : ""; },
-	slice: function (a, s, e) { return a ? a.slice(s, e) : []; }
-};
-window.Map = {
-	create: function (...args) { return window.JSOL.dict(...args); },
-	has: function (obj, key) { return Object.prototype.hasOwnProperty.call(obj, key); },
-	keys: function (obj) { return Object.keys(obj); }
-};
-window.$mRegex = {
-	replace: (p, r, s, f) => { const re = new RegExp(p, f); return s.replace(re, r); },
-	match: (p, s, f) => { const re = new RegExp(p, f); const m = re.exec(s); return m ? { matched: true, groups: m } : { matched: false }; },
-	test: (p, s, f) => { const re = new RegExp(p, f); return re.test(s); }
-};
-window.Regex = window.$mRegex;
+// REEMPLAZAR ARCHIVO COMPLETO EN interpreter/js/repl.js
+
+// --- GESTIÓN EXPLICITA DE ACTIVACIÓN Y OCULTAMIENTO DE PESTAÑAS (j0ui Standard) ---
+function j0_activate_tab(groupName, targetId) {
+	const tabGroup = document.querySelector(`[data-j0-tab-group="${groupName}"]`);
+	const paneGroup = document.querySelector(`[data-j0-pane-group="${groupName}"]`);
+	if (!tabGroup || !paneGroup) return;
+
+	let targetTab = tabGroup.querySelector(`[data-j0-target="${targetId}"]`);
+	if (!targetTab) {
+		targetTab = tabGroup.querySelector('[data-j0-target]');
+	}
+	if (!targetTab) return;
+
+	const actualTarget = targetTab.getAttribute('data-j0-target');
+
+	tabGroup.querySelectorAll('[data-j0-target]').forEach(btn => {
+		btn.classList.toggle('j0ui-active', btn === targetTab);
+	});
+
+	paneGroup.querySelectorAll('[data-j0-panel]').forEach(pane => {
+		const isMatch = pane.getAttribute('data-j0-panel') === actualTarget;
+		pane.classList.toggle('j0ui-active', isMatch);
+		pane.style.display = isMatch ? 'block' : 'none';
+	});
+
+	if (window.j0?.vfs) {
+		window.j0.vfs.set('fs_repl_active_tab', actualTarget);
+	}
+}
+
+// --- DETECCIÓN Y ADICIÓN DE OVERFLOW PARA TABS (j0ui Standard) ---
+function j0_tabs_check_overflow(row) {
+	if (!row) return;
+	const hasOverflow = row.scrollWidth > row.clientWidth + 2;
+	row.classList.toggle('has-overflow', hasOverflow);
+
+	if (!hasOverflow) return;
+
+	const items = Array.from(row.querySelectorAll('.j0ui-tab-item'));
+	const rowRect = row.getBoundingClientRect();
+
+	const hidden = items.filter(item => {
+		const rect = item.getBoundingClientRect();
+		return rect.right > rowRect.right - 40;
+	});
+
+	const btn = row.querySelector('.j0ui-tabs-overflow-btn');
+	if (!btn) return;
+
+	let menu = btn._overflowMenu;
+	if (!menu) {
+		menu = document.createElement('div');
+		menu.className = 'j0ui-dropdown-menu j0ui-tabs-overflow-menu';
+		btn.appendChild(menu);
+		btn._overflowMenu = menu;
+
+		btn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			const isOpen = menu.style.display === 'block';
+			menu.style.display = isOpen ? 'none' : 'block';
+		});
+
+		document.addEventListener('click', () => { menu.style.display = 'none'; });
+	}
+
+	menu.innerHTML = hidden.map(item => {
+		const label = item.querySelector('.j0ui-tab-label')?.textContent || item.textContent.trim();
+		const panel = item.dataset.j0Target || item.getAttribute('data-j0-target');
+		return `<div class="j0ui-menu-item j0ui-tabs-overflow-item${item.classList.contains('j0ui-active') ? ' is-checked' : ''}"
+                     data-overflow-target="${panel || ''}">
+                    <span class="j0ui-menu-check">✓</span>
+                    <span class="j0ui-menu-item-label">${label}</span>
+                </div>`;
+	}).join('');
+
+	menu.querySelectorAll('.j0ui-tabs-overflow-item').forEach(item => {
+		item.addEventListener('click', () => {
+			const targetId = item.dataset.overflowTarget;
+			if (!targetId) return;
+			j0_activate_tab('repl-views', targetId);
+			menu.style.display = 'none';
+		});
+	});
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-	// 0. Persistir y Restaurar la Posición de Scroll de la Barra Lateral
+	// Persistir y Restaurar la Posición de Scroll de la Barra Lateral
 	const sidebar = document.querySelector('.jsol-repl-sidebar');
 	if (sidebar) {
 		const savedScroll = sessionStorage.getItem('jsol_sidebar_scroll');
@@ -36,6 +96,79 @@ document.addEventListener('DOMContentLoaded', () => {
 			sessionStorage.setItem('jsol_sidebar_scroll', sidebar.scrollTop);
 		});
 	}
+
+	// Renderizado Markdown para el bloque de Documentación mediante marked.js
+	const docsNode = document.querySelector('[data-js-hook="repl-docs"]');
+	if (docsNode) {
+		const rawDoc = docsNode.getAttribute('data-raw-doc');
+		if (rawDoc) {
+			if (typeof window.marked !== 'undefined' && typeof window.marked.parse === 'function') {
+				docsNode.innerHTML = window.marked.parse(rawDoc);
+			} else {
+				docsNode.textContent = rawDoc;
+			}
+		}
+	}
+
+	// Restauración y Activación de Tab mediante j0.vfs
+	const tabGroup = document.querySelector('[data-j0-tab-group="repl-views"]');
+	if (tabGroup) {
+		const savedTab = window.j0?.vfs ? window.j0.vfs.get('fs_repl_active_tab', 'docs') : 'docs';
+		j0_activate_tab('repl-views', savedTab);
+	}
+
+	// Listener Global para Conmutación de Pestañas
+	document.addEventListener('click', (e) => {
+		const tabItem = e.target.closest('[data-j0-target]');
+		if (tabItem) {
+			const group = tabItem.closest('[data-j0-tab-group]');
+			if (group) {
+				const groupName = group.getAttribute('data-j0-tab-group');
+				const target = tabItem.getAttribute('data-j0-target');
+				j0_activate_tab(groupName, target);
+			}
+		}
+	});
+
+	// Delegación de eventos del bus para Acciones REPL
+	if (window.j0?.bus) {
+		window.j0.bus.on('repl:download-all', () => {
+			const urlParams = new URLSearchParams(window.location.search);
+			const currentFile = urlParams.get('file');
+			if (currentFile) {
+				window.location.href = `export-zip.php?file=${encodeURIComponent(currentFile)}`;
+			}
+		});
+
+		window.j0.bus.on('repl:download-target', (payload) => {
+			const target = payload.target || 'jsol';
+			const urlParams = new URLSearchParams(window.location.search);
+			const currentFile = urlParams.get('file') || '';
+			window.location.href = `download.php?file=${encodeURIComponent(currentFile)}&target=${encodeURIComponent(target)}`;
+		});
+
+		window.j0.bus.on('repl:copy-target', (payload) => {
+			const target = payload.target || 'jsol';
+			const codeNode = document.querySelector(`[data-js-code-pane="${target}"]`);
+			if (!codeNode) return;
+
+			navigator.clipboard.writeText(codeNode.textContent).then(() => {
+				const trigger = payload.trigger;
+				if (trigger) {
+					const origText = trigger.textContent;
+					trigger.textContent = 'Copied!';
+					setTimeout(() => { trigger.textContent = origText; }, 1500);
+				}
+			});
+		});
+	}
+
+	// Monitoreo de Overflow para Pestañas
+	const tabRows = document.querySelectorAll('.j0ui-tabs-row');
+	tabRows.forEach(j0_tabs_check_overflow);
+	window.addEventListener('resize', () => {
+		tabRows.forEach(j0_tabs_check_overflow);
+	});
 
 	const metaNode = document.querySelector('[data-js-hook="metadata"]');
 	if (!metaNode) return;
@@ -54,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		return;
 	}
 
-	// SSOT: Read the function's return signature directly from the source code
+	// SSOT: Read return signature
 	let outputCols = ['_result'];
 	const fnStr = window[funcName].toString();
 	const dictMatch = fnStr.match(/return\s+(?:window\.)?JSOL\.dict\(([\s\S]*?)\);?/);
@@ -106,7 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const tplTdIn = document.querySelector('[data-tpl="td-input"]').content;
 	const tplTdOut = document.querySelector('[data-tpl="td-output"]').content;
 
-	// Helper: Map prefix to HTML input attributes
 	const getAttr = (paramName) => {
 		const prefix = paramName.substring(1, 2);
 		let type = 'text', step = '', ph = '...';
@@ -174,9 +306,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	} else {
 		buildRow();
 	}
-	buildRow(); // Always add one empty trailing row
+	buildRow();
 
-	// 4. Reactive Evaluation Logic
+	// 4. Reactive Evaluation
 	const evaluateRow = (row) => {
 		const inputs = row.querySelectorAll('[data-js-hook="repl-input"]');
 		const outputs = row.querySelectorAll('[data-js-hook="repl-output"]');
@@ -277,21 +409,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	// Initial evaluation
 	tbody.querySelectorAll('tr').forEach(evaluateRow);
 });
 
-/////
-
-// <!-- Theme Switcher & Navigation Interaction Script -->
-
-
 document.addEventListener('DOMContentLoaded', () => {
-	// Restore Global Theme from localStorage
 	const savedGlobalTheme = localStorage.getItem('jsol_global_theme') || 'dark';
 	document.documentElement.setAttribute('data-theme', savedGlobalTheme);
 
-	// Global Theme Switcher Logic
 	const globalSwitches = document.querySelectorAll('[data-j0-action="ui:toggle-theme"]');
 	globalSwitches.forEach(sw => {
 		sw.addEventListener('click', () => {
@@ -304,7 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-	// Widget Theme Switcher Logic (Isolated)
 	const widgetFrame = document.querySelector('[data-js-hook="repl-frame"]');
 	const widgetToggle = document.querySelector('[data-js-hook="widget-theme-toggle"]');
 
@@ -323,7 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// Smooth Scroll for Nav Anchor links
 	document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 		anchor.addEventListener('click', (e) => {
 			const href = anchor.getAttribute('href');

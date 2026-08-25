@@ -1,33 +1,38 @@
 import math
 from jsol_core import JSOL
 
-# @JSOL v0.2.95 - Self-Hosted Engine Orchestrator
-def _mResolveWrappers(_mTargetsConfig, _sCliTargetFlag, _sCliPrefixOverride, _sCliSuffixOverride): 
+# @JSOL v0.2.96 - Self-Hosted Engine Orchestrator (generic, target-agnostic)
+#
+# $mExecuteCompilationPipeline no conoce ningún target por nombre. Itera
+# sobre $mBackendRegistry, que mapea target id -> función de compilación
+# completa para ese target (masked code, prefix, suffix, reglas SSOT,
+# tokens -> { code, tokens }). Sumar un target nuevo: un $fCompileBackendX
+# nuevo + una línea en el registro. Este archivo no se vuelve a tocar.
 
-  _sPrefix = "";
-  _sSuffix = "";
-  if len(_sCliPrefixOverride) > 0 or len(_sCliSuffixOverride) > 0: 
+def mResolveWrappers(mTargetsConfig, sCliTargetFlag, sCliPrefixOverride, sCliSuffixOverride): 
 
-    return JSOL.dict("prefix",  _sCliPrefixOverride,  "suffix",  _sCliSuffixOverride);
+  if len(sCliPrefixOverride) > 0 or len(sCliSuffixOverride) > 0: 
 
-
-  if len(_sCliTargetFlag) > 0: 
-
-    if _mTargetsConfig["targets"] != None and _mTargetsConfig["targets"][_sCliTargetFlag] != None: 
-
-      _mTargetObj = _mTargetsConfig["targets"][_sCliTargetFlag];
-      return JSOL.dict("prefix",  _mTargetObj["prefix"],  "suffix",  _mTargetObj["suffix"]);
+    return JSOL.dict("prefix",  sCliPrefixOverride,  "suffix",  sCliSuffixOverride);
 
 
+  if len(sCliTargetFlag) > 0: 
+
+    if mTargetsConfig["targets"] != None and mTargetsConfig["targets"][sCliTargetFlag] != None: 
+
+      mTargetObj = mTargetsConfig["targets"][sCliTargetFlag];
+      return JSOL.dict("prefix",  mTargetObj["prefix"],  "suffix",  mTargetObj["suffix"]);
 
 
-  _sDefaultPointer = _mTargetsConfig["default"];
-  if _sDefaultPointer != None and len(_sDefaultPointer) > 0: 
 
-    if _mTargetsConfig["targets"] != None and _mTargetsConfig["targets"][_sDefaultPointer] != None: 
 
-      _mDefaultObj = _mTargetsConfig["targets"][_sDefaultPointer];
-      return JSOL.dict("prefix",  _mDefaultObj["prefix"],  "suffix",  _mDefaultObj["suffix"]);
+  sDefaultPointer = mTargetsConfig["default"];
+  if sDefaultPointer != None and len(sDefaultPointer) > 0: 
+
+    if mTargetsConfig["targets"] != None and mTargetsConfig["targets"][sDefaultPointer] != None: 
+
+      mDefaultObj = mTargetsConfig["targets"][sDefaultPointer];
+      return JSOL.dict("prefix",  mDefaultObj["prefix"],  "suffix",  mDefaultObj["suffix"]);
 
 
 
@@ -35,139 +40,126 @@ def _mResolveWrappers(_mTargetsConfig, _sCliTargetFlag, _sCliPrefixOverride, _sC
   return JSOL.dict("prefix",  "",  "suffix",  "");
 
 
-def _mExecuteCompilationPipeline(_sSourceCode, _mTargetsConfig, _mCliOptions, _mSSOT): 
+# --- Backend registry: one function per target, uniform signature ---
+# ($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules, $aTokens) -> { code, tokens }
+# "tokens" is returned (not just "code") because a target may need its own
+# transformed token set before unmasking — Python does, to translate "//"
+# comments to "#" without ever touching real string literals elsewhere.
 
-  _mPragmaResult = _mAuditPragma(_sSourceCode);
-  if _mPragmaResult["valid"] == False: 
+def fCompileBackendJS(sMaskedCode, sPrefix, sSuffix, mSSOTRules, aTokens): 
 
-    return JSOL.dict("success",  False,  "errors",  _mPragmaResult["errors"]);
-
-
-  _mMaskedData = _mMaskSourceCode(_sSourceCode);
-  _sMaskedCode = _mMaskedData["maskedCode"];
-  _aTokens = _mMaskedData["tokens"];
-
-  _mPatternResult = _mAuditForbiddenPatterns(_sMaskedCode);
-  if _mPatternResult["valid"] == False: 
-
-    return JSOL.dict("success",  False,  "errors",  _mPatternResult["errors"]);
+  sCompiled = sCompileToJS(sMaskedCode, sPrefix, sSuffix, mSSOTRules);
+  sIndented = sIndentCode(sCompiled, "  ");
+  return JSOL.dict("code",  sIndented,  "tokens",  aTokens);
 
 
-  _mTypingResult = _mAuditStrictTyping(_sMaskedCode, _mSSOT);
-  if _mTypingResult["valid"] == False: 
+def fCompileBackendPHP(sMaskedCode, sPrefix, sSuffix, mSSOTRules, aTokens): 
 
-    return JSOL.dict("success",  False,  "errors",  _mTypingResult["errors"]);
-
-
-  _sJsTargetFlag = "";
-  if ( "jsTarget" in _mCliOptions) == True: 
-
-    _sJsTargetFlag = _mCliOptions["jsTarget"];
+  sCompiled = sCompileToPHP(sMaskedCode, sPrefix, sSuffix, mSSOTRules);
+  sIndented = sIndentCode(sCompiled, "  ");
+  return JSOL.dict("code",  sIndented,  "tokens",  aTokens);
 
 
-  _sJsPrefixArg = "";
-  if ( "jsPrefix" in _mCliOptions) == True: 
+def fCompileBackendTS(sMaskedCode, sPrefix, sSuffix, mSSOTRules, aTokens): 
 
-    _sJsPrefixArg = _mCliOptions["jsPrefix"];
-
-
-  _sJsSuffixArg = "";
-  if ( "jsSuffix" in _mCliOptions) == True: 
-
-    _sJsSuffixArg = _mCliOptions["jsSuffix"];
+  sCompiled = sCompileToJS(sMaskedCode, sPrefix, sSuffix, mSSOTRules);
+  sIndented = sIndentCode(sCompiled, "  ");
+  return JSOL.dict("code",  sIndented,  "tokens",  aTokens);
 
 
-  _mJsWrappers = _mResolveWrappers(_mTargetsConfig["js"], _sJsTargetFlag, _sJsPrefixArg, _sJsSuffixArg);
+def fCompileBackendPython(sMaskedCode, sPrefix, sSuffix, mSSOTRules, aTokens): 
 
-  _sPhpTargetFlag = "";
-  if ( "phpTarget" in _mCliOptions) == True: 
-
-    _sPhpTargetFlag = _mCliOptions["phpTarget"];
-
-
-  _sPhpPrefixArg = "";
-  if ( "phpPrefix" in _mCliOptions) == True: 
-
-    _sPhpPrefixArg = _mCliOptions["phpPrefix"];
+  sCompiled = sCompileToJS(sMaskedCode, sPrefix, sSuffix, mSSOTRules);
+  sTernary = sConvertTernaries(sCompiled);
+  sControlFlow = sConvertControlFlowToPython(sTernary);
+  sSanitized = sSanitizePythonIdentifiers(sControlFlow);
+  sIndented = sIndentCode(sSanitized, "  ");
+  sStripped = sStripPythonBraces(sIndented, "  ");
+  aPyTokens = aTranslateCommentTokensToPython(aTokens);
+  return JSOL.dict("code",  sStripped,  "tokens",  aPyTokens);
 
 
-  _sPhpSuffixArg = "";
-  if ( "phpSuffix" in _mCliOptions) == True: 
+mBackendRegistry = JSOL.dict(
+"js",  fCompileBackendJS, 
+"php",  fCompileBackendPHP, 
+"ts",  fCompileBackendTS, 
+"python",  fCompileBackendPython
+);
 
-    _sPhpSuffixArg = _mCliOptions["phpSuffix"];
+def mExecuteCompilationPipeline(sSourceCode, mTargetsConfig, mCliOptions, mSSOT): 
 
+  mPragmaResult = mAuditPragma(sSourceCode);
+  if mPragmaResult["valid"] == False: 
 
-  _mPhpWrappers = _mResolveWrappers(_mTargetsConfig["php"], _sPhpTargetFlag, _sPhpPrefixArg, _sPhpSuffixArg);
-
-  _sTsTargetFlag = "";
-  if ( "tsTarget" in _mCliOptions) == True: 
-
-    _sTsTargetFlag = _mCliOptions["tsTarget"];
-
-
-  _sTsPrefixArg = "";
-  if ( "tsPrefix" in _mCliOptions) == True: 
-
-    _sTsPrefixArg = _mCliOptions["tsPrefix"];
+    return JSOL.dict("success",  False,  "errors",  mPragmaResult["errors"]);
 
 
-  _sTsSuffixArg = "";
-  if ( "tsSuffix" in _mCliOptions) == True: 
+  mMaskedData = mMaskSourceCode(sSourceCode);
+  sMaskedCode = mMaskedData["maskedCode"];
+  aTokens = mMaskedData["tokens"];
 
-    _sTsSuffixArg = _mCliOptions["tsSuffix"];
+  mPatternResult = mAuditForbiddenPatterns(sMaskedCode);
+  if mPatternResult["valid"] == False: 
 
-
-  _mTsWrappers = _mResolveWrappers(_mTargetsConfig["ts"], _sTsTargetFlag, _sTsPrefixArg, _sTsSuffixArg);
-
-  _sCompiledJS = _sCompileToJS(_sMaskedCode, _mJsWrappers["prefix"], _mJsWrappers["suffix"], _mSSOT["targets"]["js"]);
-  _sCompiledPHP = _sCompileToPHP(_sMaskedCode, _mPhpWrappers["prefix"], _mPhpWrappers["suffix"], _mSSOT["targets"]["php"]);
-
-  _sCompiledTS = _sCompileToJS(_sMaskedCode, _mTsWrappers["prefix"], _mTsWrappers["suffix"], _mSSOT["targets"]["ts"]);
-
-  _sPyTargetFlag = "";
-  if ( "pyTarget" in _mCliOptions) == True: 
-
-    _sPyTargetFlag = _mCliOptions["pyTarget"];
+    return JSOL.dict("success",  False,  "errors",  mPatternResult["errors"]);
 
 
-  _sPyPrefixArg = "";
-  if ( "pyPrefix" in _mCliOptions) == True: 
+  mTypingResult = mAuditStrictTyping(sMaskedCode, mSSOT);
+  if mTypingResult["valid"] == False: 
 
-    _sPyPrefixArg = _mCliOptions["pyPrefix"];
-
-
-  _sPySuffixArg = "";
-  if ( "pySuffix" in _mCliOptions) == True: 
-
-    _sPySuffixArg = _mCliOptions["pySuffix"];
+    return JSOL.dict("success",  False,  "errors",  mTypingResult["errors"]);
 
 
-  _mPyWrappers = _mResolveWrappers(_mTargetsConfig["py"], _sPyTargetFlag, _sPyPrefixArg, _sPySuffixArg);
-  _sCompiledPY = _sCompileToJS(_sMaskedCode, _mPyWrappers["prefix"], _mPyWrappers["suffix"], _mSSOT["targets"]["python"]);
+  aTargetIds = list(mBackendRegistry.keys());
+  mResults = JSOL.dict();
 
-  _sIndentedJS = _sIndentCode(_sCompiledJS, "  ");
-  _sIndentedPHP = _sIndentCode(_sCompiledPHP, "  ");
-  _sIndentedTS = _sIndentCode(_sCompiledTS, "  ");
+  i = 0;
+  while i < len(aTargetIds): 
 
-  _sTernaryPY = _sConvertTernaries(_sCompiledPY);
-  _sControlFlowPY = _sConvertControlFlowToPython(_sTernaryPY);
-  _sSanitizedPY = _sSanitizePythonIdentifiers(_sControlFlowPY);
-  _sIndentedPY = _sIndentCode(_sSanitizedPY, "  ");
-  _sStrippedPY = _sStripPythonBraces(_sIndentedPY, "  ");
+    sTargetId = aTargetIds[i];
+    fBackend = mBackendRegistry[sTargetId];
 
-  _aTranslatedTokensPY = _aTranslateCommentTokensToPython(_aTokens);
+    sTargetFlag = "";
+    if ( sTargetId + "" + "Target" in mCliOptions) == True: 
 
-  _sFinalJS = _sUnmaskSourceCode(_sIndentedJS, _aTokens);
-  _sFinalPHP = _sUnmaskSourceCode(_sIndentedPHP, _aTokens);
-  _sFinalTS = _sUnmaskSourceCode(_sIndentedTS, _aTokens);
-  _sFinalPY = _sUnmaskSourceCode(_sStrippedPY, _aTranslatedTokensPY);
+      sTargetFlag = mCliOptions[sTargetId + "" + "Target"];
+
+
+    elif ( "target" in mCliOptions) == True: 
+
+      sTargetFlag = mCliOptions["target"];
+
+
+    sPrefixArg = "";
+    if ( sTargetId + "" + "Prefix" in mCliOptions) == True: 
+
+      sPrefixArg = mCliOptions[sTargetId + "" + "Prefix"];
+
+
+    sSuffixArg = "";
+    if ( sTargetId + "" + "Suffix" in mCliOptions) == True: 
+
+      sSuffixArg = mCliOptions[sTargetId + "" + "Suffix"];
+
+
+    mWrapperConfig = mTargetsConfig[sTargetId];
+    mWrappers = mResolveWrappers(mWrapperConfig, sTargetFlag, sPrefixArg, sSuffixArg);
+    mSSOTRules = mSSOT["targets"][sTargetId];
+
+    mBackendResult = fBackend(sMaskedCode, mWrappers["prefix"], mWrappers["suffix"], mSSOTRules, aTokens);
+    sFinal = sUnmaskSourceCode(mBackendResult["code"], mBackendResult["tokens"]);
+
+    mResults[sTargetId] = sFinal;
+
+    i = i + 1;
+
 
   return JSOL.dict(
   "success",  True, 
-  "js",  _sFinalJS, 
-  "php",  _sFinalPHP, 
-  "ts",  _sFinalTS, 
-  "py",  _sFinalPY
+  "js",  mResults["js"], 
+  "php",  mResults["php"], 
+  "ts",  mResults["ts"], 
+  "py",  mResults["python"]
   );
 
 

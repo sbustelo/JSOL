@@ -1,55 +1,60 @@
 import math
 from jsol_core import JSOL
 
-# @JSOL v0.2.95 - Targets Configuration Normalizer
-def _mNormalizeTargetsConfig(_mRawConfig): 
+# @JSOL v0.2.96 - Targets Configuration Normalizer (generic, target-agnostic)
+#
+# Iterates over $mBackendRegistry's keys (defined in engine.jsol) instead of
+# one hardcoded block per target. Adding a new compiler target never
+# requires touching this file again — it just needs an entry in the
+# registry, and this picks it up automatically.
 
-  _mJsConfig = JSOL.dict("default",  "",  "targets",  JSOL.dict());
-  _mPhpConfig = JSOL.dict("default",  "",  "targets",  JSOL.dict());
-  _mTsConfig = JSOL.dict("default",  "",  "targets",  JSOL.dict());
-  _mPyConfig = JSOL.dict("default",  "",  "targets",  JSOL.dict());
+def mNormalizeTargetsConfig(mRawConfig): 
 
-  if _mRawConfig == None: 
+  aTargetIds = list(mBackendRegistry.keys());
+  mResult = JSOL.dict();
 
-    return JSOL.dict("js",  _mJsConfig,  "php",  _mPhpConfig,  "ts",  _mTsConfig,  "py",  _mPyConfig);
+  i = 0;
+  while i < len(aTargetIds): 
 
+    sTargetId = aTargetIds[i];
+    mResult[sTargetId] = JSOL.dict("default",  "",  "targets",  JSOL.dict());
 
-  if ( "js" in _mRawConfig): 
-
-    _mJsConfig["default"] = _mRawConfig["js"]["default"] or "";
-    _mJsConfig["targets"] = _mRawConfig["js"]["targets"] or JSOL.dict();
-
-
-  if ( "php" in _mRawConfig): 
-
-    _mPhpConfig["default"] = _mRawConfig["php"]["default"] or "";
-    _mPhpConfig["targets"] = _mRawConfig["php"]["targets"] or JSOL.dict();
+    i = i + 1;
 
 
-  if ( "ts" in _mRawConfig): 
+  if mRawConfig == None: 
 
-    _mTsConfig["default"] = _mRawConfig["ts"]["default"] or "";
-    _mTsConfig["targets"] = _mRawConfig["ts"]["targets"] or JSOL.dict();
-
-
-  if ( "py" in _mRawConfig): 
-
-    _mPyConfig["default"] = _mRawConfig["py"]["default"] or "";
-    _mPyConfig["targets"] = _mRawConfig["py"]["targets"] or JSOL.dict();
+    return mResult;
 
 
-  if ( "default" in _mRawConfig) and ( "targets" in _mRawConfig): 
+  i = 0;
+  while i < len(aTargetIds): 
 
-    _mJsConfig["default"] = _mRawConfig["default"];
-    _mPhpConfig["default"] = _mRawConfig["default"];
-    _mTsConfig["default"] = _mRawConfig["default"];
-    _mJsConfig["targets"] = _mRawConfig["targets"];
-    _mPhpConfig["targets"] = _mRawConfig["targets"];
-    _mTsConfig["targets"] = _mRawConfig["targets"];
-    _mPyConfig["default"] = _mRawConfig["default"];
-    _mPyConfig["targets"] = _mRawConfig["targets"];
+    sTargetId = aTargetIds[i];
+    if ( sTargetId in mRawConfig) == True: 
+
+      mResult[sTargetId]["default"] = mRawConfig[sTargetId]["default"] or "";
+      mResult[sTargetId]["targets"] = mRawConfig[sTargetId]["targets"] or JSOL.dict();
 
 
-  return JSOL.dict("js",  _mJsConfig,  "php",  _mPhpConfig,  "ts",  _mTsConfig,  "py",  _mPyConfig);
+    i = i + 1;
+
+
+  # Global default/targets block applies to every registered target.
+  if ( "default" in mRawConfig) == True and ( "targets" in mRawConfig) == True: 
+
+    i = 0;
+    while i < len(aTargetIds): 
+
+      sTargetId = aTargetIds[i];
+      mResult[sTargetId]["default"] = mRawConfig["default"];
+      mResult[sTargetId]["targets"] = mRawConfig["targets"];
+
+      i = i + 1;
+
+
+
+
+  return mResult;
 
 

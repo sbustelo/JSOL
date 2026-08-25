@@ -2,17 +2,21 @@
 
 /**
  @description
- Classic FizzBuzz: for every integer from 1 to $qLimit, produce "Fizz" if
+ 
+ #Classic FizzBuzz#
+ 
+ For every integer from 1 to $qLimit, produce "Fizz" if
  divisible by 3, "Buzz" if divisible by 5, "FizzBuzz" if divisible by both,
  or the number itself (as text) otherwise.
-  This is one of the oldest exercises for teaching conditional branching and
+
+This is one of the oldest exercises for teaching conditional branching and
  the modulo operator: every rule is a simple divisibility check, but the
  order in which you check them matters. Both-divisor must be tested before
  either single-divisor rule, or "FizzBuzz" is never reached (every multiple
  of 15 would already be caught by the "Fizz" branch first).
 
-@param {integer} $qLimit - Upper bound, inclusive. Expected to be >= 1.
-@returns {array<string>} - One string per number from 1 to $qLimit, in order.
+- @param {integer} $qLimit - Upper bound, inclusive. Expected to be >= 1.
+- @returns {array<string>} - One string per number from 1 to $qLimit, in order.
 */
 
 /**

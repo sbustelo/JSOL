@@ -1,11 +1,16 @@
 declare var JSOL: any;
 declare var Rgx: any;
 
-// @JSOL v0.2.95 - Self-Hosted Engine Orchestrator
+// @JSOL v0.2.96 - Self-Hosted Engine Orchestrator (generic, target-agnostic)
+//
+// $mExecuteCompilationPipeline no conoce ningún target por nombre. Itera
+// sobre $mBackendRegistry, que mapea target id -> función de compilación
+// completa para ese target (masked code, prefix, suffix, reglas SSOT,
+// tokens -> { code, tokens }). Sumar un target nuevo: un $fCompileBackendX
+// nuevo + una línea en el registro. Este archivo no se vuelve a tocar.
+
 const $mResolveWrappers = function($mTargetsConfig: any, $sCliTargetFlag: any, $sCliPrefixOverride: any, $sCliSuffixOverride: any): Record<string, any> {
-  let $sPrefix: string = "";
-    let $sSuffix: string = "";
-    if ($sCliPrefixOverride.length > 0 || $sCliSuffixOverride.length > 0) {
+  if ($sCliPrefixOverride.length > 0 || $sCliSuffixOverride.length > 0) {
     return JSOL.dict("prefix",  $sCliPrefixOverride,  "suffix",  $sCliSuffixOverride);
   }
   if ($sCliTargetFlag.length > 0) {
@@ -23,6 +28,44 @@ const $mResolveWrappers = function($mTargetsConfig: any, $sCliTargetFlag: any, $
   }
   return JSOL.dict("prefix",  "",  "suffix",  "");
 };
+// --- Backend registry: one function per target, uniform signature ---
+// ($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules, $aTokens) -> { code, tokens }
+// "tokens" is returned (not just "code") because a target may need its own
+// transformed token set before unmasking — Python does, to translate "//"
+// comments to "#" without ever touching real string literals elsewhere.
+
+const $fCompileBackendJS = function($sMaskedCode: any, $sPrefix: any, $sSuffix: any, $mSSOTRules: any, $aTokens: any) {
+  const $sCompiled: string = $sCompileToJS($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules);
+    const $sIndented: string = $sIndentCode($sCompiled, "  ");
+    return JSOL.dict("code",  $sIndented,  "tokens",  $aTokens);
+};
+const $fCompileBackendPHP = function($sMaskedCode: any, $sPrefix: any, $sSuffix: any, $mSSOTRules: any, $aTokens: any) {
+  const $sCompiled: string = $sCompileToPHP($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules);
+    const $sIndented: string = $sIndentCode($sCompiled, "  ");
+    return JSOL.dict("code",  $sIndented,  "tokens",  $aTokens);
+};
+const $fCompileBackendTS = function($sMaskedCode: any, $sPrefix: any, $sSuffix: any, $mSSOTRules: any, $aTokens: any) {
+  const $sCompiled: string = $sCompileToJS($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules);
+    const $sIndented: string = $sIndentCode($sCompiled, "  ");
+    return JSOL.dict("code",  $sIndented,  "tokens",  $aTokens);
+};
+const $fCompileBackendPython = function($sMaskedCode: any, $sPrefix: any, $sSuffix: any, $mSSOTRules: any, $aTokens: any) {
+  const $sCompiled: string = $sCompileToJS($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules);
+    const $sTernary: string = $sConvertTernaries($sCompiled);
+    const $sControlFlow: string = $sConvertControlFlowToPython($sTernary);
+    const $sSanitized: string = $sSanitizePythonIdentifiers($sControlFlow);
+    const $sIndented: string = $sIndentCode($sSanitized, "  ");
+    const $sStripped: string = $sStripPythonBraces($sIndented, "  ");
+    const $aPyTokens: any[] = $aTranslateCommentTokensToPython($aTokens);
+    return JSOL.dict("code",  $sStripped,  "tokens",  $aPyTokens);
+};
+const $mBackendRegistry: Record<string, any> = JSOL.dict(
+    "js",  $fCompileBackendJS, 
+    "php",  $fCompileBackendPHP, 
+    "ts",  $fCompileBackendTS, 
+    "python",  $fCompileBackendPython
+);
+
 const $mExecuteCompilationPipeline = function($sSourceCode: any, $mTargetsConfig: any, $mCliOptions: any, $mSSOT: any): Record<string, any> {
   const $mPragmaResult: Record<string, any> = $mAuditPragma($sSourceCode);
     if ($mPragmaResult["valid"] === false) {
@@ -40,90 +83,42 @@ const $mExecuteCompilationPipeline = function($sSourceCode: any, $mTargetsConfig
     if ($mTypingResult["valid"] === false) {
     return JSOL.dict("success",  false,  "errors",  $mTypingResult["errors"]);
   }
-  let $sJsTargetFlag: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "jsTarget") === true) {
-    $sJsTargetFlag = $mCliOptions["jsTarget"];
-  }
-  let $sJsPrefixArg: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "jsPrefix") === true) {
-    $sJsPrefixArg = $mCliOptions["jsPrefix"];
-  }
-  let $sJsSuffixArg: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "jsSuffix") === true) {
-    $sJsSuffixArg = $mCliOptions["jsSuffix"];
-  }
-  const $mJsWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
+  const $aTargetIds: any[] = Object.keys($mBackendRegistry);
+    const $mResults: Record<string, any> = JSOL.dict();
 
-    let $sPhpTargetFlag: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "phpTarget") === true) {
-    $sPhpTargetFlag = $mCliOptions["phpTarget"];
-  }
-  let $sPhpPrefixArg: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "phpPrefix") === true) {
-    $sPhpPrefixArg = $mCliOptions["phpPrefix"];
-  }
-  let $sPhpSuffixArg: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "phpSuffix") === true) {
-    $sPhpSuffixArg = $mCliOptions["phpSuffix"];
-  }
-  const $mPhpWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
+    for (let $i = 0; $i < $aTargetIds.length; $i = $i + 1) {
+    const $sTargetId: string = $aTargetIds[$i];
+        const $fBackend = $mBackendRegistry[$sTargetId];
 
-    let $sTsTargetFlag: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "tsTarget") === true) {
-    $sTsTargetFlag = $mCliOptions["tsTarget"];
+        let $sTargetFlag: string = "";
+        if (Object.prototype.hasOwnProperty.call($mCliOptions,  $sTargetId + "" + "Target") === true) {
+      $sTargetFlag = $mCliOptions[$sTargetId + "" + "Target"];
+    }
+    else if (Object.prototype.hasOwnProperty.call($mCliOptions,  "target") === true) {
+      $sTargetFlag = $mCliOptions["target"];
+    }
+    let $sPrefixArg: string = "";
+        if (Object.prototype.hasOwnProperty.call($mCliOptions,  $sTargetId + "" + "Prefix") === true) {
+      $sPrefixArg = $mCliOptions[$sTargetId + "" + "Prefix"];
+    }
+    let $sSuffixArg: string = "";
+        if (Object.prototype.hasOwnProperty.call($mCliOptions,  $sTargetId + "" + "Suffix") === true) {
+      $sSuffixArg = $mCliOptions[$sTargetId + "" + "Suffix"];
+    }
+    const $mWrapperConfig: Record<string, any> = $mTargetsConfig[$sTargetId];
+        const $mWrappers: Record<string, any> = $mResolveWrappers($mWrapperConfig, $sTargetFlag, $sPrefixArg, $sSuffixArg);
+        const $mSSOTRules: Record<string, any> = $mSSOT["targets"][$sTargetId];
+
+        const $mBackendResult: Record<string, any> = $fBackend($sMaskedCode, $mWrappers["prefix"], $mWrappers["suffix"], $mSSOTRules, $aTokens);
+        const $sFinal: string = $sUnmaskSourceCode($mBackendResult["code"], $mBackendResult["tokens"]);
+
+        $mResults[$sTargetId] = $sFinal;
   }
-  let $sTsPrefixArg: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "tsPrefix") === true) {
-    $sTsPrefixArg = $mCliOptions["tsPrefix"];
-  }
-  let $sTsSuffixArg: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "tsSuffix") === true) {
-    $sTsSuffixArg = $mCliOptions["tsSuffix"];
-  }
-  const $mTsWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["ts"], $sTsTargetFlag, $sTsPrefixArg, $sTsSuffixArg);
-
-    const $sCompiledJS: string = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"], $mSSOT["targets"]["js"]);
-    const $sCompiledPHP: string = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"], $mSSOT["targets"]["php"]);
-
-    const $sCompiledTS: string = $sCompileToJS($sMaskedCode, $mTsWrappers["prefix"], $mTsWrappers["suffix"], $mSSOT["targets"]["ts"]);
-
-    let $sPyTargetFlag: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "pyTarget") === true) {
-    $sPyTargetFlag = $mCliOptions["pyTarget"];
-  }
-  let $sPyPrefixArg: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "pyPrefix") === true) {
-    $sPyPrefixArg = $mCliOptions["pyPrefix"];
-  }
-  let $sPySuffixArg: string = "";
-    if (Object.prototype.hasOwnProperty.call($mCliOptions,  "pySuffix") === true) {
-    $sPySuffixArg = $mCliOptions["pySuffix"];
-  }
-  const $mPyWrappers: Record<string, any> = $mResolveWrappers($mTargetsConfig["py"], $sPyTargetFlag, $sPyPrefixArg, $sPySuffixArg);
-    const $sCompiledPY: string = $sCompileToJS($sMaskedCode, $mPyWrappers["prefix"], $mPyWrappers["suffix"], $mSSOT["targets"]["python"]);
-
-    const $sIndentedJS: string = $sIndentCode($sCompiledJS, "  ");
-    const $sIndentedPHP: string = $sIndentCode($sCompiledPHP, "  ");
-    const $sIndentedTS: string = $sIndentCode($sCompiledTS, "  ");
-
-    const $sTernaryPY: string = $sConvertTernaries($sCompiledPY);
-    const $sControlFlowPY: string = $sConvertControlFlowToPython($sTernaryPY);
-    const $sSanitizedPY: string = $sSanitizePythonIdentifiers($sControlFlowPY);
-    const $sIndentedPY: string = $sIndentCode($sSanitizedPY, "  ");
-    const $sStrippedPY: string = $sStripPythonBraces($sIndentedPY, "  ");
-
-    const $aTranslatedTokensPY: any[] = $aTranslateCommentTokensToPython($aTokens);
-
-    const $sFinalJS: string = $sUnmaskSourceCode($sIndentedJS, $aTokens);
-    const $sFinalPHP: string = $sUnmaskSourceCode($sIndentedPHP, $aTokens);
-    const $sFinalTS: string = $sUnmaskSourceCode($sIndentedTS, $aTokens);
-    const $sFinalPY: string = $sUnmaskSourceCode($sStrippedPY, $aTranslatedTokensPY);
-
-    return JSOL.dict(
+  return JSOL.dict(
         "success",  true, 
-        "js",  $sFinalJS, 
-        "php",  $sFinalPHP, 
-        "ts",  $sFinalTS, 
-        "py",  $sFinalPY
+        "js",  $mResults["js"], 
+        "php",  $mResults["php"], 
+        "ts",  $mResults["ts"], 
+        "py",  $mResults["python"]
     );
 };

@@ -1,7 +1,11 @@
 import math
 from jsol_core import JSOL
 
-# @JSOL v0.2.95 - Python Control-Flow Translator
+
+# @JSOL v0.2.96 - Python Target Compiler
+# [!] ARCHITECTURE NOTICE: This Python target compiler has a direct structural dependency on 
+# js-compiler.jsol. It expects the source code to have passed through the JavaScript base 
+# transformations (like ternary and brace stripping) before applying Python-specific rules.
 #
 # Runs on MASKED code, AFTER $sCompileToJS(..., pythonRules) has already
 # substituted primitives (Str.*, Arr.*, Map.*, Cast.*), and BEFORE $sIndentCode.
@@ -20,12 +24,8 @@ from jsol_core import JSOL
 #   - else if (cond) { -> elif cond: {
 #   - else {           -> else: {
 #   - while (cond) {   -> while cond: {
-#   - Canonical for (let $i = A; $i <OP> B; $i = $i <OP2> C) {
-#         -> for $i in range(...): {
-#     Handles all four comparison directions (<, <=, >, >=). If a for-loop
-#     doesn't match this exact canonical shape, it is NOT silently mangled:
-#     it's left untouched with a loud "# JSOL-PYTHON-TODO" marker so it's
-#     impossible to miss and impossible to ship broken by accident.
+#   - switch (cond) {  -> converts to while loop with elif chain
+#   - for (init; cond; step) { -> converts to while loop mathematically
 #
 # NOT handled in this pass, on purpose (separate, harder problem):
 #   - Ternary (cond ? a : b) -> (a if cond else b)
@@ -34,125 +34,65 @@ from jsol_core import JSOL
 # engine.jsol until validated against real examples.
 
 
+def aTranslateCommentTokensToPython(aTokens): 
 
-# Comments are masked out by the lexer and restored VERBATIM by
-# $sUnmaskSourceCode — none of the passes above ever see them, by design.
-# That's correct for JS/PHP/TS (all share "//" and "/* */"), but Python
-# doesn't understand either. This transforms the TOKEN VALUES themselves,
-# before the final unmask, so there's zero risk of touching a "//" that
-# happens to live inside an actual string literal elsewhere in the code —
-# this only ever touches isolated comment tokens.
-def _aTranslateCommentTokensToPython(_aTokens): 
+  aResult = [];
+  i = 0;
+  while i < len(aTokens): 
 
-  _aResult = [];
-  _i = 0;
-  while _i < len(_aTokens): 
+    mToken = aTokens[i];
+    sKey = mToken["key"];
+    sVal = mToken["value"];
 
-    _mToken = _aTokens[_i];
-    _sKey = _mToken["key"];
-    _sVal = _mToken["value"];
+    if sVal[( 0):( 0)+( 2)] == "//": 
 
-    if _sVal[( 0):( 0)+( 2)] == "//": 
-
-      _sRest = _sVal[( 2):( 2)+( len(_sVal) - 2)];
-      _aResult.append( JSOL.dict("key",  _sKey,  "value",  "#" + "" + _sRest));
+      sRest = sVal[( 2):( 2)+( len(sVal) - 2)];
+      aResult.append( JSOL.dict("key",  sKey,  "value",  "#" + "" + sRest));
 
 
-    elif _sVal[( 0):( 0)+( 2)] == "/*": 
+    elif sVal[( 0):( 0)+( 2)] == "/*": 
 
-      _sInner = _sVal[( 2):( 2)+( len(_sVal) - 2)];
-      if _sInner[( len(_sInner) - 2):( len(_sInner) - 2)+( 2)] == "*/": 
+      sInner = sVal[( 2):( 2)+( len(sVal) - 2)];
+      if sInner[( len(sInner) - 2):( len(sInner) - 2)+( 2)] == "*/": 
 
-        _sInner = _sInner[( 0):( 0)+( len(_sInner) - 2)];
+        sInner = sInner[( 0):( 0)+( len(sInner) - 2)];
 
 
-      _sConverted = "#" + "" + _sInner.replace( "\n",  "\n#");
-      _aResult.append( JSOL.dict("key",  _sKey,  "value",  _sConverted));
+      sConverted = "#" + "" + sInner.replace( "\n",  "\n#");
+      aResult.append( JSOL.dict("key",  sKey,  "value",  sConverted));
 
 
     else: 
 
       # Not a comment (starts with a quote char) — a real string
       # literal, leave it byte-for-byte untouched.
-      _aResult.append( JSOL.dict("key",  _sKey,  "value",  _sVal));
+      aResult.append( JSOL.dict("key",  sKey,  "value",  sVal));
 
 
-    _i = _i + 1;
+    i = i + 1;
 
 
-  return _aResult;
+  return aResult;
 
 
-def _bIsWhitespaceCharTrim(_sCh): 
+def bIsWhitespaceCharTrim(sCh): 
 
-  if _sCh == " ": 
-
-    return True;
-
-
-  if _sCh == "\t": 
+  if sCh == " ": 
 
     return True;
 
 
-  if _sCh == "\n": 
+  if sCh == "\t": 
 
     return True;
 
 
-  if _sCh == "\r": 
+  if sCh == "\n": 
 
     return True;
 
 
-  return False;
-
-
-# Local trim, since the raw-execution polyfill (dist/stdlib/jsol-core.js)
-# doesn't implement Str.trim — it's only ever used compiled (-> native
-# .trim()), never as a raw runtime call before this module. Str.sub is
-# pervasively relied on already, safer to build on it than on the polyfill.
-def _sTrimWhitespace(_sVal): 
-
-  _iLen = len(_sVal);
-  _iStart = 0;
-  while _iStart < _iLen and _bIsWhitespaceCharTrim(_sVal[( _iStart):( _iStart)+( 1)]) == True: 
-
-    _iStart = _iStart + 1;
-
-
-  _iEnd = _iLen;
-  while _iEnd > _iStart and _bIsWhitespaceCharTrim(_sVal[( _iEnd - 1):( _iEnd - 1)+( 1)]) == True: 
-
-    _iEnd = _iEnd - 1;
-
-
-  return _sVal[( _iStart):( _iStart)+( _iEnd - _iStart)];
-
-
-def _bIsIdentChar(_sCh): 
-
-  if _sCh == "_": 
-
-    return True;
-
-
-  if _sCh == "$": 
-
-    return True;
-
-
-  if _sCh >= "a" and _sCh <= "z": 
-
-    return True;
-
-
-  if _sCh >= "A" and _sCh <= "Z": 
-
-    return True;
-
-
-  if _sCh >= "0" and _sCh <= "9": 
+  if sCh == "\r": 
 
     return True;
 
@@ -160,585 +100,671 @@ def _bIsIdentChar(_sCh):
   return False;
 
 
-# Reads a full identifier/keyword starting at $iStart (assumes $iStart is a
-# valid identifier-start position). Returns { "word": ..., "end": ... } where
-# "end" is the index right after the last identifier char.
-def _mReadWord(_sCode, _iStart): 
+def sTrimWhitespace(sVal): 
 
-  _iLen = len(_sCode);
-  _i = _iStart;
-  while _i < _iLen and _bIsIdentChar(_sCode[( _i):( _i)+( 1)]) == True: 
+  iLen = len(sVal);
+  iStart = 0;
+  while iStart < iLen and bIsWhitespaceCharTrim(sVal[( iStart):( iStart)+( 1)]) == True: 
 
-    _i = _i + 1;
+    iStart = iStart + 1;
 
 
-  return JSOL.dict("word",  _sCode[( _iStart):( _iStart)+( _i - _iStart)],  "end",  _i);
+  iEnd = iLen;
+  while iEnd > iStart and bIsWhitespaceCharTrim(sVal[( iEnd - 1):( iEnd - 1)+( 1)]) == True: 
+
+    iEnd = iEnd - 1;
 
 
-# Skips whitespace starting at $iStart, returns the index of the next
-# non-whitespace character (or $iLen if the code ends first).
-def _iSkipWhitespace(_sCode, _iStart): 
+  return sVal[( iStart):( iStart)+( iEnd - iStart)];
 
-  _iLen = len(_sCode);
-  _i = _iStart;
-  while _i < _iLen: 
 
-    _sCh = _sCode[( _i):( _i)+( 1)];
-    if _sCh == " " or _sCh == "\t" or _sCh == "\n" or _sCh == "\r": 
+def bIsIdentChar(sCh): 
 
-      _i = _i + 1;
+  if sCh == "_": 
+
+    return True;
+
+
+  if sCh == "$": 
+
+    return True;
+
+
+  if sCh >= "a" and sCh <= "z": 
+
+    return True;
+
+
+  if sCh >= "A" and sCh <= "Z": 
+
+    return True;
+
+
+  if sCh >= "0" and sCh <= "9": 
+
+    return True;
+
+
+  return False;
+
+
+def mReadWord(sCode, iStart): 
+
+  iLen = len(sCode);
+  i = iStart;
+  while i < iLen and bIsIdentChar(sCode[( i):( i)+( 1)]) == True: 
+
+    i = i + 1;
+
+
+  return JSOL.dict("word",  sCode[( iStart):( iStart)+( i - iStart)],  "end",  i);
+
+
+def iSkipWhitespace(sCode, iStart): 
+
+  iLen = len(sCode);
+  i = iStart;
+  while i < iLen: 
+
+    sCh = sCode[( i):( i)+( 1)];
+    if sCh == " " or sCh == "\t" or sCh == "\n" or sCh == "\r": 
+
+      i = i + 1;
 
 
     else: 
 
-      return _i;
+      return i;
 
 
 
 
-  return _i;
+  return i;
 
 
-# Given the index of an opening "(" (must point exactly at "("), returns the
-# balanced substring INSIDE the parens (not including the parens themselves)
-# and the index right after the matching ")". Depth-aware, so nested calls
-# inside the condition (e.g. "Str.len($s) > 0") are handled correctly.
-def _mReadBalancedParens(_sCode, _iOpenIndex): 
+def mReadBalancedParens(sCode, iOpenIndex): 
 
-  _iLen = len(_sCode);
-  _iDepth = 0;
-  _i = _iOpenIndex;
-  _iInsideStart = -1;
+  iLen = len(sCode);
+  iDepth = 0;
+  i = iOpenIndex;
+  iInsideStart = -1;
 
-  while _i < _iLen: 
+  while i < iLen: 
 
-    _sCh = _sCode[( _i):( _i)+( 1)];
-    if _sCh == "(": 
+    sCh = sCode[( i):( i)+( 1)];
+    if sCh == "(": 
 
-      _iDepth = _iDepth + 1;
-      if _iDepth == 1: 
+      iDepth = iDepth + 1;
+      if iDepth == 1: 
 
-        _iInsideStart = _i + 1;
+        iInsideStart = i + 1;
 
 
 
 
-    elif _sCh == ")": 
+    elif sCh == ")": 
 
-      _iDepth = _iDepth - 1;
-      if _iDepth == 0: 
+      iDepth = iDepth - 1;
+      if iDepth == 0: 
 
         return JSOL.dict(
-        "inside",  _sCode[( _iInsideStart):( _iInsideStart)+( _i - _iInsideStart)], 
-        "end",  _i + 1
+        "inside",  sCode[( iInsideStart):( iInsideStart)+( i - iInsideStart)], 
+        "end",  i + 1
         );
 
 
 
 
-    _i = _i + 1;
+    i = i + 1;
 
 
-  # Unbalanced input — should never happen on valid, already-linted JSOL.
-  return JSOL.dict("inside",  "",  "end",  _iLen);
+  return JSOL.dict("inside",  "",  "end",  iLen);
 
 
-# Translates JS-style boolean/comparison operators to Python inside a single
-# expression fragment (a condition, a for-loop clause, etc). Word-boundary
-# safe for "!" so it never touches "!=" / "!==".
-def _sTranslateOperators(_sExpr): 
+def sTranslateOperators(sExpr): 
 
-  _sResult = "";
-  _i = 0;
-  _iLen = len(_sExpr);
+  sResult = "";
+  i = 0;
+  iLen = len(sExpr);
 
-  while _i < _iLen: 
+  while i < iLen: 
 
-    _sCh = _sExpr[( _i):( _i)+( 1)];
-    _bAtBoundary = (_i == 0) or (_bIsIdentChar(_sExpr[( _i - 1):( _i - 1)+( 1)]) == False);
+    sCh = sExpr[( i):( i)+( 1)];
+    bAtBoundary = (i == 0) or (bIsIdentChar(sExpr[( i - 1):( i - 1)+( 1)]) == False);
 
-    if _bAtBoundary == True and _bIsIdentChar(_sCh) == True: 
+    if bAtBoundary == True and bIsIdentChar(sCh) == True: 
 
-      _mWord = _mReadWord(_sExpr, _i);
-      _sWord = _mWord["word"];
+      mWord = mReadWord(sExpr, i);
+      sWord = mWord["word"];
 
-      if _sWord == "true": 
+      if sWord == "true": 
 
-        _sResult = _sResult + "" + "True";
-        _i = _mWord["end"];
+        sResult = sResult + "" + "True";
+        i = mWord["end"];
 
 
-      elif _sWord == "false": 
+      elif sWord == "false": 
 
-        _sResult = _sResult + "" + "False";
-        _i = _mWord["end"];
+        sResult = sResult + "" + "False";
+        i = mWord["end"];
 
 
-      elif _sWord == "null": 
+      elif sWord == "null": 
 
-        _sResult = _sResult + "" + "None";
-        _i = _mWord["end"];
+        sResult = sResult + "" + "None";
+        i = mWord["end"];
 
 
       else: 
 
-        _sResult = _sResult + "" + _sWord;
-        _i = _mWord["end"];
+        sResult = sResult + "" + sWord;
+        i = mWord["end"];
 
 
 
 
     else: 
 
-      _sTwo = _sExpr[( _i):( _i)+( 2)];
-      _sThree = _sExpr[( _i):( _i)+( 3)];
+      sTwo = sExpr[( i):( i)+( 2)];
+      sThree = sExpr[( i):( i)+( 3)];
 
-      if _sThree == "===": 
+      if sThree == "===": 
 
-        _sResult = _sResult + "" + "==";
-        _i = _i + 3;
-
-
-      elif _sThree == "!==": 
-
-        _sResult = _sResult + "" + "!=";
-        _i = _i + 3;
+        sResult = sResult + "" + "==";
+        i = i + 3;
 
 
-      elif _sTwo == "&&": 
+      elif sThree == "!==": 
 
-        _sResult = _sResult + "" + "and";
-        _i = _i + 2;
-
-
-      elif _sTwo == "||": 
-
-        _sResult = _sResult + "" + "or";
-        _i = _i + 2;
+        sResult = sResult + "" + "!=";
+        i = i + 3;
 
 
-      elif _sTwo == "!=": 
+      elif sTwo == "&&": 
 
-        _sResult = _sResult + "" + "!=";
-        _i = _i + 2;
+        sResult = sResult + "" + "and";
+        i = i + 2;
 
 
-      elif _sExpr[( _i):( _i)+( 1)] == "!": 
+      elif sTwo == "||": 
 
-        _sResult = _sResult + "" + "not ";
-        _i = _i + 1;
+        sResult = sResult + "" + "or";
+        i = i + 2;
+
+
+      elif sTwo == "!=": 
+
+        sResult = sResult + "" + "!=";
+        i = i + 2;
+
+
+      elif sExpr[( i):( i)+( 1)] == "!": 
+
+        sResult = sResult + "" + "not ";
+        i = i + 1;
 
 
       else: 
 
-        _sResult = _sResult + "" + _sCh;
-        _i = _i + 1;
+        sResult = sResult + "" + sCh;
+        i = i + 1;
 
 
 
 
 
 
-  return _sResult;
+  return sResult;
 
 
-# Attempts to parse the canonical "let $i = A; $i <OP> B; $i = $i <OP2> C"
-# shape. Returns "ok"=false if the shape doesn't match — callers MUST check
-# "ok" and never assume success.
-def _mReadBalancedBraces(_sCode, _iOpenIndex): 
+def mReadBalancedBraces(sCode, iOpenIndex): 
 
-  _iLen = len(_sCode);
-  _iDepth = 0;
-  _i = _iOpenIndex;
-  _iInsideStart = -1;
-  while _i < _iLen: 
+  iLen = len(sCode);
+  iDepth = 0;
+  i = iOpenIndex;
+  iInsideStart = -1;
+  while i < iLen: 
 
-    _sCh = _sCode[( _i):( _i)+( 1)];
-    if _sCh == "{": 
+    sCh = sCode[( i):( i)+( 1)];
+    if sCh == "{": 
 
-      _iDepth = _iDepth + 1;
-      if _iDepth == 1: 
+      iDepth = iDepth + 1;
+      if iDepth == 1: 
 
-        _iInsideStart = _i + 1;
+        iInsideStart = i + 1;
 
 
 
 
-    elif _sCh == "}": 
+    elif sCh == "}": 
 
-      _iDepth = _iDepth - 1;
-      if _iDepth == 0: 
+      iDepth = iDepth - 1;
+      if iDepth == 0: 
 
-        return JSOL.dict("inside",  _sCode[( _iInsideStart):( _iInsideStart)+( _i - _iInsideStart)],  "end",  _i + 1);
-
-
+        return JSOL.dict("inside",  sCode[( iInsideStart):( iInsideStart)+( i - iInsideStart)],  "end",  i + 1);
 
 
-    _i = _i + 1;
 
 
-  return JSOL.dict("inside",  "",  "end",  _iLen);
+    i = i + 1;
 
 
-def _sConvertControlFlowToPython(_sMaskedCode): 
-
-  _sResult = "";
-  _i = 0;
-  _iLen = len(_sMaskedCode);
-
-  while _i < _iLen: 
-
-    _sCh = _sMaskedCode[( _i):( _i)+( 1)];
-    _bAtBoundary = (_i == 0) or (_bIsIdentChar(_sMaskedCode[( _i - 1):( _i - 1)+( 1)]) == False);
-
-    if _bAtBoundary == True and _bIsIdentChar(_sCh) == True: 
-
-      _mWord = _mReadWord(_sMaskedCode, _i);
-      _sWord = _mWord["word"];
-
-      if _sWord == "null": 
-
-        _sResult = _sResult + "" + "None";
-        _i = _mWord["end"];
+  return JSOL.dict("inside",  "",  "end",  iLen);
 
 
-      elif _sWord == "true": 
+def sConvertControlFlowToPython(sMaskedCode): 
 
-        _sResult = _sResult + "" + "True";
-        _i = _mWord["end"];
+  sResult = "";
+  i = 0;
+  iLen = len(sMaskedCode);
+
+  while i < iLen: 
+
+    sCh = sMaskedCode[( i):( i)+( 1)];
+    bAtBoundary = (i == 0) or (bIsIdentChar(sMaskedCode[( i - 1):( i - 1)+( 1)]) == False);
+
+    if bAtBoundary == True and bIsIdentChar(sCh) == True: 
+
+      mWord = mReadWord(sMaskedCode, i);
+      sWord = mWord["word"];
+
+      if sWord == "null": 
+
+        sResult = sResult + "" + "None";
+        i = mWord["end"];
 
 
-      elif _sWord == "false": 
+      elif sWord == "true": 
 
-        _sResult = _sResult + "" + "False";
-        _i = _mWord["end"];
+        sResult = sResult + "" + "True";
+        i = mWord["end"];
 
 
-      elif _sWord == "if": 
+      elif sWord == "false": 
 
-        _iAfter = _iSkipWhitespace(_sMaskedCode, _mWord["end"]);
-        if _sMaskedCode[( _iAfter):( _iAfter)+( 1)] == "(": 
+        sResult = sResult + "" + "False";
+        i = mWord["end"];
 
-          _mParens = _mReadBalancedParens(_sMaskedCode, _iAfter);
-          _sResult = _sResult + "" + "if " + "" + _sTranslateOperators(_mParens["inside"]) + "" + ":";
-          _i = _mParens["end"];
+
+      elif sWord == "if": 
+
+        iAfter = iSkipWhitespace(sMaskedCode, mWord["end"]);
+        if sMaskedCode[( iAfter):( iAfter)+( 1)] == "(": 
+
+          mParens = mReadBalancedParens(sMaskedCode, iAfter);
+          sResult = sResult + "" + "if " + "" + sTranslateOperators(mParens["inside"]) + "" + ":";
+          i = mParens["end"];
 
 
         else: 
 
-          _sResult = _sResult + "" + _sWord;
-          _i = _mWord["end"];
+          sResult = sResult + "" + sWord;
+          i = mWord["end"];
 
 
 
 
-      elif _sWord == "switch": 
+      elif sWord == "switch": 
 
-        _iAfter = _iSkipWhitespace(_sMaskedCode, _mWord["end"]);
-        if _sMaskedCode[( _iAfter):( _iAfter)+( 1)] == "(": 
+        iAfter = iSkipWhitespace(sMaskedCode, mWord["end"]);
+        if sMaskedCode[( iAfter):( iAfter)+( 1)] == "(": 
 
-          _mParens = _mReadBalancedParens(_sMaskedCode, _iAfter);
-          _iAfterParens = _iSkipWhitespace(_sMaskedCode, _mParens["end"]);
-          if _sMaskedCode[( _iAfterParens):( _iAfterParens)+( 1)] == "{": 
+          mParens = mReadBalancedParens(sMaskedCode, iAfter);
+          iAfterParens = iSkipWhitespace(sMaskedCode, mParens["end"]);
+          if sMaskedCode[( iAfterParens):( iAfterParens)+( 1)] == "{": 
 
-            _mBraces = _mReadBalancedBraces(_sMaskedCode, _iAfterParens);
-            _sBody = _sConvertControlFlowToPython(_mBraces["inside"]);
-            _sResult = _sResult + "" + "_jsol_switch = " + "" + _sTranslateOperators(_mParens["inside"]) + "" + "\n_jsol_done = False\nwhile not _jsol_done: {\n_jsol_done = True\nif False: pass" + "" + _sBody + "\n}";
-            _i = _mBraces["end"];
+            mBraces = mReadBalancedBraces(sMaskedCode, iAfterParens);
+            sBody = sConvertControlFlowToPython(mBraces["inside"]);
+            sResult = sResult + "" + "_jsol_switch = " + "" + sTranslateOperators(mParens["inside"]) + "" + "\n_jsol_done = False\nwhile not _jsol_done: {\n_jsol_done = True\nif False: pass" + "" + sBody + "\n}";
+            i = mBraces["end"];
 
 
           else: 
 
-            _sResult = _sResult + "" + "_jsol_switch = " + "" + _sTranslateOperators(_mParens["inside"]) + "" + "\nif True:";
-            _i = _mParens["end"];
+            sResult = sResult + "" + "_jsol_switch = " + "" + sTranslateOperators(mParens["inside"]) + "" + "\nif True:";
+            i = mParens["end"];
 
 
 
 
         else: 
 
-          _sResult = _sResult + "" + _sWord;
-          _i = _mWord["end"];
+          sResult = sResult + "" + sWord;
+          i = mWord["end"];
 
 
 
 
-      elif _sWord == "case": 
+      elif sWord == "case": 
 
-        _iAfter = _iSkipWhitespace(_sMaskedCode, _mWord["end"]);
-        _bFoundColon = False;
-        _iColon = _iAfter;
-        while _iColon < _iLen: 
+        iAfter = iSkipWhitespace(sMaskedCode, mWord["end"]);
+        bFoundColon = False;
+        iColon = iAfter;
+        while iColon < iLen: 
 
-          _sChar = _sMaskedCode[( _iColon):( _iColon)+( 1)];
-          if _sChar == ":": 
+          sChar = sMaskedCode[( iColon):( iColon)+( 1)];
+          if sChar == ":": 
 
-            _bFoundColon = True;
+            bFoundColon = True;
             break;
 
 
-          if _sChar == ";" or _sChar == "{" or _sChar == "}": 
+          if sChar == ";" or sChar == "{" or sChar == "}": 
 
             break;
 
 
-          _iColon = _iColon + 1;
+          iColon = iColon + 1;
 
 
-        if _bFoundColon == True: 
+        if bFoundColon == True: 
 
-          _sVal = _sMaskedCode[( _iAfter):( _iAfter)+( _iColon - _iAfter)];
-          _sResult = _sResult + "" + "\nelif _jsol_switch == " + "" + _sTranslateOperators(_sTrimWhitespace(_sVal)) + "" + ":";
-          _i = _iColon + 1;
-
-
-        else: 
-
-          _sResult = _sResult + "" + _sWord;
-          _i = _mWord["end"];
-
-
-
-
-      elif _sWord == "default": 
-
-        _iAfter = _iSkipWhitespace(_sMaskedCode, _mWord["end"]);
-        if _sMaskedCode[( _iAfter):( _iAfter)+( 1)] == ":": 
-
-          _sResult = _sResult + "" + "\nelse:";
-          _i = _iAfter + 1;
+          sVal = sMaskedCode[( iAfter):( iAfter)+( iColon - iAfter)];
+          sResult = sResult + "" + "\nelif _jsol_switch == " + "" + sTranslateOperators(sTrimWhitespace(sVal)) + "" + ":";
+          i = iColon + 1;
 
 
         else: 
 
-          _sResult = _sResult + "" + _sWord;
-          _i = _mWord["end"];
+          sResult = sResult + "" + sWord;
+          i = mWord["end"];
 
 
 
 
-      elif _sWord == "else": 
+      elif sWord == "default": 
 
-        _iAfter = _iSkipWhitespace(_sMaskedCode, _mWord["end"]);
-        _mMaybeIf = _mReadWord(_sMaskedCode, _iAfter);
-        if _mMaybeIf["word"] == "if": 
+        iAfter = iSkipWhitespace(sMaskedCode, mWord["end"]);
+        if sMaskedCode[( iAfter):( iAfter)+( 1)] == ":": 
 
-          _iAfterIf = _iSkipWhitespace(_sMaskedCode, _mMaybeIf["end"]);
-          if _sMaskedCode[( _iAfterIf):( _iAfterIf)+( 1)] == "(": 
+          sResult = sResult + "" + "\nelse:";
+          i = iAfter + 1;
 
-            _mParens = _mReadBalancedParens(_sMaskedCode, _iAfterIf);
-            _sResult = _sResult + "" + "elif " + "" + _sTranslateOperators(_mParens["inside"]) + "" + ":";
-            _i = _mParens["end"];
+
+        else: 
+
+          sResult = sResult + "" + sWord;
+          i = mWord["end"];
+
+
+
+
+      elif sWord == "else": 
+
+        iAfter = iSkipWhitespace(sMaskedCode, mWord["end"]);
+        mMaybeIf = mReadWord(sMaskedCode, iAfter);
+        if mMaybeIf["word"] == "if": 
+
+          iAfterIf = iSkipWhitespace(sMaskedCode, mMaybeIf["end"]);
+          if sMaskedCode[( iAfterIf):( iAfterIf)+( 1)] == "(": 
+
+            mParens = mReadBalancedParens(sMaskedCode, iAfterIf);
+            sResult = sResult + "" + "elif " + "" + sTranslateOperators(mParens["inside"]) + "" + ":";
+            i = mParens["end"];
 
 
           else: 
 
-            _sResult = _sResult + "" + "else";
-            _i = _mWord["end"];
+            sResult = sResult + "" + "else";
+            i = mWord["end"];
 
 
 
 
-        elif _sMaskedCode[( _iAfter):( _iAfter)+( 1)] == "{": 
+        elif sMaskedCode[( iAfter):( iAfter)+( 1)] == "{": 
 
-          # Real control-flow else — goes straight to a block.
-          _sResult = _sResult + "" + "else:";
-          _i = _mWord["end"];
-
-
-        else: 
-
-          # Not followed by "{" — this is the "else" that
-          # python-ternary.jsol already emitted as part of
-          # "a if cond else b". Leave it exactly as plain text,
-          # no colon, don't touch anything else on the line.
-          _sResult = _sResult + "" + "else";
-          _i = _mWord["end"];
-
-
-
-
-      elif _sWord == "while": 
-
-        _iAfter = _iSkipWhitespace(_sMaskedCode, _mWord["end"]);
-        if _sMaskedCode[( _iAfter):( _iAfter)+( 1)] == "(": 
-
-          _mParens = _mReadBalancedParens(_sMaskedCode, _iAfter);
-          _sResult = _sResult + "" + "while " + "" + _sTranslateOperators(_mParens["inside"]) + "" + ":";
-          _i = _mParens["end"];
+          sResult = sResult + "" + "else:";
+          i = mWord["end"];
 
 
         else: 
 
-          _sResult = _sResult + "" + _sWord;
-          _i = _mWord["end"];
+          sResult = sResult + "" + "else";
+          i = mWord["end"];
 
 
 
 
-      elif _sWord == "for": 
+      elif sWord == "while": 
 
-        _iAfter = _iSkipWhitespace(_sMaskedCode, _mWord["end"]);
-        if _sMaskedCode[( _iAfter):( _iAfter)+( 1)] == "(": 
+        iAfter = iSkipWhitespace(sMaskedCode, mWord["end"]);
+        if sMaskedCode[( iAfter):( iAfter)+( 1)] == "(": 
 
-          _mParens = _mReadBalancedParens(_sMaskedCode, _iAfter);
-          _iAfterParens = _iSkipWhitespace(_sMaskedCode, _mParens["end"]);
-          if _sMaskedCode[( _iAfterParens):( _iAfterParens)+( 1)] == "{": 
-
-            _mBraces = _mReadBalancedBraces(_sMaskedCode, _iAfterParens);
-
-            _sInsideParens = _mParens["inside"];
-            _iSemi1 = JSOL.str_index_of(_sInsideParens,  ";");
-            _sTail1 = _sInsideParens[( _iSemi1 + 1):( _iSemi1 + 1)+( len(_sInsideParens) - (_iSemi1 + 1))];
-            _iSemi2 = JSOL.str_index_of(_sTail1,  ";");
-            _sTail2 = _sTail1[( _iSemi2 + 1):( _iSemi2 + 1)+( len(_sTail1) - (_iSemi2 + 1))];
-
-            _sInit = _sTrimWhitespace(_sInsideParens[( 0):( 0)+( _iSemi1)]);
-            if _sInit[( 0):( 0)+( 4)] == "let ": 
-
-              _sInit = _sInit[( 4):( 4)+( len(_sInit) - 4)];
+          mParens = mReadBalancedParens(sMaskedCode, iAfter);
+          sResult = sResult + "" + "while " + "" + sTranslateOperators(mParens["inside"]) + "" + ":";
+          i = mParens["end"];
 
 
-            _sCond = _sTrimWhitespace(_sTail1[( 0):( 0)+( _iSemi2)]);
-            _sStep = _sTrimWhitespace(_sTail2);
+        else: 
 
-            _sBody = _sConvertControlFlowToPython(_mBraces["inside"]);
+          sResult = sResult + "" + sWord;
+          i = mWord["end"];
 
-            _sResult = _sResult + "" + _sInit + ";\nwhile " + _sTranslateOperators(_sCond) + ": {" + _sBody + "\n" + _sStep + ";\n}";
-            _i = _mBraces["end"];
+
+
+
+      elif sWord == "for": 
+
+        iAfter = iSkipWhitespace(sMaskedCode, mWord["end"]);
+        if sMaskedCode[( iAfter):( iAfter)+( 1)] == "(": 
+
+          mParens = mReadBalancedParens(sMaskedCode, iAfter);
+          iAfterParens = iSkipWhitespace(sMaskedCode, mParens["end"]);
+          if sMaskedCode[( iAfterParens):( iAfterParens)+( 1)] == "{": 
+
+            mBraces = mReadBalancedBraces(sMaskedCode, iAfterParens);
+
+            sInsideParens = mParens["inside"];
+            iSemi1 = JSOL.str_index_of(sInsideParens,  ";");
+            sTail1 = sInsideParens[( iSemi1 + 1):( iSemi1 + 1)+( len(sInsideParens) - (iSemi1 + 1))];
+            iSemi2 = JSOL.str_index_of(sTail1,  ";");
+            sTail2 = sTail1[( iSemi2 + 1):( iSemi2 + 1)+( len(sTail1) - (iSemi2 + 1))];
+
+            sInit = sTrimWhitespace(sInsideParens[( 0):( 0)+( iSemi1)]);
+            if sInit[( 0):( 0)+( 4)] == "let ": 
+
+              sInit = sInit[( 4):( 4)+( len(sInit) - 4)];
+
+
+            sCond = sTrimWhitespace(sTail1[( 0):( 0)+( iSemi2)]);
+            sStep = sTrimWhitespace(sTail2);
+
+            sBody = sConvertControlFlowToPython(mBraces["inside"]);
+
+            sResult = sResult + "" + sInit + ";\nwhile " + sTranslateOperators(sCond) + ": {" + sBody + "\n" + sStep + ";\n}";
+            i = mBraces["end"];
 
 
           else: 
 
-            _sResult = _sResult + "" + _sWord;
-            _i = _mWord["end"];
+            sResult = sResult + "" + sWord;
+            i = mWord["end"];
 
 
 
 
         else: 
 
-          _sResult = _sResult + "" + _sWord;
-          _i = _mWord["end"];
+          sResult = sResult + "" + sWord;
+          i = mWord["end"];
 
 
 
 
-      elif _sWord == "const" or _sWord == "let": 
+      elif sWord == "const" or sWord == "let": 
 
-        _iAfterKw = _iSkipWhitespace(_sMaskedCode, _mWord["end"]);
-        _mIdent = _mReadWord(_sMaskedCode, _iAfterKw);
-        _iAfterIdent = _iSkipWhitespace(_sMaskedCode, _mIdent["end"]);
+        iAfterKw = iSkipWhitespace(sMaskedCode, mWord["end"]);
+        mIdent = mReadWord(sMaskedCode, iAfterKw);
+        iAfterIdent = iSkipWhitespace(sMaskedCode, mIdent["end"]);
 
-        if _sMaskedCode[( _iAfterIdent):( _iAfterIdent)+( 1)] == "=" and _sMaskedCode[( _iAfterIdent):( _iAfterIdent)+( 2)] != "==": 
+        if sMaskedCode[( iAfterIdent):( iAfterIdent)+( 1)] == "=" and sMaskedCode[( iAfterIdent):( iAfterIdent)+( 2)] != "==": 
 
-          _iAfterEq = _iSkipWhitespace(_sMaskedCode, _iAfterIdent + 1);
-          _mMaybeFunc = _mReadWord(_sMaskedCode, _iAfterEq);
+          iAfterEq = iSkipWhitespace(sMaskedCode, iAfterIdent + 1);
+          mMaybeFunc = mReadWord(sMaskedCode, iAfterEq);
 
-          if _mMaybeFunc["word"] == "function": 
+          if mMaybeFunc["word"] == "function": 
 
-            _iAfterFuncKw = _iSkipWhitespace(_sMaskedCode, _mMaybeFunc["end"]);
-            if _sMaskedCode[( _iAfterFuncKw):( _iAfterFuncKw)+( 1)] == "(": 
+            iAfterFuncKw = iSkipWhitespace(sMaskedCode, mMaybeFunc["end"]);
+            if sMaskedCode[( iAfterFuncKw):( iAfterFuncKw)+( 1)] == "(": 
 
-              _mParams = _mReadBalancedParens(_sMaskedCode, _iAfterFuncKw);
-              _sResult = _sResult + "" + "def " + "" + _mIdent["word"] + "" + "(" + "" + _mParams["inside"] + "" + "):";
-              _i = _mParams["end"];
+              mParams = mReadBalancedParens(sMaskedCode, iAfterFuncKw);
+              sResult = sResult + "" + "def " + "" + mIdent["word"] + "" + "(" + "" + mParams["inside"] + "" + "):";
+              i = mParams["end"];
 
 
             else: 
 
-              _sResult = _sResult + "" + _mIdent["word"] + "" + " = ";
-              _i = _iAfterEq;
+              sResult = sResult + "" + mIdent["word"] + "" + " = ";
+              i = iAfterEq;
 
 
 
 
           else: 
 
-            _sResult = _sResult + "" + _mIdent["word"] + "" + " = ";
-            _i = _iAfterEq;
+            sResult = sResult + "" + mIdent["word"] + "" + " = ";
+            i = iAfterEq;
 
 
 
 
         else: 
 
-          _sResult = _sResult + "" + _mIdent["word"];
-          _i = _mIdent["end"];
+          sResult = sResult + "" + mIdent["word"];
+          i = mIdent["end"];
 
 
 
 
       else: 
 
-        _sResult = _sResult + "" + _sWord;
-        _i = _mWord["end"];
+        sResult = sResult + "" + sWord;
+        i = mWord["end"];
 
 
 
 
-    elif _sCh == "&" and _sMaskedCode[( _i):( _i)+( 2)] == "&&": 
+    elif sCh == "&" and sMaskedCode[( i):( i)+( 2)] == "&&": 
 
-      _sResult = _sResult + "" + "and";
-      _i = _i + 2;
-
-
-    elif _sCh == "|" and _sMaskedCode[( _i):( _i)+( 2)] == "||": 
-
-      _sResult = _sResult + "" + "or";
-      _i = _i + 2;
+      sResult = sResult + "" + "and";
+      i = i + 2;
 
 
-    elif _sCh == "=" and _sMaskedCode[( _i):( _i)+( 3)] == "===": 
+    elif sCh == "|" and sMaskedCode[( i):( i)+( 2)] == "||": 
 
-      _sResult = _sResult + "" + "==";
-      _i = _i + 3;
-
-
-    elif _sCh == "!" and _sMaskedCode[( _i):( _i)+( 3)] == "!==": 
-
-      _sResult = _sResult + "" + "!=";
-      _i = _i + 3;
+      sResult = sResult + "" + "or";
+      i = i + 2;
 
 
-    elif _sCh == "!" and _sMaskedCode[( _i):( _i)+( 2)] != "!=": 
+    elif sCh == "=" and sMaskedCode[( i):( i)+( 3)] == "===": 
 
-      _sResult = _sResult + "" + "not ";
-      _i = _i + 1;
-
-
-    else: 
-
-      _sResult = _sResult + "" + _sCh;
-      _i = _i + 1;
+      sResult = sResult + "" + "==";
+      i = i + 3;
 
 
+    elif sCh == "!" and sMaskedCode[( i):( i)+( 3)] == "!==": 
+
+      sResult = sResult + "" + "!=";
+      i = i + 3;
 
 
-  return _sResult;
+    elif sCh == "!" and sMaskedCode[( i):( i)+( 2)] != "!=": 
 
-
-def _sSanitizePythonIdentifiers(_sMaskedCode): 
-
-  _sResult = "";
-  _iLen = len(_sMaskedCode);
-  _i = 0;
-  while _i < _iLen: 
-
-    _sCh = _sMaskedCode[( _i):( _i)+( 1)];
-    if _sCh == "$": 
-
-      _sResult = _sResult + "" + "_";
+      sResult = sResult + "" + "not ";
+      i = i + 1;
 
 
     else: 
 
-      _sResult = _sResult + "" + _sCh;
+      sResult = sResult + "" + sCh;
+      i = i + 1;
 
 
-    _i = _i + 1;
 
 
-  return _sResult;
+  return sResult;
+
+
+def sSanitizePythonIdentifiers(sMaskedCode): 
+
+  def bIsIdentChar(sCh): 
+
+    if sCh == "_": 
+
+      return True;
+
+
+    if sCh >= "a" and sCh <= "z": 
+
+      return True;
+
+
+    if sCh >= "A" and sCh <= "Z": 
+
+      return True;
+
+
+    if sCh >= "0" and sCh <= "9": 
+
+      return True;
+
+
+    return False;
+
+
+  # Python 3 hard keywords. Nunca pueden ser identificadores, sin excepcion.
+  aPyKeywords = [
+  "False", "None", "True", "and", "as", "assert", "async", "await",
+  "break", "class", "continue", "def", "del", "elif", "else", "except",
+  "finally", "for", "from", "global", "if", "import", "in", "is",
+  "lambda", "nonlocal", "not", "or", "pass", "raise", "return",
+  "try", "while", "with", "yield"
+  ];
+
+  # Builtins de uso frecuente que un nombre de variable de negocio puede
+  # pisar una vez removido el prefijo tipado (ej. $str, $map, $type, $id).
+  aPyBuiltins = [
+  "str", "int", "float", "bool", "list", "dict", "set", "tuple",
+  "type", "id", "len", "map", "filter", "sum", "min", "max",
+  "sorted", "input", "print", "format", "object", "super", "next",
+  "iter", "hash", "range", "repr", "slice", "zip", "vars", "dir",
+  "open", "eval", "exec", "abs", "all", "any", "bin", "chr", "ord",
+  "hex", "oct", "pow", "round", "property", "staticmethod", "classmethod"
+  ];
+
+  sResult = "";
+  iLen = len(sMaskedCode);
+  i = 0;
+  while i < iLen: 
+
+    sCh = sMaskedCode[( i):( i)+( 1)];
+    if sCh == "$": 
+
+      iJ = i + 1;
+      while iJ < iLen and bIsIdentChar(sMaskedCode[( iJ):( iJ)+( 1)]) == True: 
+
+        iJ = iJ + 1;
+
+
+      sName = sMaskedCode[( i + 1):( i + 1)+( iJ - i - 1)];
+      if JSOL.arr_index_of(aPyKeywords,  sName) != -1 or JSOL.arr_index_of(aPyBuiltins,  sName) != -1: 
+
+        sName = sName + "_";
+
+
+      # Estado original puro: NO SE AGREGA EL GUION BAJO
+      sResult = sResult + "" + sName;
+      i = iJ;
+
+
+    else: 
+
+      sResult = sResult + "" + sCh;
+      i = i + 1;
+
+
+
+
+  return sResult;
 
 

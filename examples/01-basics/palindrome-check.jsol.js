@@ -2,9 +2,12 @@
 
 /**
  @description
+
  Checks whether $sText reads the same forwards and backwards, comparing a
  character from the start against a character from the end and working
- inward. Comparison is case-sensitive and does not skip spaces or
+ inward. 
+ 
+ Comparison is case-sensitive and does not skip spaces or
  punctuation; callers who want "a man, a plan, a canal, Panama" style
  matching should normalize $sText before calling this function.
 

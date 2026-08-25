@@ -1,9 +1,14 @@
 <?php
-// @JSOL v0.2.95 - Self-Hosted Engine Orchestrator
+// @JSOL v0.2.96 - Self-Hosted Engine Orchestrator (generic, target-agnostic)
+//
+// $mExecuteCompilationPipeline no conoce ningún target por nombre. Itera
+// sobre $mBackendRegistry, que mapea target id -> función de compilación
+// completa para ese target (masked code, prefix, suffix, reglas SSOT,
+// tokens -> { code, tokens }). Sumar un target nuevo: un $fCompileBackendX
+// nuevo + una línea en el registro. Este archivo no se vuelve a tocar.
+
 $mResolveWrappers = function($mTargetsConfig, $sCliTargetFlag, $sCliPrefixOverride, $sCliSuffixOverride) {
-  $sPrefix = "";
-    $sSuffix = "";
-    if (mb_strlen($sCliPrefixOverride, "UTF-8") > 0 || mb_strlen($sCliSuffixOverride, "UTF-8") > 0) {
+  if (mb_strlen($sCliPrefixOverride, "UTF-8") > 0 || mb_strlen($sCliSuffixOverride, "UTF-8") > 0) {
     return JSOL::dict("prefix",  $sCliPrefixOverride,  "suffix",  $sCliSuffixOverride);
   }
   if (mb_strlen($sCliTargetFlag, "UTF-8") > 0) {
@@ -21,7 +26,45 @@ $mResolveWrappers = function($mTargetsConfig, $sCliTargetFlag, $sCliPrefixOverri
   }
   return JSOL::dict("prefix",  "",  "suffix",  "");
 };
-$mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOptions, $mSSOT) use (&$mMaskSourceCode, &$sUnmaskSourceCode, &$mAuditPragma, &$mAuditForbiddenPatterns, &$mAuditStrictTyping, &$sCompileToJS, &$sCompileToPHP, &$mResolveWrappers, &$sIndentCode, &$aTranslateCommentTokensToPython, &$sConvertTernaries, &$sConvertControlFlowToPython, &$sSanitizePythonIdentifiers, &$sStripPythonBraces) {
+// --- Backend registry: one function per target, uniform signature ---
+// ($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules, $aTokens) -> { code, tokens }
+// "tokens" is returned (not just "code") because a target may need its own
+// transformed token set before unmasking — Python does, to translate "//"
+// comments to "#" without ever touching real string literals elsewhere.
+
+$fCompileBackendJS = function($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules, $aTokens) use (&$sCompileToJS, &$sIndentCode) {
+  $sCompiled = $sCompileToJS($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules);
+    $sIndented = $sIndentCode($sCompiled, "  ");
+    return JSOL::dict("code",  $sIndented,  "tokens",  $aTokens);
+};
+$fCompileBackendPHP = function($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules, $aTokens) use (&$sCompileToPHP, &$sIndentCode) {
+  $sCompiled = $sCompileToPHP($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules);
+    $sIndented = $sIndentCode($sCompiled, "  ");
+    return JSOL::dict("code",  $sIndented,  "tokens",  $aTokens);
+};
+$fCompileBackendTS = function($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules, $aTokens) use (&$sCompileToJS, &$sIndentCode) {
+  $sCompiled = $sCompileToJS($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules);
+    $sIndented = $sIndentCode($sCompiled, "  ");
+    return JSOL::dict("code",  $sIndented,  "tokens",  $aTokens);
+};
+$fCompileBackendPython = function($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules, $aTokens) use (&$sCompileToJS, &$sConvertTernaries, &$sConvertControlFlowToPython, &$sSanitizePythonIdentifiers, &$sIndentCode, &$sStripPythonBraces, &$aTranslateCommentTokensToPython) {
+  $sCompiled = $sCompileToJS($sMaskedCode, $sPrefix, $sSuffix, $mSSOTRules);
+    $sTernary = $sConvertTernaries($sCompiled);
+    $sControlFlow = $sConvertControlFlowToPython($sTernary);
+    $sSanitized = $sSanitizePythonIdentifiers($sControlFlow);
+    $sIndented = $sIndentCode($sSanitized, "  ");
+    $sStripped = $sStripPythonBraces($sIndented, "  ");
+    $aPyTokens = $aTranslateCommentTokensToPython($aTokens);
+    return JSOL::dict("code",  $sStripped,  "tokens",  $aPyTokens);
+};
+$mBackendRegistry = JSOL::dict(
+    "js",  $fCompileBackendJS, 
+    "php",  $fCompileBackendPHP, 
+    "ts",  $fCompileBackendTS, 
+    "python",  $fCompileBackendPython
+);
+
+$mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOptions, $mSSOT) use (&$mMaskSourceCode, &$sUnmaskSourceCode, &$mAuditPragma, &$mAuditForbiddenPatterns, &$mAuditStrictTyping, &$mResolveWrappers, &$mBackendRegistry) {
   $mPragmaResult = $mAuditPragma($sSourceCode);
     if ($mPragmaResult["valid"] === false) {
     return JSOL::dict("success",  false,  "errors",  $mPragmaResult["errors"]);
@@ -38,90 +81,42 @@ $mExecuteCompilationPipeline = function($sSourceCode, $mTargetsConfig, $mCliOpti
     if ($mTypingResult["valid"] === false) {
     return JSOL::dict("success",  false,  "errors",  $mTypingResult["errors"]);
   }
-  $sJsTargetFlag = "";
-    if (isset($mCliOptions[ "jsTarget"]) === true) {
-    $sJsTargetFlag = $mCliOptions["jsTarget"];
-  }
-  $sJsPrefixArg = "";
-    if (isset($mCliOptions[ "jsPrefix"]) === true) {
-    $sJsPrefixArg = $mCliOptions["jsPrefix"];
-  }
-  $sJsSuffixArg = "";
-    if (isset($mCliOptions[ "jsSuffix"]) === true) {
-    $sJsSuffixArg = $mCliOptions["jsSuffix"];
-  }
-  $mJsWrappers = $mResolveWrappers($mTargetsConfig["js"], $sJsTargetFlag, $sJsPrefixArg, $sJsSuffixArg);
+  $aTargetIds = array_keys($mBackendRegistry);
+    $mResults = JSOL::dict();
 
-    $sPhpTargetFlag = "";
-    if (isset($mCliOptions[ "phpTarget"]) === true) {
-    $sPhpTargetFlag = $mCliOptions["phpTarget"];
-  }
-  $sPhpPrefixArg = "";
-    if (isset($mCliOptions[ "phpPrefix"]) === true) {
-    $sPhpPrefixArg = $mCliOptions["phpPrefix"];
-  }
-  $sPhpSuffixArg = "";
-    if (isset($mCliOptions[ "phpSuffix"]) === true) {
-    $sPhpSuffixArg = $mCliOptions["phpSuffix"];
-  }
-  $mPhpWrappers = $mResolveWrappers($mTargetsConfig["php"], $sPhpTargetFlag, $sPhpPrefixArg, $sPhpSuffixArg);
+    for ($i = 0; $i < count($aTargetIds); $i = $i + 1) {
+    $sTargetId = $aTargetIds[$i];
+        $fBackend = $mBackendRegistry[$sTargetId];
 
-    $sTsTargetFlag = "";
-    if (isset($mCliOptions[ "tsTarget"]) === true) {
-    $sTsTargetFlag = $mCliOptions["tsTarget"];
+        $sTargetFlag = "";
+        if (isset($mCliOptions[ $sTargetId . "" . "Target"]) === true) {
+      $sTargetFlag = $mCliOptions[$sTargetId . "" . "Target"];
+    }
+    else if (isset($mCliOptions[ "target"]) === true) {
+      $sTargetFlag = $mCliOptions["target"];
+    }
+    $sPrefixArg = "";
+        if (isset($mCliOptions[ $sTargetId . "" . "Prefix"]) === true) {
+      $sPrefixArg = $mCliOptions[$sTargetId . "" . "Prefix"];
+    }
+    $sSuffixArg = "";
+        if (isset($mCliOptions[ $sTargetId . "" . "Suffix"]) === true) {
+      $sSuffixArg = $mCliOptions[$sTargetId . "" . "Suffix"];
+    }
+    $mWrapperConfig = $mTargetsConfig[$sTargetId];
+        $mWrappers = $mResolveWrappers($mWrapperConfig, $sTargetFlag, $sPrefixArg, $sSuffixArg);
+        $mSSOTRules = $mSSOT["targets"][$sTargetId];
+
+        $mBackendResult = $fBackend($sMaskedCode, $mWrappers["prefix"], $mWrappers["suffix"], $mSSOTRules, $aTokens);
+        $sFinal = $sUnmaskSourceCode($mBackendResult["code"], $mBackendResult["tokens"]);
+
+        $mResults[$sTargetId] = $sFinal;
   }
-  $sTsPrefixArg = "";
-    if (isset($mCliOptions[ "tsPrefix"]) === true) {
-    $sTsPrefixArg = $mCliOptions["tsPrefix"];
-  }
-  $sTsSuffixArg = "";
-    if (isset($mCliOptions[ "tsSuffix"]) === true) {
-    $sTsSuffixArg = $mCliOptions["tsSuffix"];
-  }
-  $mTsWrappers = $mResolveWrappers($mTargetsConfig["ts"], $sTsTargetFlag, $sTsPrefixArg, $sTsSuffixArg);
-
-    $sCompiledJS = $sCompileToJS($sMaskedCode, $mJsWrappers["prefix"], $mJsWrappers["suffix"], $mSSOT["targets"]["js"]);
-    $sCompiledPHP = $sCompileToPHP($sMaskedCode, $mPhpWrappers["prefix"], $mPhpWrappers["suffix"], $mSSOT["targets"]["php"]);
-
-    $sCompiledTS = $sCompileToJS($sMaskedCode, $mTsWrappers["prefix"], $mTsWrappers["suffix"], $mSSOT["targets"]["ts"]);
-
-    $sPyTargetFlag = "";
-    if (isset($mCliOptions[ "pyTarget"]) === true) {
-    $sPyTargetFlag = $mCliOptions["pyTarget"];
-  }
-  $sPyPrefixArg = "";
-    if (isset($mCliOptions[ "pyPrefix"]) === true) {
-    $sPyPrefixArg = $mCliOptions["pyPrefix"];
-  }
-  $sPySuffixArg = "";
-    if (isset($mCliOptions[ "pySuffix"]) === true) {
-    $sPySuffixArg = $mCliOptions["pySuffix"];
-  }
-  $mPyWrappers = $mResolveWrappers($mTargetsConfig["py"], $sPyTargetFlag, $sPyPrefixArg, $sPySuffixArg);
-    $sCompiledPY = $sCompileToJS($sMaskedCode, $mPyWrappers["prefix"], $mPyWrappers["suffix"], $mSSOT["targets"]["python"]);
-
-    $sIndentedJS = $sIndentCode($sCompiledJS, "  ");
-    $sIndentedPHP = $sIndentCode($sCompiledPHP, "  ");
-    $sIndentedTS = $sIndentCode($sCompiledTS, "  ");
-
-    $sTernaryPY = $sConvertTernaries($sCompiledPY);
-    $sControlFlowPY = $sConvertControlFlowToPython($sTernaryPY);
-    $sSanitizedPY = $sSanitizePythonIdentifiers($sControlFlowPY);
-    $sIndentedPY = $sIndentCode($sSanitizedPY, "  ");
-    $sStrippedPY = $sStripPythonBraces($sIndentedPY, "  ");
-
-    $aTranslatedTokensPY = $aTranslateCommentTokensToPython($aTokens);
-
-    $sFinalJS = $sUnmaskSourceCode($sIndentedJS, $aTokens);
-    $sFinalPHP = $sUnmaskSourceCode($sIndentedPHP, $aTokens);
-    $sFinalTS = $sUnmaskSourceCode($sIndentedTS, $aTokens);
-    $sFinalPY = $sUnmaskSourceCode($sStrippedPY, $aTranslatedTokensPY);
-
-    return JSOL::dict(
+  return JSOL::dict(
         "success",  true, 
-        "js",  $sFinalJS, 
-        "php",  $sFinalPHP, 
-        "ts",  $sFinalTS, 
-        "py",  $sFinalPY
+        "js",  $mResults["js"], 
+        "php",  $mResults["php"], 
+        "ts",  $mResults["ts"], 
+        "py",  $mResults["python"]
     );
 };

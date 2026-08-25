@@ -1,6 +1,6 @@
 [
-{ "id": "Str.concat", "type": "call", "template": "implode(\"\", [{*}])" },
-{ "id": "Str.sub", "type": "call", "template": "mb_substr({0}, {1}, {2}, \"UTF-8\")" },
+  { "id": "Str.concat", "type": "call", "template": "implode(\"\", [{*}])" },
+  { "id": "Str.sub", "type": "call", "template": "mb_substr({0}, {1}, {2}, \"UTF-8\")" },
   { "id": "Str.len", "type": "call", "template": "mb_strlen({0}, \"UTF-8\")" },
   { "id": "Str.indexOf", "type": "call", "template": "JSOL::strIndexOf({0}, {1})" },
   { "id": "Str.replace", "type": "call", "template": "str_replace({1}, {2}, {0})" },
@@ -39,7 +39,8 @@
   { "id": "JSOL.unset", "type": "call", "template": "/* mem-op */" },
   { "id": "JSOL.JS", "type": "block", "template": "strip" },
   { "id": "JSOL.PHP", "type": "block", "template": "unwrap" },
-{ "id": "JSOL.use", "type": "regex", "search": "function\\s*\\(([^)]*)\\)\\s*\\{(?:\\s|__JSOL_COM_\\d+__)*JSOL\\.use\\s*\\(([^)]+)\\)\\s*;?", "template": "function($1) use ($2) {\n" },
+  { "id": "JSOL.use", "type": "regex", "search": "function\\s*\\(([^)]*)\\)\\s*\\{(?:\\s|__JSOL_COM_\\d+__)*JSOL\\.use\\s*\\(([^)]+)\\)\\s*;?", "template": "function($1) use ($2) {\n" },
+  { "id": "JSOL.range", "type": "range", "template": "" },
   { "id": "Math.PI", "type": "replace", "template": "M_PI" },
   { "id": "isNaN", "type": "call", "template": "is_nan({0})" },
   { "id": "Math.", "type": "replace", "template": "" }
