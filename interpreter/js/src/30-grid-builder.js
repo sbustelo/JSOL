@@ -1,5 +1,3 @@
-// REEMPLAZAR ARCHIVO COMPLETO EN interpreter/js/src/30-grid-builder.js
-
 window.JSOL_GRID_BUILDER = {
 	getAttr: function(paramName) {
 		const prefix = paramName.substring(1, 2);
@@ -9,7 +7,7 @@ window.JSOL_GRID_BUILDER = {
 		else if (['n', 'c', 'p'].includes(prefix)) { type = 'number'; step = 'any'; ph = '0.00'; }
 		else if (['q', 'i'].includes(prefix)) { type = 'number'; step = '1'; ph = '0'; }
 		else if (prefix === 'b') { ph = 'true/false'; }
-		else if (['a', 'm'].includes(prefix)) { ph = '[] or {}'; }
+		else if (['a', 'm', 'd'].includes(prefix)) { ph = '[] or {}'; }
 
 		return { type, step, ph, prefix };
 	},
@@ -61,31 +59,76 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (!window[funcName]) return;
 
 	let outputCols = ['_result'];
-	const fnStr = window[funcName].toString();
-	const dictMatch = fnStr.match(/return\s+(?:window\.)?JSOL\.dict\(([\s\S]*?)\);?/);
+	let detectionSuccess = false;
 
-	if (dictMatch) {
-		const argsStr = dictMatch[1];
-		let args = [], current = '', inStr = false, strQuote = '', pCount = 0, bCount = 0, cCount = 0;
-		for (let i = 0; i < argsStr.length; i++) {
-			const ch = argsStr[i], prev = i > 0 ? argsStr[i - 1] : '';
-			if ((ch === '"' || ch === "'") && prev !== '\\') {
-				if (!inStr) { inStr = true; strQuote = ch; }
-				else if (ch === strQuote) { inStr = false; }
+	// CAPA 1: Detección por Contrato (SSOT)
+	if (contractCases.length > 0) {
+		const firstCase = contractCases[0];
+		if (firstCase && typeof firstCase === 'object' && firstCase.expect && typeof firstCase.expect === 'object') {
+			const keys = Object.keys(firstCase.expect);
+			if (keys.length > 0) {
+				outputCols = keys;
+				detectionSuccess = true;
 			}
-			if (!inStr) {
-				if (ch === '(') pCount++; else if (ch === ')') pCount--;
-				else if (ch === '[') bCount++; else if (ch === ']') bCount--;
-				else if (ch === '{') cCount++; else if (ch === '}') cCount--;
-			}
-			if (ch === ',' && !inStr && pCount === 0 && bCount === 0 && cCount === 0) {
-				args.push(current.trim()); current = '';
-			} else { current += ch; }
 		}
-		if (current.trim() !== '') args.push(current.trim());
-		if (args.length >= 2) {
-			outputCols = [];
-			for (let i = 0; i < args.length; i += 2) outputCols.push(args[i].replace(/^["']|["']$/g, ''));
+	}
+
+	// CAPA 2: Detección por Dry-Run (Telemetría en memoria)
+	if (!detectionSuccess && contractCases.length > 0) {
+		try {
+			const firstCase = contractCases[0];
+			const inData = (firstCase && typeof firstCase === 'object' && firstCase.in) ? firstCase.in : firstCase;
+			const args = inputCols.map(col => {
+				if (inData[col] !== undefined) return inData[col];
+				const attr = window.JSOL_GRID_BUILDER.getAttr(col);
+				if (attr.type === 'number') return 0;
+				if (attr.prefix === 'b') return false;
+				if (['a', 'm', 'd'].includes(attr.prefix)) return {};
+				return "";
+			});
+			
+			const dryRunResult = window[funcName](...args);
+			
+			if (dryRunResult && typeof dryRunResult === 'object' && !Array.isArray(dryRunResult)) {
+				const keys = Object.keys(dryRunResult);
+				if (keys.length > 0) {
+					outputCols = keys;
+					detectionSuccess = true;
+				}
+			}
+		} catch (e) {
+			// Falla de Dry-Run silenciosa, pasar al fallback
+		}
+	}
+
+	// CAPA 3: Fallback Regex Estático (Legacy)
+	if (!detectionSuccess) {
+		const fnStr = window[funcName].toString();
+		const dictMatch = fnStr.match(/return\s+(?:window\.)?JSOL\.dict\(([\s\S]*?)\);?/);
+
+		if (dictMatch) {
+			const argsStr = dictMatch[1];
+			let args = [], current = '', inStr = false, strQuote = '', pCount = 0, bCount = 0, cCount = 0;
+			for (let i = 0; i < argsStr.length; i++) {
+				const ch = argsStr[i], prev = i > 0 ? argsStr[i - 1] : '';
+				if ((ch === '"' || ch === "'") && prev !== '\\') {
+					if (!inStr) { inStr = true; strQuote = ch; }
+					else if (ch === strQuote) { inStr = false; }
+				}
+				if (!inStr) {
+					if (ch === '(') pCount++; else if (ch === ')') pCount--;
+					else if (ch === '[') bCount++; else if (ch === ']') bCount--;
+					else if (ch === '{') cCount++; else if (ch === '}') cCount--;
+				}
+				if (ch === ',' && !inStr && pCount === 0 && bCount === 0 && cCount === 0) {
+					args.push(current.trim()); current = '';
+				} else { current += ch; }
+			}
+			if (current.trim() !== '') args.push(current.trim());
+			if (args.length >= 2) {
+				outputCols = [];
+				for (let i = 0; i < args.length; i += 2) outputCols.push(args[i].replace(/^["']|["']$/g, ''));
+			}
 		}
 	}
 
