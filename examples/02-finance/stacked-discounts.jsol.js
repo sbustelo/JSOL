@@ -25,7 +25,7 @@
 
 const $nApplyStackedDiscounts = function($nPrice, $aDiscountRates) {
     let $nCurrentPrice = $nPrice;
-    const $qCount = Arr.count($aDiscountRates);
+    const $qCount = Arr.len($aDiscountRates);
 
     for (let $i = 0; $i < $qCount; $i = $i + 1) {
         const $nRate = $aDiscountRates[$i];

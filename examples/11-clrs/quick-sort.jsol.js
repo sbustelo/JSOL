@@ -1,4 +1,4 @@
-// @JSOL v0.2.94
+// @JSOL v0.2.97
 
 /**
  @description
@@ -43,7 +43,8 @@ const $mPartition = function($aValues, $qLow, $qHigh) {
 };
 
 const $aQuickSortRange = function($aValues, $qLow, $qHigh) {
-    // JSOL.use: Binds internal function dependencies for isolated closure scopes in target engines.
+	// deprecated in 0.2.97: compiler auto-injects use() clauses for scope transparency
+	// JSOL.use: Binds internal function dependencies for isolated closure scopes in target engines.
     JSOL.use($aQuickSortRange, $mPartition);
 
     if ($qLow < $qHigh) {
@@ -61,10 +62,11 @@ const $aQuickSortRange = function($aValues, $qLow, $qHigh) {
 };
 
 const $aQuickSort = function($aValues) {
+	// deprecated in 0.2.97: compiler auto-injects use() clauses for scope transparency
     // JSOL.use: Explicitly imports external function reference into the closure scope.
     JSOL.use($aQuickSortRange);
 
-    let $aSorted = Arr.slice($aValues, 0, Arr.count($aValues));
-    $aSorted = $aQuickSortRange($aSorted, 0, Arr.count($aSorted) - 1);
+    let $aSorted = Arr.slice($aValues, 0, Arr.len($aValues));
+    $aSorted = $aQuickSortRange($aSorted, 0, Arr.len($aSorted) - 1);
     return $aSorted;
 };

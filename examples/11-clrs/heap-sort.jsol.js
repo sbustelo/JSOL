@@ -1,4 +1,4 @@
-// @JSOL v0.2.94
+// @JSOL v0.2.97
 
 /**
  @description
@@ -30,7 +30,7 @@
 */
 
 const $aSiftDown = function($aValues, $qHeapSize, $qRoot) {
-    // JSOL.use: Explicitly binds self-reference for recursive closure execution across target runtimes.
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
     JSOL.use($aSiftDown);
 
     let $qLargest = $qRoot;
@@ -58,11 +58,11 @@ const $aSiftDown = function($aValues, $qHeapSize, $qRoot) {
 };
 
 const $aHeapSort = function($aValues) {
-    // JSOL.use: Injects helper functions into closure scope for isolated target runtimes.
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
     JSOL.use($aSiftDown);
 
-    let $aSorted = Arr.slice($aValues, 0, Arr.count($aValues));
-    const $qLen = Arr.count($aSorted);
+    let $aSorted = Arr.slice($aValues, 0, Arr.len($aValues));
+    const $qLen = Arr.len($aSorted);
 
     // Build the max-heap: sift down every non-leaf node, from the last one back to the root.
     for (let $qI = Math.floor($qLen / 2) - 1; $qI >= 0; $qI = $qI - 1) {

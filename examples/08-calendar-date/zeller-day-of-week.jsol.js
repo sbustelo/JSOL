@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -11,13 +11,11 @@
  case inside the arithmetic itself.
   The classic formula ends in "- 2*J"; here it is written as "+ 5*J"
  instead (-2 and +5 are congruent mod 7), so every term in the sum stays
- non-negative. That avoids ever depending on how a target language's %
- operator handles a negative dividend, which JS and PHP do not treat
- identically.
+ non-negative.
 
-@param {integer} $qYear - Full year (e.g. 2026).
-@param {integer} $qMonth - Month, 1-12.
-@param {integer} $qDay - Day of the month.
+@param {number} $nYear - Full year (e.g. 2026).
+@param {number} $nMonth - Month, 1-12.
+@param {number} $nDay - Day of the month.
 @returns {string} - Day of the week: "Sunday" through "Saturday".
 */
 
@@ -25,33 +23,34 @@
  @contract
  {
    "cases": [
-     { "$qYear": 2026, "$qMonth": 8, "$qDay": 13 },
-     { "$qYear": 2000, "$qMonth": 1, "$qDay": 1 }
+     { "$nYear": 2026, "$nMonth": 8, "$nDay": 13 },
+     { "$nYear": 2000, "$nMonth": 1, "$nDay": 1 }
    ]
  }
 */
 
-const $sDayOfWeek = function($qYear, $qMonth, $qDay) {
-    let $qAdjustedMonth = $qMonth;
-    let $qAdjustedYear = $qYear;
+const $sDayOfWeek = function($nYear, $nMonth, $nDay) {
+    let $nAdjustedMonth = $nMonth;
+    let $nAdjustedYear = $nYear;
 
-    if ($qMonth < 3) {
-        $qAdjustedMonth = $qMonth + 12;
-        $qAdjustedYear = $qYear - 1;
+    if ($nMonth < 3) {
+        $nAdjustedMonth = $nMonth + 12;
+        $nAdjustedYear = $nYear - 1;
     }
 
-    const $qK = $qAdjustedYear % 100;
-    const $qJ = Math.floor($qAdjustedYear / 100);
+    // JSOL 0.3.0: Replaced % with Math.modX to guarantee exact modulo resolution.
+    const $nK = Math.modX($nAdjustedYear, 100);
+    const $nJ = Math.floor($nAdjustedYear / 100);
 
-    const $qH = ($qDay
-        + Math.floor((13 * ($qAdjustedMonth + 1)) / 5)
-        + $qK
-        + Math.floor($qK / 4)
-        + Math.floor($qJ / 4)
-        + (5 * $qJ)) % 7;
+    const $nH = Math.modX(($nDay
+        + Math.floor((13 * ($nAdjustedMonth + 1)) / 5)
+        + $nK
+        + Math.floor($nK / 4)
+        + Math.floor($nJ / 4)
+        + (5 * $nJ)), 7);
 
-    // $qH: 0=Saturday, 1=Sunday, 2=Monday, ... 6=Friday.
+    // $nH: 0=Saturday, 1=Sunday, 2=Monday, ... 6=Friday.
     const $aDayNames = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
-    return $aDayNames[$qH];
+    return $aDayNames[$nH];
 };

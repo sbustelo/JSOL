@@ -29,8 +29,8 @@ const $aBubbleSort = function($aValues) {
     // Work on a copy: the input array is not mutated. Arr.slice over the
     // full range is how a shallow copy is made, JSOL has no dedicated
     // Arr.copy.
-    const $aSorted = Arr.slice($aValues, 0, Arr.count($aValues));
-    const $qLen = Arr.count($aSorted);
+    const $aSorted = Arr.slice($aValues, 0, Arr.len($aValues));
+    const $qLen = Arr.len($aSorted);
 
     let $bSwapped = true;
     while ($bSwapped === true) {

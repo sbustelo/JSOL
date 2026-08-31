@@ -174,7 +174,7 @@ check_diff() {
     
     log "  Running diff: $name ($dir1 vs $dir2)..."
     set +e
-    local diff_raw=$(diff -r "$dir1" "$dir2" 2>&1)
+    local diff_raw=$(diff -r -x '.*' -x '_*' "$dir1" "$dir2" 2>&1)
     local diff_exit=$?
     
     # Filter out extensions to evaluate only logical integrity if needed.

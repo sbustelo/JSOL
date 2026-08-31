@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -27,8 +27,8 @@
 */
 
 const $bValidateStrongPassword = function($sPassword) {
-    const $iLen = Str.len($sPassword);
-    if ($iLen < 8) {
+    const $nLen = Str.len($sPassword);
+    if ($nLen < 8) {
         return false;
     }
 
@@ -37,16 +37,16 @@ const $bValidateStrongPassword = function($sPassword) {
     let $bHasDigit = false;
     let $bHasSymbol = false;
 
-    for (let $i = 0; $i < $iLen; $i = $i + 1) {
-        const $qCode = Str.char($sPassword, $i);
+    for (let $nIndex = 0; $nIndex < $nLen; $nIndex = $nIndex + 1) {
+        const $nCode = Str.char($sPassword, $nIndex);
 
-        if ($qCode >= 65 && $qCode <= 90) {
+        if ($nCode >= 65 && $nCode <= 90) {
             // 'A'-'Z'
             $bHasUpper = true;
-        } else if ($qCode >= 97 && $qCode <= 122) {
+        } else if ($nCode >= 97 && $nCode <= 122) {
             // 'a'-'z'
             $bHasLower = true;
-        } else if ($qCode >= 48 && $qCode <= 57) {
+        } else if ($nCode >= 48 && $nCode <= 57) {
             // '0'-'9'
             $bHasDigit = true;
         } else {

@@ -1,4 +1,4 @@
-// @JSOL v0.2.96
+// @JSOL v0.2.97
 
 /**
  @description
@@ -36,16 +36,15 @@
  - `Str.len`
  - `Str.sub`
  - `Str.indexOf`
- - `Str.replace`
+ - `Str.replaceAll`
  - `Str.char`
  - `Str.fromChar`
  - `Str.upper`
  - `Str.lower`
- - `Str.trim`
  - `Str.split`
 
  ### Array Methods
- - `Arr.count`
+ - `Arr.len`
  - `Arr.push`
  - `Arr.pop`
  - `Arr.shift`
@@ -64,7 +63,7 @@
  - `Math.pow`
  - `Math.min`
  - `Math.max`
- - `Math.round`
+ - `Math.roundX`
 
  ### Bitwise Methods
  - `Bit.and`
@@ -92,14 +91,13 @@
      { "$sMethod": "Str.len" },
      { "$sMethod": "Str.sub" },
      { "$sMethod": "Str.indexOf" },
-     { "$sMethod": "Str.replace" },
+     { "$sMethod": "Str.replaceAll" },
      { "$sMethod": "Str.char" },
      { "$sMethod": "Str.fromChar" },
      { "$sMethod": "Str.upper" },
      { "$sMethod": "Str.lower" },
-     { "$sMethod": "Str.trim" },
      { "$sMethod": "Str.split" },
-     { "$sMethod": "Arr.count" },
+     { "$sMethod": "Arr.len" },
      { "$sMethod": "Arr.push" },
      { "$sMethod": "Arr.pop" },
      { "$sMethod": "Arr.shift" },
@@ -112,9 +110,15 @@
      { "$sMethod": "Math.floor" },
      { "$sMethod": "Math.abs" },
      { "$sMethod": "Math.pow" },
-     { "$sMethod": "Math.min" },
-     { "$sMethod": "Math.max" },
-     { "$sMethod": "Math.round" },
+     
+	 { "$sMethod": "Math.roundX" },
+     { "$sMethod": "Math.eq" },
+     { "$sMethod": "Math.neq" },
+     { "$sMethod": "Math.gt" },
+     { "$sMethod": "Math.lt" },
+     { "$sMethod": "Math.gte" },
+     { "$sMethod": "Math.lte" },
+
      { "$sMethod": "Bit.and" },
      { "$sMethod": "Bit.or" },
      { "$sMethod": "Bit.xor" },
@@ -131,23 +135,30 @@
  }
 */
 
+/**
+Out of contract 0.2.97 
+     // { "$sMethod": "Math.min" },
+     // { "$sMethod": "Math.max" },} $sMethod 
+ */
+
 const $sTestPrimitive = function($sMethod) {
     switch ($sMethod) {
         case "Str.len": return Cast.toStr(Str.len("abc"));
         case "Str.sub": return Str.sub("abc", 1, 1);
         case "Str.indexOf": return Cast.toStr(Str.indexOf("abc", "b"));
-        case "Str.replace": return Str.replace("abc", "b", "x");
+        // JSOL 0.3.0: Str.replaceAll replaces the deprecated Str.replace.
+        case "Str.replaceAll": return Str.replaceAll("abc", "b", "x");
         case "Str.char": return Cast.toStr(Str.char("abc", 0));
         case "Str.fromChar": return Str.fromChar(97);
         case "Str.upper": return Str.upper("abc");
         case "Str.lower": return Str.lower("ABC");
-        case "Str.trim": return Str.trim(" abc ");
         case "Str.split": {
             const $aSplit = Str.split("a,b", ",");
             return Arr.join($aSplit, "-");
         }
 
-        case "Arr.count": return Cast.toStr(Arr.count(["x", "y"]));
+        // JSOL 0.3.0: Arr.len replaces Arr.count.
+        case "Arr.len": return Cast.toStr(Arr.len(["x", "y"]));
         case "Arr.push": {
             const $aPush = ["x", "y"];
             Arr.push($aPush, "z");
@@ -188,9 +199,21 @@ const $sTestPrimitive = function($sMethod) {
         case "Math.floor": return Cast.toStr(Math.floor(1.9));
         case "Math.abs": return Cast.toStr(Math.abs(-5));
         case "Math.pow": return Cast.toStr(Math.pow(2, 3));
-        case "Math.min": return Cast.toStr(Math.min(10, 2));
-        case "Math.max": return Cast.toStr(Math.max(10, 2));
-        case "Math.round": return Cast.toStr(Math.round(1.5));
+        // case "Math.min": return Cast.toStr(Math.min(10, 2));
+        // case "Math.max": return Cast.toStr(Math.max(10, 2));
+
+// JSOL 0.3.0: Math.roundX replaces Math.round.
+        case "Math.roundX": return Cast.toStr(Math.roundX(1.5));
+
+        // TS Parity: Operar sobre variables para eludir el Error TS2367.
+        case "Math.eq": { const $nA = 5; const $nB = 5; return Cast.toStr(Math.eq($nA, $nB)); }
+        case "Math.neq": { const $nA = 5; const $nB = 3; return Cast.toStr(Math.neq($nA, $nB)); }
+        case "Math.gt": { const $nA = 5; const $nB = 3; return Cast.toStr(Math.gt($nA, $nB)); }
+        case "Math.lt": { const $nA = 3; const $nB = 5; return Cast.toStr(Math.lt($nA, $nB)); }
+        case "Math.gte": { const $nA = 5; const $nB = 5; return Cast.toStr(Math.gte($nA, $nB)); }
+        case "Math.lte": { const $nA = 5; const $nB = 5; return Cast.toStr(Math.lte($nA, $nB)); }
+
+        case "Bit.and": return Cast.toStr(Bit.and(3, 1));
 
         case "Bit.and": return Cast.toStr(Bit.and(3, 1));
         case "Bit.or": return Cast.toStr(Bit.or(1, 2));

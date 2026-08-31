@@ -30,7 +30,7 @@
 */
 
 const $mGreedyCoinChange = function($aDenominations, $qAmount) {
-    const $qDenomCount = Arr.count($aDenominations);
+    const $qDenomCount = Arr.len($aDenominations);
     const $aCoinsUsed = [];
     let $qRemaining = $qAmount;
 
@@ -47,5 +47,5 @@ const $mGreedyCoinChange = function($aDenominations, $qAmount) {
         return Map.create("coins", [], "count", -1);
     }
 
-    return Map.create("coins", $aCoinsUsed, "count", Arr.count($aCoinsUsed));
+    return Map.create("coins", $aCoinsUsed, "count", Arr.len($aCoinsUsed));
 };

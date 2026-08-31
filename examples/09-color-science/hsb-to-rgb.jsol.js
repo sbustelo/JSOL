@@ -77,9 +77,9 @@ const $mHsbToRgb = function($nHue, $nSaturation, $nBrightness) {
         $nB1 = $nX;
     }
 
-    const $qR = Math.round(($nR1 + $nMatch) * 255);
-    const $qG = Math.round(($nG1 + $nMatch) * 255);
-    const $qB = Math.round(($nB1 + $nMatch) * 255);
+    const $qR = Math.roundX(($nR1 + $nMatch) * 255);
+    const $qG = Math.roundX(($nG1 + $nMatch) * 255);
+    const $qB = Math.roundX(($nB1 + $nMatch) * 255);
 
     return Map.create("r", $qR, "g", $qG, "b", $qB);
 };

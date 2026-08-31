@@ -27,7 +27,7 @@
 
 const $qBinarySearch = function($aSortedValues, $nTarget) {
     let $qLow = 0;
-    let $qHigh = Arr.count($aSortedValues) - 1;
+    let $qHigh = Arr.len($aSortedValues) - 1;
 
     while ($qLow <= $qHigh) {
         // Written as low + (high-low)/2 rather than (low+high)/2 to avoid

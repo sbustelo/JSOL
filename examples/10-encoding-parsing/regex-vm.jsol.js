@@ -1,4 +1,4 @@
-// @JSOL v0.2.96
+// @JSOL v0.2.97
 
 /**
  @description
@@ -11,10 +11,10 @@
 
  TODO: Implement missing features required for parity with the current native safe subset (e.g., {n,m} quantifiers, \b/\B boundaries). Additionally, restrict the . (dot) wildcard so it correctly excludes line terminators (\n, \r) by default, aligning with standard regex behavior. Achieving this parity is strictly required to eventually support Lua as a target, since Lua lacks native POSIX regex support and will rely on this VM at runtime.
 
-@param {string} $sPatternStr - The regex pattern to compile and search.
-@param {string} $sReplacementStr - The replacement string (supports capture group references like $1, $2).
-@param {string} $sStr - The target text to operate on.
-@param {string} $sFlags - Execution flags (e.g., "g" for global replacement).
+@param {string} $saPatternStr - The regex pattern to compile and search.
+@param {string} $saReplacementStr - The replacement string (supports capture group references like $1, $2).
+@param {string} $saStr - The target text to operate on.
+@param {string} $saFlags - Execution flags (e.g., "g" for global replacement).
 @returns {string} - The resulting string after applying the replacements.
 */
 
@@ -22,182 +22,184 @@
  @contract
  {
    "cases": [
-     { "$sPatternStr": "([a-z]+)-([0-9]+)", "$sReplacementStr": "$2:$1", "$sStr": "id-42 and user-99", "$sFlags": "g" },
-     { "$sPatternStr": "\\s+", "$sReplacementStr": "-", "$sStr": "hello   world", "$sFlags": "g" },
-     { "$sPatternStr": "a(b|c)*d", "$sReplacementStr": "MATCH", "$sStr": "z abbbcd z", "$sFlags": "g" }
+     { "$saPatternStr": "([a-z]+)-([0-9]+)", "$saReplacementStr": "$2:$1", "$saStr": "id-42 and user-99", "$saFlags": "g" },
+     { "$saPatternStr": "\\s+", "$saReplacementStr": "-", "$saStr": "hello   world", "$saFlags": "g" },
+     { "$saPatternStr": "a(b|c)*d", "$saReplacementStr": "MATCH", "$saStr": "z abbbcd z", "$saFlags": "g" }
    ]
  }
 */
 
-const $mParseAtom = function($sPat, $i, $iN, $iGc, $mFns) {
-    const $sC = Str.sub($sPat, $i, 1);
-    if ($sC === "(") {
-        $i = $i + 1;
+const $mParseAtom = function($saPat, $nIndex, $nN, $nGc, $mFns) {
+    const $saC = Str.sub($saPat, $nIndex, 1);
+    if ($saC === "(") {
+        $nIndex = $nIndex + 1;
         let $bCapturing = true;
-        if ($i + 1 < $iN && Str.sub($sPat, $i, 2) === "?:") {
+        if ($nIndex + 1 < $nN && Str.sub($saPat, $nIndex, 2) === "?:") {
             $bCapturing = false;
-            $i = $i + 2;
+            $nIndex = $nIndex + 2;
         }
-        let $iIdx = -1;
+        let $nIdx = -1;
         if ($bCapturing === true) {
-            $iGc = $iGc + 1;
-            $iIdx = $iGc;
+            $nGc = $nGc + 1;
+            $nIdx = $nGc;
         }
         const $fPAltFn = $mFns["parseAlt"];
-        let $mR = $fPAltFn($sPat, $i, $iN, $iGc, $mFns);
+        let $mR = $fPAltFn($saPat, $nIndex, $nN, $nGc, $mFns);
         const $mBody = $mR["node"];
-        $i = $mR["i"];
-        $iGc = $mR["groupCount"];
-        $i = $i + 1;
-        return Map.create("node", Map.create("type", "group", "index", $iIdx, "capturing", $bCapturing, "body", $mBody), "i", $i, "groupCount", $iGc);
+        $nIndex = $mR["i"];
+        $nGc = $mR["groupCount"];
+        $nIndex = $nIndex + 1;
+        return Map.create("node", Map.create("type", "group", "index", $nIdx, "capturing", $bCapturing, "body", $mBody), "i", $nIndex, "groupCount", $nGc);
     }
-    if ($sC === "[") {
-        $i = $i + 1;
+    if ($saC === "[") {
+        $nIndex = $nIndex + 1;
         let $bNegate = false;
-        if ($i < $iN && Str.sub($sPat, $i, 1) === "^") {
+        if ($nIndex < $nN && Str.sub($saPat, $nIndex, 1) === "^") {
             $bNegate = true;
-            $i = $i + 1;
+            $nIndex = $nIndex + 1;
         }
         let $aRanges = [];
         let $aSingles = [];
         let $bFirst = true;
-        while ($i < $iN && (Str.sub($sPat, $i, 1) !== "]" || $bFirst)) {
+        while ($nIndex < $nN && (Str.sub($saPat, $nIndex, 1) !== "]" || $bFirst)) {
             $bFirst = false;
-            let $sCh = Str.sub($sPat, $i, 1);
+            let $saCh = Str.sub($saPat, $nIndex, 1);
             let $bIsShorthand = false;
-            if ($sCh === "\\") {
-                $i = $i + 1;
-                const $sE = Str.sub($sPat, $i, 1);
-                if ($sE === "d") {
+            if ($saCh === "\\") {
+                $nIndex = $nIndex + 1;
+                const $saE = Str.sub($saPat, $nIndex, 1);
+                if ($saE === "d") {
                     const $aR09 = ["0", "9"]; Arr.push($aRanges, $aR09);
                     $bIsShorthand = true;
-                    $i = $i + 1;
-                } else if ($sE === "w") {
+                    $nIndex = $nIndex + 1;
+                } else if ($saE === "w") {
                     const $aRaz = ["a", "z"]; Arr.push($aRanges, $aRaz);
                     const $aRAZ = ["A", "Z"]; Arr.push($aRanges, $aRAZ);
                     const $aR09w = ["0", "9"]; Arr.push($aRanges, $aR09w);
                     Arr.push($aSingles, "_");
                     $bIsShorthand = true;
-                    $i = $i + 1;
-                } else if ($sE === "s") {
+                    $nIndex = $nIndex + 1;
+                } else if ($saE === "s") {
                     Arr.push($aSingles, " "); Arr.push($aSingles, "\t"); Arr.push($aSingles, "\n"); Arr.push($aSingles, "\r");
                     $bIsShorthand = true;
-                    $i = $i + 1;
+                    $nIndex = $nIndex + 1;
                 } else {
-                    $sCh = $sE;
-                    $i = $i + 1;
+                    $saCh = $saE;
+                    $nIndex = $nIndex + 1;
                 }
             } else {
-                $i = $i + 1;
+                $nIndex = $nIndex + 1;
             }
             if ($bIsShorthand === true) { continue; }
-            if ($i < $iN && Str.sub($sPat, $i, 1) === "-" && $i + 1 < $iN && Str.sub($sPat, $i + 1, 1) !== "]") {
-                $i = $i + 1;
-                let $sCh2 = Str.sub($sPat, $i, 1);
-                if ($sCh2 === "\\") {
-                    $i = $i + 1;
-                    $sCh2 = Str.sub($sPat, $i, 1);
-                    $i = $i + 1;
+            if ($nIndex < $nN && Str.sub($saPat, $nIndex, 1) === "-" && $nIndex + 1 < $nN && Str.sub($saPat, $nIndex + 1, 1) !== "]") {
+                $nIndex = $nIndex + 1;
+                let $saCh2 = Str.sub($saPat, $nIndex, 1);
+                if ($saCh2 === "\\") {
+                    $nIndex = $nIndex + 1;
+                    $saCh2 = Str.sub($saPat, $nIndex, 1);
+                    $nIndex = $nIndex + 1;
                 } else {
-                    $i = $i + 1;
+                    $nIndex = $nIndex + 1;
                 }
-                const $aRng = [$sCh, $sCh2];
+                const $aRng = [$saCh, $saCh2];
                 Arr.push($aRanges, $aRng);
             } else {
-                Arr.push($aSingles, $sCh);
+                Arr.push($aSingles, $saCh);
             }
         }
-        $i = $i + 1;
-        return Map.create("node", Map.create("type", "class", "negate", $bNegate, "ranges", $aRanges, "singles", $aSingles), "i", $i, "groupCount", $iGc);
+        $nIndex = $nIndex + 1;
+        return Map.create("node", Map.create("type", "class", "negate", $bNegate, "ranges", $aRanges, "singles", $aSingles), "i", $nIndex, "groupCount", $nGc);
     }
-    if ($sC === ".") {
-        $i = $i + 1;
-        return Map.create("node", Map.create("type", "any"), "i", $i, "groupCount", $iGc);
+    if ($saC === ".") {
+        $nIndex = $nIndex + 1;
+        return Map.create("node", Map.create("type", "any"), "i", $nIndex, "groupCount", $nGc);
     }
-    if ($sC === "^") {
-        $i = $i + 1;
-        return Map.create("node", Map.create("type", "anchorStart"), "i", $i, "groupCount", $iGc);
+    if ($saC === "^") {
+        $nIndex = $nIndex + 1;
+        return Map.create("node", Map.create("type", "anchorStart"), "i", $nIndex, "groupCount", $nGc);
     }
-    if ($sC === "$") {
-        $i = $i + 1;
-        return Map.create("node", Map.create("type", "anchorEnd"), "i", $i, "groupCount", $iGc);
+    if ($saC === "$") {
+        $nIndex = $nIndex + 1;
+        return Map.create("node", Map.create("type", "anchorEnd"), "i", $nIndex, "groupCount", $nGc);
     }
-    if ($sC === "\\") {
-        $i = $i + 1;
-        const $sE = Str.sub($sPat, $i, 1);
-        $i = $i + 1;
-        if ($sE === "d") { const $aRd = [["0", "9"]]; return Map.create("node", Map.create("type", "class", "negate", false, "ranges", $aRd, "singles", []), "i", $i, "groupCount", $iGc); }
-        if ($sE === "w") { const $aRw = [["a", "z"], ["A", "Z"], ["0", "9"]]; const $aSw = ["_"]; return Map.create("node", Map.create("type", "class", "negate", false, "ranges", $aRw, "singles", $aSw), "i", $i, "groupCount", $iGc); }
-        if ($sE === "s") { const $aSs = [" ", "\t", "\n", "\r"]; return Map.create("node", Map.create("type", "class", "negate", false, "ranges", [], "singles", $aSs), "i", $i, "groupCount", $iGc); }
-        return Map.create("node", Map.create("type", "char", "value", $sE), "i", $i, "groupCount", $iGc);
+    if ($saC === "\\") {
+        $nIndex = $nIndex + 1;
+        const $saE = Str.sub($saPat, $nIndex, 1);
+        $nIndex = $nIndex + 1;
+        if ($saE === "d") { const $aRd = [["0", "9"]]; return Map.create("node", Map.create("type", "class", "negate", false, "ranges", $aRd, "singles", []), "i", $nIndex, "groupCount", $nGc); }
+        if ($saE === "w") { const $aRw = [["a", "z"], ["A", "Z"], ["0", "9"]]; const $aSw = ["_"]; return Map.create("node", Map.create("type", "class", "negate", false, "ranges", $aRw, "singles", $aSw), "i", $nIndex, "groupCount", $nGc); }
+        if ($saE === "s") { const $aSs = [" ", "\t", "\n", "\r"]; return Map.create("node", Map.create("type", "class", "negate", false, "ranges", [], "singles", $aSs), "i", $nIndex, "groupCount", $nGc); }
+        return Map.create("node", Map.create("type", "char", "value", $saE), "i", $nIndex, "groupCount", $nGc);
     }
-    $i = $i + 1;
-    return Map.create("node", Map.create("type", "char", "value", $sC), "i", $i, "groupCount", $iGc);
+    $nIndex = $nIndex + 1;
+    return Map.create("node", Map.create("type", "char", "value", $saC), "i", $nIndex, "groupCount", $nGc);
 };
 
-const $mParseQuantified = function($sPat, $i, $iN, $iGc, $mFns) {
+const $mParseQuantified = function($saPat, $nIndex, $nN, $nGc, $mFns) {
     const $fPaFn = $mFns["parseAtom"];
-    let $mR = $fPaFn($sPat, $i, $iN, $iGc, $mFns);
+    let $mR = $fPaFn($saPat, $nIndex, $nN, $nGc, $mFns);
     let $mAtom = $mR["node"];
-    $i = $mR["i"];
-    $iGc = $mR["groupCount"];
+    $nIndex = $mR["i"];
+    $nGc = $mR["groupCount"];
 
-    while ($i < $iN) {
-        const $sC = Str.sub($sPat, $i, 1);
-        if ($sC === "*") {
-            $i = $i + 1;
+    while ($nIndex < $nN) {
+        const $saC = Str.sub($saPat, $nIndex, 1);
+        if ($saC === "*") {
+            $nIndex = $nIndex + 1;
             let $bLazy = false;
-            if ($i < $iN && Str.sub($sPat, $i, 1) === "?") { $bLazy = true; $i = $i + 1; }
+            if ($nIndex < $nN && Str.sub($saPat, $nIndex, 1) === "?") { $bLazy = true; $nIndex = $nIndex + 1; }
             $mAtom = Map.create("type", "rep", "min", 0, "max", 999999, "lazy", $bLazy, "body", $mAtom);
-        } else if ($sC === "+") {
-            $i = $i + 1;
+        } else if ($saC === "+") {
+            $nIndex = $nIndex + 1;
             let $bLazy = false;
-            if ($i < $iN && Str.sub($sPat, $i, 1) === "?") { $bLazy = true; $i = $i + 1; }
+            if ($nIndex < $nN && Str.sub($saPat, $nIndex, 1) === "?") { $bLazy = true; $nIndex = $nIndex + 1; }
             $mAtom = Map.create("type", "rep", "min", 1, "max", 999999, "lazy", $bLazy, "body", $mAtom);
-        } else if ($sC === "?") {
-            $i = $i + 1;
+        } else if ($saC === "?") {
+            $nIndex = $nIndex + 1;
             let $bLazy = false;
-            if ($i < $iN && Str.sub($sPat, $i, 1) === "?") { $bLazy = true; $i = $i + 1; }
+            if ($nIndex < $nN && Str.sub($saPat, $nIndex, 1) === "?") { $bLazy = true; $nIndex = $nIndex + 1; }
             $mAtom = Map.create("type", "rep", "min", 0, "max", 1, "lazy", $bLazy, "body", $mAtom);
         } else {
             break;
         }
     }
-    return Map.create("node", $mAtom, "i", $i, "groupCount", $iGc);
+    return Map.create("node", $mAtom, "i", $nIndex, "groupCount", $nGc);
 };
 
-const $mParseConcat = function($sPat, $i, $iN, $iGc, $mFns) {
+const $mParseConcat = function($saPat, $nIndex, $nN, $nGc, $mFns) {
     let $aParts = [];
     const $fPqFn = $mFns["parseQuantified"];
-    while ($i < $iN && Str.sub($sPat, $i, 1) !== "|" && Str.sub($sPat, $i, 1) !== ")") {
-        let $mR = $fPqFn($sPat, $i, $iN, $iGc, $mFns);
+    while ($nIndex < $nN && Str.sub($saPat, $nIndex, 1) !== "|" && Str.sub($saPat, $nIndex, 1) !== ")") {
+        let $mR = $fPqFn($saPat, $nIndex, $nN, $nGc, $mFns);
         Arr.push($aParts, $mR["node"]);
-        $i = $mR["i"];
-        $iGc = $mR["groupCount"];
+        $nIndex = $mR["i"];
+        $nGc = $mR["groupCount"];
     }
-    return Map.create("node", Map.create("type", "concat", "parts", $aParts), "i", $i, "groupCount", $iGc);
+    return Map.create("node", Map.create("type", "concat", "parts", $aParts), "i", $nIndex, "groupCount", $nGc);
 };
 
-const $mParseAlt = function($sPat, $i, $iN, $iGc, $mFns) {
+const $mParseAlt = function($saPat, $nIndex, $nN, $nGc, $mFns) {
     let $aOptions = [];
     const $fPcFn = $mFns["parseConcat"];
-    let $mR1 = $fPcFn($sPat, $i, $iN, $iGc, $mFns);
+    let $mR1 = $fPcFn($saPat, $nIndex, $nN, $nGc, $mFns);
     Arr.push($aOptions, $mR1["node"]);
-    $i = $mR1["i"];
-    $iGc = $mR1["groupCount"];
+    $nIndex = $mR1["i"];
+    $nGc = $mR1["groupCount"];
 
-    while ($i < $iN && Str.sub($sPat, $i, 1) === "|") {
-        $i = $i + 1;
-        let $mR2 = $fPcFn($sPat, $i, $iN, $iGc, $mFns);
+    while ($nIndex < $nN && Str.sub($saPat, $nIndex, 1) === "|") {
+        $nIndex = $nIndex + 1;
+        let $mR2 = $fPcFn($saPat, $nIndex, $nN, $nGc, $mFns);
         Arr.push($aOptions, $mR2["node"]);
-        $i = $mR2["i"];
-        $iGc = $mR2["groupCount"];
+        $nIndex = $mR2["i"];
+        $nGc = $mR2["groupCount"];
     }
-    if (Arr.count($aOptions) === 1) { return Map.create("node", $aOptions[0], "i", $i, "groupCount", $iGc); }
-    return Map.create("node", Map.create("type", "alt", "options", $aOptions), "i", $i, "groupCount", $iGc);
+    
+    if (Arr.len($aOptions) === 1) { return Map.create("node", $aOptions[0], "i", $nIndex, "groupCount", $nGc); }
+    return Map.create("node", Map.create("type", "alt", "options", $aOptions), "i", $nIndex, "groupCount", $nGc);
 };
 
-const $mParsePattern = function($sPat) {
+const $mParsePattern = function($saPat) {
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
     JSOL.use($mParseAlt, $mParseConcat, $mParseQuantified, $mParseAtom);
     const $mFns = Map.create(
         "parseAlt", $mParseAlt,
@@ -205,101 +207,102 @@ const $mParsePattern = function($sPat) {
         "parseQuantified", $mParseQuantified,
         "parseAtom", $mParseAtom
     );
-    const $iN = Str.len($sPat);
-    const $mR = $mParseAlt($sPat, 0, $iN, 0, $mFns);
+    const $nN = Str.len($saPat);
+    const $mR = $mParseAlt($saPat, 0, $nN, 0, $mFns);
     return Map.create("tree", $mR["node"], "groupCount", $mR["groupCount"]);
 };
 
-const $fGen = function($mN, $aProg, $fSelfFn) {
-    const $sType = $mN["type"];
-    if ($sType === "concat") {
-        const $aParts = $mN["parts"];
-        const $iPCount = Arr.count($aParts);
-        for (let $iP = 0; $iP < $iPCount; $iP = $iP + 1) { 
-            $aProg = $fSelfFn($aParts[$iP], $aProg, $fSelfFn); 
+const $fGen = function($mNode, $aProg, $fSelfFn) {
+    const $saType = $mNode["type"];
+    if ($saType === "concat") {
+        const $aParts = $mNode["parts"];
+        const $nPCount = Arr.len($aParts);
+        for (let $nP = 0; $nP < $nPCount; $nP = $nP + 1) { 
+            $aProg = $fSelfFn($aParts[$nP], $aProg, $fSelfFn); 
         }
-    } else if ($sType === "alt") {
-        const $aOptions = $mN["options"];
-        const $iOCount = Arr.count($aOptions);
+    } else if ($saType === "alt") {
+        const $aOptions = $mNode["options"];
+        const $nOCount = Arr.len($aOptions);
         let $aJmpEnds = [];
-        for (let $iIdx = 0; $iIdx < $iOCount; $iIdx = $iIdx + 1) {
-            if ($iIdx < $iOCount - 1) {
-                const $iSplitPc = Arr.count($aProg);
+        for (let $nIdx = 0; $nIdx < $nOCount; $nIdx = $nIdx + 1) {
+            if ($nIdx < $nOCount - 1) {
+                const $nSplitPc = Arr.len($aProg);
                 Arr.push($aProg, Map.create("op", "SPLIT", "x", 0, "y", 0));
-                const $iX = Arr.count($aProg);
-                $aProg = $fSelfFn($aOptions[$iIdx], $aProg, $fSelfFn);
-                const $iJmpPc = Arr.count($aProg);
+                const $nX = Arr.len($aProg);
+                $aProg = $fSelfFn($aOptions[$nIdx], $aProg, $fSelfFn);
+                const $nJmpPc = Arr.len($aProg);
                 Arr.push($aProg, Map.create("op", "JMP", "to", 0));
-                Arr.push($aJmpEnds, $iJmpPc);
-                $aProg[$iSplitPc]["x"] = $iX;
-                $aProg[$iSplitPc]["y"] = Arr.count($aProg);
+                Arr.push($aJmpEnds, $nJmpPc);
+                $aProg[$nSplitPc]["x"] = $nX;
+                $aProg[$nSplitPc]["y"] = Arr.len($aProg);
             } else {
-                $aProg = $fSelfFn($aOptions[$iIdx], $aProg, $fSelfFn);
+                $aProg = $fSelfFn($aOptions[$nIdx], $aProg, $fSelfFn);
             }
         }
-        const $iJCount = Arr.count($aJmpEnds);
-        for (let $iJ = 0; $iJ < $iJCount; $iJ = $iJ + 1) {
-            $aProg[$aJmpEnds[$iJ]]["to"] = Arr.count($aProg);
+        const $nJCount = Arr.len($aJmpEnds);
+        for (let $nJ = 0; $nJ < $nJCount; $nJ = $nJ + 1) {
+            $aProg[$aJmpEnds[$nJ]]["to"] = Arr.len($aProg);
         }
-    } else if ($sType === "rep") {
-        const $iMin = $mN["min"];
-        const $iMax = $mN["max"];
-        const $bLazy = $mN["lazy"];
-        for (let $iC = 0; $iC < $iMin; $iC = $iC + 1) { 
-            $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn); 
+    } else if ($saType === "rep") {
+        const $nMin = $mNode["min"];
+        const $nMax = $mNode["max"];
+        const $bLazy = $mNode["lazy"];
+        for (let $nC = 0; $nC < $nMin; $nC = $nC + 1) { 
+            $aProg = $fSelfFn($mNode["body"], $aProg, $fSelfFn); 
         }
-        if ($iMax === 999999) {
-            const $iSplitPc = Arr.count($aProg);
+        if ($nMax === 999999) {
+            const $nSplitPc = Arr.len($aProg);
             Arr.push($aProg, Map.create("op", "SPLIT", "x", 0, "y", 0));
-            const $iBodyStart = Arr.count($aProg);
-            $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
-            Arr.push($aProg, Map.create("op", "JMP", "to", $iSplitPc));
+            const $nBodyStart = Arr.len($aProg);
+            $aProg = $fSelfFn($mNode["body"], $aProg, $fSelfFn);
+            Arr.push($aProg, Map.create("op", "JMP", "to", $nSplitPc));
             if ($bLazy === true) {
-                $aProg[$iSplitPc]["x"] = Arr.count($aProg);
-                $aProg[$iSplitPc]["y"] = $iBodyStart;
+                $aProg[$nSplitPc]["x"] = Arr.len($aProg);
+                $aProg[$nSplitPc]["y"] = $nBodyStart;
             } else {
-                $aProg[$iSplitPc]["x"] = $iBodyStart;
-                $aProg[$iSplitPc]["y"] = Arr.count($aProg);
+                $aProg[$nSplitPc]["x"] = $nBodyStart;
+                $aProg[$nSplitPc]["y"] = Arr.len($aProg);
             }
         } else {
-            const $iOptional = $iMax - $iMin;
-            for (let $iC = 0; $iC < $iOptional; $iC = $iC + 1) {
-                const $iSplitPc = Arr.count($aProg);
+            const $nOptional = $nMax - $nMin;
+            for (let $nC = 0; $nC < $nOptional; $nC = $nC + 1) {
+                const $nSplitPc = Arr.len($aProg);
                 Arr.push($aProg, Map.create("op", "SPLIT", "x", 0, "y", 0));
-                const $iBodyStart = Arr.count($aProg);
-                $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
+                const $nBodyStart = Arr.len($aProg);
+                $aProg = $fSelfFn($mNode["body"], $aProg, $fSelfFn);
                 if ($bLazy === true) {
-                    $aProg[$iSplitPc]["x"] = Arr.count($aProg);
-                    $aProg[$iSplitPc]["y"] = $iBodyStart;
+                    $aProg[$nSplitPc]["x"] = Arr.len($aProg);
+                    $aProg[$nSplitPc]["y"] = $nBodyStart;
                 } else {
-                    $aProg[$iSplitPc]["x"] = $iBodyStart;
-                    $aProg[$iSplitPc]["y"] = Arr.count($aProg);
+                    $aProg[$nSplitPc]["x"] = $nBodyStart;
+                    $aProg[$nSplitPc]["y"] = Arr.len($aProg);
                 }
             }
         }
-    } else if ($sType === "group") {
-        if (Map.has($mN, "capturing") && $mN["capturing"] === false) {
-            $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
+    } else if ($saType === "group") {
+        if (Map.has($mNode, "capturing") && $mNode["capturing"] === false) {
+            $aProg = $fSelfFn($mNode["body"], $aProg, $fSelfFn);
         } else {
-            Arr.push($aProg, Map.create("op", "SAVE", "slot", $mN["index"] * 2));
-            $aProg = $fSelfFn($mN["body"], $aProg, $fSelfFn);
-            Arr.push($aProg, Map.create("op", "SAVE", "slot", $mN["index"] * 2 + 1));
+            Arr.push($aProg, Map.create("op", "SAVE", "slot", $mNode["index"] * 2));
+            $aProg = $fSelfFn($mNode["body"], $aProg, $fSelfFn);
+            Arr.push($aProg, Map.create("op", "SAVE", "slot", $mNode["index"] * 2 + 1));
         }
-    } else if ($sType === "char") {
-        Arr.push($aProg, Map.create("op", "CHAR", "value", $mN["value"]));
-    } else if ($sType === "any") {
+    } else if ($saType === "char") {
+        Arr.push($aProg, Map.create("op", "CHAR", "value", $mNode["value"]));
+    } else if ($saType === "any") {
         Arr.push($aProg, Map.create("op", "ANY"));
-    } else if ($sType === "class") {
-        Arr.push($aProg, Map.create("op", "CLASS", "negate", $mN["negate"], "ranges", $mN["ranges"], "singles", $mN["singles"]));
-    } else if ($sType === "anchorStart") {
+    } else if ($saType === "class") {
+        Arr.push($aProg, Map.create("op", "CLASS", "negate", $mNode["negate"], "ranges", $mNode["ranges"], "singles", $mNode["singles"]));
+    } else if ($saType === "anchorStart") {
         Arr.push($aProg, Map.create("op", "BOL"));
-    } else if ($sType === "anchorEnd") {
+    } else if ($saType === "anchorEnd") {
         Arr.push($aProg, Map.create("op", "EOL"));
     }
     return $aProg;
 };
 
-const $aCompileRegex = function($mNode, $iGroupCount) {
+const $aCompileRegex = function($mNode, $nGroupCount) {
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
     JSOL.use($fGen);
     let $aProg = [];
     Arr.push($aProg, Map.create("op", "SAVE", "slot", 0));
@@ -309,93 +312,95 @@ const $aCompileRegex = function($mNode, $iGroupCount) {
     return $aProg;
 };
 
-const $sToLower = function($sCh) {
-    const $iCode = Str.char($sCh, 0);
-    if ($iCode >= 65 && $iCode <= 90) { return Str.fromChar($iCode + 32); }
-    return $sCh;
+const $saToLower = function($saCh) {
+    const $nCode = Str.char($saCh, 0);
+    if ($nCode >= 65 && $nCode <= 90) { return Str.fromChar($nCode + 32); }
+    return $saCh;
 };
 
-const $bCharMatches = function($mInstr, $sCh, $bCi) {
-    JSOL.use($sToLower);
+const $bCharMatches = function($mInstr, $saCh, $bCi) {
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
+    JSOL.use($saToLower);
     let $bInSet = false;
-    const $sChComp = $bCi === true ? $sToLower($sCh) : $sCh;
-    const $iCCode = Str.char($sChComp, 0);
+    const $saChComp = $bCi === true ? $saToLower($saCh) : $saCh;
+    const $nCCode = Str.char($saChComp, 0);
 
     const $aSingles = $mInstr["singles"];
-    const $iSCount = Arr.count($aSingles);
-    for (let $i = 0; $i < $iSCount; $i = $i + 1) {
-        const $sS = $aSingles[$i];
-        const $sSComp = $bCi === true ? $sToLower($sS) : $sS;
-        if ($sSComp === $sChComp) { $bInSet = true; }
+    const $nSCount = Arr.len($aSingles);
+    for (let $nIndex = 0; $nIndex < $nSCount; $nIndex = $nIndex + 1) {
+        const $saS = $aSingles[$nIndex];
+        const $saSComp = $bCi === true ? $saToLower($saS) : $saS;
+        if ($saSComp === $saChComp) { $bInSet = true; }
     }
 
     const $aRanges = $mInstr["ranges"];
-    const $iRCount = Arr.count($aRanges);
-    for (let $i = 0; $i < $iRCount; $i = $i + 1) {
-        const $aR = $aRanges[$i];
-        const $sA = $bCi === true ? $sToLower($aR[0]) : $aR[0];
-        const $sB = $bCi === true ? $sToLower($aR[1]) : $aR[1];
-        const $iACode = Str.char($sA, 0);
-        const $iBCode = Str.char($sB, 0);
-        if ($iCCode >= $iACode && $iCCode <= $iBCode) { $bInSet = true; }
+    const $nRCount = Arr.len($aRanges);
+    for (let $nIndex = 0; $nIndex < $nRCount; $nIndex = $nIndex + 1) {
+        const $aR = $aRanges[$nIndex];
+        const $saA = $bCi === true ? $saToLower($aR[0]) : $aR[0];
+        const $saB = $bCi === true ? $saToLower($aR[1]) : $aR[1];
+        const $nACode = Str.char($saA, 0);
+        const $nBCode = Str.char($saB, 0);
+        if ($nCCode >= $nACode && $nCCode <= $nBCode) { $bInSet = true; }
     }
 
     if ($mInstr["negate"] === true) { return !$bInSet; }
     return $bInSet;
 };
 
-const $mRunRegex = function($aProg, $sStr, $bCi, $iGroupCount, $iStartSp) {
-    JSOL.use($bCharMatches, $sToLower);
-    const $iN = Str.len($sStr);
-    let $iPc = 0;
-    let $iSp = $iStartSp;
+const $mRunRegex = function($aProg, $saStr, $bCi, $nGroupCount, $nStartSp) {
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
+    JSOL.use($bCharMatches, $saToLower);
+    const $nN = Str.len($saStr);
+    let $nPc = 0;
+    let $nSp = $nStartSp;
     let $aSaves = [];
-    const $iSavesLen = ($iGroupCount + 1) * 2;
-    for (let $i = 0; $i < $iSavesLen; $i = $i + 1) { Arr.push($aSaves, -1); }
+    const $nSavesLen = ($nGroupCount + 1) * 2;
+    for (let $nIndex = 0; $nIndex < $nSavesLen; $nIndex = $nIndex + 1) { Arr.push($aSaves, -1); }
 
     const $aStack = [];
-    let $iStackPtr = 0;
+    let $nStackPtr = 0;
 
     let $bRunning = true;
     let $bMatched = false;
 
     while ($bRunning === true) {
-        const $mInstr = $aProg[$iPc];
+        const $mInstr = $aProg[$nPc];
         let $bOk = true;
-        const $sOp = $mInstr["op"];
+        const $saOp = $mInstr["op"];
 
-        if ($sOp === "CHAR") {
-            if ($iSp < $iN) {
-                const $sCh = Str.sub($sStr, $iSp, 1);
-                const $sVal = $mInstr["value"];
-                const $bMatch = $bCi === true ? ($sToLower($sCh) === $sToLower($sVal)) : ($sCh === $sVal);
-                if ($bMatch === true) { $iSp = $iSp + 1; $iPc = $iPc + 1; } else { $bOk = false; }
+        if ($saOp === "CHAR") {
+            if ($nSp < $nN) {
+                const $saCh = Str.sub($saStr, $nSp, 1);
+                const $saVal = $mInstr["value"];
+                const $bMatch = $bCi === true ? ($saToLower($saCh) === $saToLower($saVal)) : ($saCh === $saVal);
+                if ($bMatch === true) { $nSp = $nSp + 1; $nPc = $nPc + 1; } else { $bOk = false; }
             } else { $bOk = false; }
-        } else if ($sOp === "ANY") {
-            if ($iSp < $iN) { $iSp = $iSp + 1; $iPc = $iPc + 1; } else { $bOk = false; }
-        } else if ($sOp === "CLASS") {
-            if ($iSp < $iN) {
-                const $sCh = Str.sub($sStr, $iSp, 1);
-                if ($bCharMatches($mInstr, $sCh, $bCi) === true) { $iSp = $iSp + 1; $iPc = $iPc + 1; } else { $bOk = false; }
+        } else if ($saOp === "ANY") {
+            if ($nSp < $nN) { $nSp = $nSp + 1; $nPc = $nPc + 1; } else { $bOk = false; }
+        } else if ($saOp === "CLASS") {
+            if ($nSp < $nN) {
+                const $saCh = Str.sub($saStr, $nSp, 1);
+                if ($bCharMatches($mInstr, $saCh, $bCi) === true) { $nSp = $nSp + 1; $nPc = $nPc + 1; } else { $bOk = false; }
             } else { $bOk = false; }
-        } else if ($sOp === "BOL") {
-            if ($iSp === 0) { $iPc = $iPc + 1; } else { $bOk = false; }
-        } else if ($sOp === "EOL") {
-            if ($iSp === $iN) { $iPc = $iPc + 1; } else { $bOk = false; }
-        } else if ($sOp === "JMP") {
-            $iPc = $mInstr["to"];
-        } else if ($sOp === "SPLIT") {
+        } else if ($saOp === "BOL") {
+            if ($nSp === 0) { $nPc = $nPc + 1; } else { $bOk = false; }
+        } else if ($saOp === "EOL") {
+            if ($nSp === $nN) { $nPc = $nPc + 1; } else { $bOk = false; }
+        } else if ($saOp === "JMP") {
+            $nPc = $mInstr["to"];
+        } else if ($saOp === "SPLIT") {
             const $aSavesCopy = [];
-            for (let $i = 0; $i < $iSavesLen; $i = $i + 1) { Arr.push($aSavesCopy, $aSaves[$i]); }
-            const $mFrame = Map.create("pc", $mInstr["y"], "sp", $iSp, "saves", $aSavesCopy);
-            if ($iStackPtr < Arr.count($aStack)) { $aStack[$iStackPtr] = $mFrame; } else { Arr.push($aStack, $mFrame); }
-            $iStackPtr = $iStackPtr + 1;
+            for (let $nIndex = 0; $nIndex < $nSavesLen; $nIndex = $nIndex + 1) { Arr.push($aSavesCopy, $aSaves[$nIndex]); }
+            const $mFrame = Map.create("pc", $mInstr["y"], "sp", $nSp, "saves", $aSavesCopy);
+            if ($nStackPtr < Arr.len($aStack)) { $aStack[$nStackPtr] = $mFrame; } else { Arr.push($aStack, $mFrame); }
+            $nStackPtr = $nStackPtr + 1;
             
-            $iPc = $mInstr["x"];
-        } else if ($sOp === "SAVE") {
-            $aSaves[$mInstr["slot"]] = $iSp;
-            $iPc = $iPc + 1;
-        } else if ($sOp === "MATCH") {
+            $nPc = $mInstr["x"];
+        } else if ($saOp === "SAVE") {
+            $aSaves[$mInstr["slot"]] = $nSp;
+            $nPc = $nPc + 1;
+        } else if ($saOp === "MATCH") {
             $bMatched = true;
             $bRunning = false;
         } else {
@@ -403,13 +408,13 @@ const $mRunRegex = function($aProg, $sStr, $bCi, $iGroupCount, $iStartSp) {
         }
 
         if ($bRunning === true && $bOk === false) {
-            if ($iStackPtr === 0) { 
+            if ($nStackPtr === 0) { 
                 $bRunning = false; 
             } else {
-                $iStackPtr = $iStackPtr - 1;
-                const $mF = $aStack[$iStackPtr];
-                $iPc = $mF["pc"];
-                $iSp = $mF["sp"];
+                $nStackPtr = $nStackPtr - 1;
+                const $mF = $aStack[$nStackPtr];
+                $nPc = $mF["pc"];
+                $nSp = $mF["sp"];
                 $aSaves = $mF["saves"];
             }
         }
@@ -418,130 +423,133 @@ const $mRunRegex = function($aProg, $sStr, $bCi, $iGroupCount, $iStartSp) {
     return Map.create("matched", $bMatched, "saves", $aSaves);
 };
 
-const $mRegexMatch = function($sPatternStr, $sStr, $sFlags) {
+const $mRegexMatch = function($saPatternStr, $saStr, $saFlags) {
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
     JSOL.use($mParsePattern, $aCompileRegex, $mRunRegex);
     let $bCi = false;
     let $bGlobal = false;
-    if (Str.indexOf($sFlags, "i") !== -1) { $bCi = true; }
-    if (Str.indexOf($sFlags, "g") !== -1) { $bGlobal = true; }
+    if (Str.indexOf($saFlags, "i") !== -1) { $bCi = true; }
+    if (Str.indexOf($saFlags, "g") !== -1) { $bGlobal = true; }
 
-    const $mParsed = $mParsePattern($sPatternStr);
+    const $mParsed = $mParsePattern($saPatternStr);
     const $aProg = $aCompileRegex($mParsed["tree"], $mParsed["groupCount"]);
-    const $iGroupCount = $mParsed["groupCount"];
+    const $nGroupCount = $mParsed["groupCount"];
 
-    const $iN = Str.len($sStr);
-    for (let $iStart = 0; $iStart <= $iN; $iStart = $iStart + 1) {
-        const $mR = $mRunRegex($aProg, $sStr, $bCi, $iGroupCount, $iStart);
+    const $nN = Str.len($saStr);
+    for (let $nStart = 0; $nStart <= $nN; $nStart = $nStart + 1) {
+        const $mR = $mRunRegex($aProg, $saStr, $bCi, $nGroupCount, $nStart);
         if ($mR["matched"] === true) {
             let $aGroups = [];
-            for (let $iG = 0; $iG <= $iGroupCount; $iG = $iG + 1) {
-                const $iS = $mR["saves"][$iG * 2];
-                const $iE = $mR["saves"][$iG * 2 + 1];
-                if ($iS >= 0 && $iE >= 0) {
-                    const $sSubG = Str.sub($sStr, $iS, $iE - $iS);
-                    Arr.push($aGroups, $sSubG);
+            for (let $nG = 0; $nG <= $nGroupCount; $nG = $nG + 1) {
+                const $nS = $mR["saves"][$nG * 2];
+                const $nE = $mR["saves"][$nG * 2 + 1];
+                if ($nS >= 0 && $nE >= 0) {
+                    const $saSubG = Str.sub($saStr, $nS, $nE - $nS);
+                    Arr.push($aGroups, $saSubG);
                 } else {
                     Arr.push($aGroups, null);
                 }
             }
-            return Map.create("matched", true, "groups", $aGroups, "index", $iStart, "length", $mR["saves"][1] - $mR["saves"][0]);
+            return Map.create("matched", true, "groups", $aGroups, "index", $nStart, "length", $mR["saves"][1] - $mR["saves"][0]);
         }
     }
     return Map.create("matched", false, "groups", [], "index", -1, "length", 0);
 };
 
-const $sRegexReplace = function($sPatternStr, $sReplacementStr, $sStr, $sFlags) {
+const $saRegexReplace = function($saPatternStr, $saReplacementStr, $saStr, $saFlags) {
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
     JSOL.use($mParsePattern, $aCompileRegex, $mRunRegex);
     let $bCi = false;
     let $bGlobal = false;
-    if (Str.indexOf($sFlags, "i") !== -1) { $bCi = true; }
-    if (Str.indexOf($sFlags, "g") !== -1) { $bGlobal = true; }
+    if (Str.indexOf($saFlags, "i") !== -1) { $bCi = true; }
+    if (Str.indexOf($saFlags, "g") !== -1) { $bGlobal = true; }
 
-    const $mParsed = $mParsePattern($sPatternStr);
+    const $mParsed = $mParsePattern($saPatternStr);
     const $aProg = $aCompileRegex($mParsed["tree"], $mParsed["groupCount"]);
-    const $iGroupCount = $mParsed["groupCount"];
+    const $nGroupCount = $mParsed["groupCount"];
 
-    let $sResult = "";
-    let $i = 0;
-    const $iN = Str.len($sStr);
+    let $saResult = "";
+    let $nIndex = 0;
+    const $nN = Str.len($saStr);
 
-    while ($i <= $iN) {
+    while ($nIndex <= $nN) {
         let $bMatchFound = false;
         let $mR = Map.create("matched", false, "saves", []);
-        let $iMatchIndex = $i;
+        let $nMatchIndex = $nIndex;
         
-        for (let $iStart = $i; $iStart <= $iN; $iStart = $iStart + 1) {
-            $mR = $mRunRegex($aProg, $sStr, $bCi, $iGroupCount, $iStart);
+        for (let $nStart = $nIndex; $nStart <= $nN; $nStart = $nStart + 1) {
+            $mR = $mRunRegex($aProg, $saStr, $bCi, $nGroupCount, $nStart);
             if ($mR["matched"] === true) {
                 $bMatchFound = true;
-                $iMatchIndex = $iStart;
+                $nMatchIndex = $nStart;
                 break;
             }
         }
 
         if ($bMatchFound === true) {
-            const $iMatchStart = $mR["saves"][0];
-            const $iMatchEnd = $mR["saves"][1];
+            const $nMatchStart = $mR["saves"][0];
+            const $nMatchEnd = $mR["saves"][1];
 
-            const $sSubA = Str.sub($sStr, $i, $iMatchStart - $i);
-            $sResult = $sResult + "" + $sSubA;
+            const $saSubA = Str.sub($saStr, $nIndex, $nMatchStart - $nIndex);
+            $saResult = $saResult + "" + $saSubA;
 
-            let $sRepResult = "";
-            const $iRepLen = Str.len($sReplacementStr);
-            for (let $iK = 0; $iK < $iRepLen; $iK = $iK + 1) {
-                const $sC = Str.sub($sReplacementStr, $iK, 1);
-                if ($sC === "$" && $iK + 1 < $iRepLen) {
-                    const $sNextC = Str.sub($sReplacementStr, $iK + 1, 1);
-                    const $iCode = Str.char($sNextC, 0);
-                    if ($iCode >= 48 && $iCode <= 57) { 
-                        const $iGIdx = $iCode - 48;
-                        if ($iGIdx <= $iGroupCount) {
-                            const $iGs = $mR["saves"][$iGIdx * 2];
-                            const $iGe = $mR["saves"][$iGIdx * 2 + 1];
-                            if ($iGs >= 0 && $iGe >= 0) {
-                                const $sSubB = Str.sub($sStr, $iGs, $iGe - $iGs);
-                                $sRepResult = $sRepResult + "" + $sSubB;
+            let $saRepResult = "";
+            const $nRepLen = Str.len($saReplacementStr);
+            for (let $nK = 0; $nK < $nRepLen; $nK = $nK + 1) {
+                const $saC = Str.sub($saReplacementStr, $nK, 1);
+                if ($saC === "$" && $nK + 1 < $nRepLen) {
+                    const $saNextC = Str.sub($saReplacementStr, $nK + 1, 1);
+                    const $nCode = Str.char($saNextC, 0);
+                    if ($nCode >= 48 && $nCode <= 57) { 
+                        const $nGIdx = $nCode - 48;
+                        if ($nGIdx <= $nGroupCount) {
+                            const $nGs = $mR["saves"][$nGIdx * 2];
+                            const $nGe = $mR["saves"][$nGIdx * 2 + 1];
+                            if ($nGs >= 0 && $nGe >= 0) {
+                                const $saSubB = Str.sub($saStr, $nGs, $nGe - $nGs);
+                                $saRepResult = $saRepResult + "" + $saSubB;
                             }
                         }
-                        $iK = $iK + 1;
+                        $nK = $nK + 1;
                     } else {
-                        $sRepResult = $sRepResult + "" + $sC;
+                        $saRepResult = $saRepResult + "" + $saC;
                     }
                 } else {
-                    $sRepResult = $sRepResult + "" + $sC;
+                    $saRepResult = $saRepResult + "" + $saC;
                 }
             }
 
-            $sResult = $sResult + "" + $sRepResult;
+            $saResult = $saResult + "" + $saRepResult;
             
-            if ($iMatchEnd === $iMatchIndex) {
-                if ($iMatchIndex < $iN) {
-                    const $sSubC = Str.sub($sStr, $iMatchIndex, 1);
-                    $sResult = $sResult + "" + $sSubC;
+            if ($nMatchEnd === $nMatchIndex) {
+                if ($nMatchIndex < $nN) {
+                    const $saSubC = Str.sub($saStr, $nMatchIndex, 1);
+                    $saResult = $saResult + "" + $saSubC;
                 }
-                $i = $iMatchIndex + 1;
+                $nIndex = $nMatchIndex + 1;
             } else {
-                $i = $iMatchEnd;
+                $nIndex = $nMatchEnd;
             }
 
             if ($bGlobal === false) {
-                const $sSubD = Str.sub($sStr, $i, $iN - $i);
-                $sResult = $sResult + "" + $sSubD;
+                const $saSubD = Str.sub($saStr, $nIndex, $nN - $nIndex);
+                $saResult = $saResult + "" + $saSubD;
                 break;
             }
         } else {
-            const $sSubE = Str.sub($sStr, $i, $iN - $i);
-            $sResult = $sResult + "" + $sSubE;
+            const $saSubE = Str.sub($saStr, $nIndex, $nN - $nIndex);
+            $saResult = $saResult + "" + $saSubE;
             break;
         }
     }
 
-    return $sResult;
+    return $saResult;
 };
 
-const $bRegexTest = function($sPatternStr, $sStr, $sFlags) {
+const $bRegexTest = function($saPatternStr, $saStr, $saFlags) {
+    // JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
     JSOL.use($mRegexMatch);
-    const $mR = $mRegexMatch($sPatternStr, $sStr, $sFlags);
+    const $mR = $mRegexMatch($saPatternStr, $saStr, $saFlags);
     if (Map.has($mR, "matched") && $mR["matched"] === true) {
         return true;
     }
@@ -550,6 +558,6 @@ const $bRegexTest = function($sPatternStr, $sStr, $sFlags) {
 
 const $mRgx = Map.create(
     "match", $mRegexMatch,
-    "replace", $sRegexReplace,
+    "replace", $saRegexReplace,
     "test", $bRegexTest
 );

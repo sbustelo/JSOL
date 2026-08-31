@@ -1,10 +1,28 @@
-/* PATH: tools/test-python-pipeline.js */
-/* REEMPLAZAR ARCHIVO COMPLETO */
 /**
  * JSOL Python Pipeline — Standalone Validator v0.2.96
  *
  * Chains the 5 not-yet-wired Python passes by hand, exactly in the order
- * they'd run inside $mExecuteCompilationPipeline once integrated.
+ * they'd run inside $mExecuteCompilationPipeline once integrated:
+ *
+ *   1. $mMaskSourceCode          (lexer.jsol)
+ *   2. $sCompileToJS w/ python rules.json  (js-compiler.jsol — reused as a
+ *      generic primitive-substitution engine, same trick TS already uses)
+ *   3. $sConvertTernaries        (python-ternary.jsol)
+ *   4. $sConvertControlFlowToPython (python-compiler.jsol)
+ *   5. $sIndentCode              (indenter.jsol — already deployed/stable)
+ *   6. $sStripPythonBraces       (python-brace-strip.jsol)
+ *   7. $sUnmaskSourceCode        (lexer.jsol)
+ *
+ * Then runs the result with a REAL `python3`, feeding it the same @contract
+ * cases, and compares against the already-trusted JS output (compiled with
+ * the real, deployed compiler) as ground truth.
+ *
+ * Nothing here touches engine.jsol or any deployed distribution.
+ *
+ * Usage:
+ *   node tools/test-python-pipeline.js --source=../examples/07-math-numeric/some-example.jsol.js
+ *
+ * Requires: python3 on PATH.
  */
 
 const fs = require('fs');
@@ -90,7 +108,7 @@ console.log('  🛠️  JS baseline OK (real, deployed compiler)');
 
 // --- 2. Load the raw, not-yet-wired Python pipeline modules ---
 const polyfillPath = path.join(srcRoot, 'dist', 'stdlib', 'jsol-core.js');
-require(polyfillPath);
+require(polyfillPath); // Str/Arr/Map/JSOL globals, needed to RUN the .jsol modules directly
 
 const modulePaths = [
     'lexer.jsol',
@@ -107,6 +125,7 @@ for (const p of modulePaths) {
         process.exit(1);
     }
 }
+
 
 const context = vm.createContext(global);
 const rawCode = modulePaths.map(p => fs.readFileSync(p, 'utf8')).join('\n') + `
@@ -139,6 +158,7 @@ if (!fs.existsSync(pythonRulesPath)) {
 }
 const pythonRules = JSON.parse(fs.readFileSync(pythonRulesPath, 'utf8'));
 
+
 const sourceCode = fs.readFileSync(sourceFile, 'utf8');
 const masked = global.$mMaskSourceCode(sourceCode);
 const compiledPy = global.$sCompileToJS(masked.maskedCode, '', '', pythonRules);
@@ -164,7 +184,6 @@ if (!fs.existsSync(jsolCorePyPath)) {
 fs.copyFileSync(jsolCorePyPath, path.join(outBase, 'jsol_core.py'));
 
 // --- 5. Small Python driver: import the module, call the function, print JSON ---
-// FIX: El compilador de Python ELIMINA el $, NO LO REEMPLAZA POR _
 const pythonFuncName = funcName.replace(/\$/g, '');
 const driverPath = path.join(outBase, '_driver.py');
 const driverCode = `

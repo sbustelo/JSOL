@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -12,31 +12,37 @@
  replaces the pair (a, b) with the strictly smaller pair (b, a mod b), so
  it terminates in a bounded number of steps without enumerating divisors.
 
-- @param {integer} $qA - First non-negative integer.
-- @param {integer} $qB - Second non-negative integer.
-- @returns {integer} - The greatest common divisor of $qA and $qB.
+- @param {number} $nA - First non-negative integer.
+- @param {number} $nB - Second non-negative integer.
+- @returns {number} - The greatest common divisor of $nA and $nB.
 */
 
 /**
  @contract
  {
    "cases": [
-     { "$qA": 48, "$qB": 18 },
-     { "$qA": 17, "$qB": 5 },
-     { "$qA": 0, "$qB": 9 }
+     { "$nA": 48, "$nB": 18 },
+     { "$nA": 17, "$nB": 5 },
+     { "$nA": 0, "$nB": 9 }
    ]
  }
 */
 
-const $qGcd = function($qA, $qB) {
-    let $qX = $qA;
-    let $qY = $qB;
+const $nGcd = function($nA, $nB) {
+    let $nX = $nA;
+    let $nY = $nB;
 
-    while ($qY !== 0) {
-        const $qRemainder = $qX % $qY;
-        $qX = $qY;
-        $qY = $qRemainder;
+    // JSOL 0.3.0: Se reemplaza la evaluación estricta ($nY !== 0) por desigualdad matemática
+    // para evadir la divergencia de tipos de PHP, donde Math.modX puede retornar el float 0.0 
+    // y provocar que (0.0 !== 0) evalúe como TRUE, generando un bucle infinito y División por Cero.
+    while ($nY > 0) {
+        // JSOL 0.3.0: The native % operator is strictly forbidden in Userland due to 
+        // sign and float truncation divergences between JS, PHP, and Python.
+        // Math.modX implements Excel's deterministic formula: a - b * floor(a / b).
+        const $nRemainder = Math.modX($nX, $nY);
+        $nX = $nY;
+        $nY = $nRemainder;
     }
 
-    return $qX;
+    return $nX;
 };

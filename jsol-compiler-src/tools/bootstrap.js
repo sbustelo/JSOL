@@ -1,7 +1,7 @@
 /**
  * JSOL Bootstrapper
  * Generates the SSOT (Single Source of Truth) for the Linter and Dynamic Compiler.
- * Validates 100% strict parity between Domains and Targets (JS, PHP, TS).
+ * Validates 100% strict parity between Domains and Targets (JS, PHP, TS, Python).
  */
 const fs = require('fs');
 const path = require('path');
@@ -47,14 +47,25 @@ const phpRules = JSON.parse(fs.readFileSync(phpRulesPath, 'utf8'));
 const tsRules = JSON.parse(fs.readFileSync(tsRulesPath, 'utf8'));
 const pythonRules = JSON.parse(fs.readFileSync(pyRulesPath, 'utf8'));
 
+// Helper para verificar la presencia de una primitiva tanto en formato Array (Legacy) como en Objeto Operations (V0.2.97)
+const hasPrimitive = (rulesObj, prim) => {
+    if (Array.isArray(rulesObj)) {
+        return rulesObj.some(r => r.id === prim);
+    }
+    if (rulesObj && rulesObj.operations) {
+        return Object.prototype.hasOwnProperty.call(rulesObj.operations, prim);
+    }
+    return false;
+};
+
 // 4. CROSS-VALIDATION GATE
 let validationFailed = false;
 
 primitivesList.forEach(prim => {
-    const inJs = jsRules.some(r => r.id === prim);
-    const inPhp = phpRules.some(r => r.id === prim);
-    const inTs = tsRules.some(r => r.id === prim);
-    const inPy = pythonRules.some(r => r.id === prim);
+    const inJs = hasPrimitive(jsRules, prim);
+    const inPhp = hasPrimitive(phpRules, prim);
+    const inTs = hasPrimitive(tsRules, prim);
+    const inPy = hasPrimitive(pythonRules, prim);
 
     if (!inJs) { console.error(`[CROSS-VALIDATION ERROR] Primitive '${prim}' lacks a translation rule in JS target.`); validationFailed = true; }
     if (!inPhp) { console.error(`[CROSS-VALIDATION ERROR] Primitive '${prim}' lacks a translation rule in PHP target.`); validationFailed = true; }
@@ -71,7 +82,7 @@ console.log("[JSOL Bootstrapper] Cross-Validation Passed: 100% parity across tar
 
 // 5. Assemble and export SSOT
 const ssoT = {
-    version: "0.2.95",
+    version: "0.2.97",
     types: typesMap,
     primitives: primitivesList,
     targets: {

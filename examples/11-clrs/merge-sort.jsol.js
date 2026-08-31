@@ -1,4 +1,4 @@
-// @JSOL v0.2.94
+// @JSOL v0.2.97
 
 /**
  @description
@@ -30,8 +30,8 @@
 
 const $aMergeSortedHalves = function($aLeft, $aRight) {
     const $aMerged = [];
-    const $qLeftLen = Arr.count($aLeft);
-    const $qRightLen = Arr.count($aRight);
+    const $qLeftLen = Arr.len($aLeft);
+    const $qRightLen = Arr.len($aRight);
 
     let $qI = 0;
     let $qJ = 0;
@@ -62,10 +62,12 @@ const $aMergeSortedHalves = function($aLeft, $aRight) {
 };
 
 const $aMergeSort = function($aValues) {
-    JSOL.use($aMergeSort, $aMergeSortedHalves);
+	// deprecated in 0.2.97: compiler auto-injects use() clauses for scope transparency
+	// JSOL 0.3.0 Note: Retained to reduce scope resolution ambiguity during compilation and polyfill interpretation.
+	JSOL.use($aMergeSort, $aMergeSortedHalves);
 	// JSOL.use: Explicitly binds external scope to the closure for the PHP target.
 	
-    const $qLen = Arr.count($aValues);
+    const $qLen = Arr.len($aValues);
 
     // A list of 0 or 1 elements is already sorted: recursion's base case.
     if ($qLen <= 1) {

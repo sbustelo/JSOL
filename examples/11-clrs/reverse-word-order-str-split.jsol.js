@@ -27,7 +27,7 @@
 
 const $sReverseWordOrderSplit = function($sSentence) {
     const $aWords = Str.split($sSentence, " ");
-    const $qCount = Arr.count($aWords);
+    const $qCount = Arr.len($aWords);
 
     let $sResult = "";
     for (let $i = $qCount - 1; $i >= 0; $i = $i - 1) {

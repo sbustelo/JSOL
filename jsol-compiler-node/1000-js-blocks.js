@@ -1,0 +1,45 @@
+// @JSOL v0.2.97
+const $fProcessBlock = function ($saCode, $saKeyword, $bUnwrap) {
+  let $saResult = $saCode;
+	let $bContinue = true;
+	let $iOffset = 0;
+
+	while ($bContinue === true) {
+    const $iSearchLen = Str["len"]($saResult) - $iOffset;
+		if ($iSearchLen <= 0) {
+      $bContinue = false; continue;
+    }
+    const $saSearchArea = Str["sub"]($saResult,  $iOffset,  $iSearchLen);
+		const $iRelIdx = Str["indexOf"]($saSearchArea,  $saKeyword);
+		if ($iRelIdx === -1) {
+      $bContinue = false; continue;
+    }
+    const $iStartIdx = $iOffset + $iRelIdx;
+		const $saTail = Str["sub"]($saResult,  $iStartIdx,  Str["len"]($saResult) - $iStartIdx);
+		const $iRelOpenBrace = Str["indexOf"]($saTail,  "{");
+		
+		if ($iRelOpenBrace === -1) {
+      $bContinue = false; continue;
+    }
+    const $iOpenBrace = $iStartIdx + $iRelOpenBrace;
+
+		const $iCloseBrace = $iComp_FindCloseBrace($saResult, $iOpenBrace);
+		if ($iCloseBrace === -1) {
+      $bContinue = false; continue;
+    }
+    const $iEndIdx = $iComp_FindStmtEnd($saResult, $iCloseBrace + 1);
+		const $saBefore = Str["sub"]($saResult,  0,  $iStartIdx);
+		const $saAfter = Str["sub"]($saResult,  $iEndIdx,  Str["len"]($saResult) - $iEndIdx);
+
+		if ($bUnwrap === true) {
+      const $saInner = Str["sub"]($saResult,  $iOpenBrace + 1,  $iCloseBrace - $iOpenBrace - 1);
+			$saResult = $saBefore + "" + $saInner + "" + $saAfter;
+			$iOffset = Str["len"]($saBefore) + Str["len"]($saInner);
+    }
+    else {
+      $saResult = $saBefore + "" + $saAfter;
+			$iOffset = Str["len"]($saBefore);
+    }
+  }
+  return $saResult;
+};

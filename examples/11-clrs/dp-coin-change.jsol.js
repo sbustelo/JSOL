@@ -34,7 +34,7 @@ const $qDpCoinChange = function($aDenominations, $qAmount) {
     // "not yet reachable". $qAmount + 1 coins is always more than any
     // valid solution could ever need.
     const $qSentinel = $qAmount + 1;
-    const $qDenomCount = Arr.count($aDenominations);
+    const $qDenomCount = Arr.len($aDenominations);
 
     // Build the table with every entry unreachable, except 0 coins needed
     // to make amount 0.

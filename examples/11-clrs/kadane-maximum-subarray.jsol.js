@@ -30,7 +30,7 @@ const $nMaxSubarraySum = function($aValues) {
     let $nBestEndingHere = $aValues[0];
     let $nBestOverall = $aValues[0];
 
-    const $qLen = Arr.count($aValues);
+    const $qLen = Arr.len($aValues);
     for (let $i = 1; $i < $qLen; $i = $i + 1) {
         const $nExtend = $nBestEndingHere + $aValues[$i];
         const $nFresh = $aValues[$i];

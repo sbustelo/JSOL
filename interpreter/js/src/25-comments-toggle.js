@@ -1,5 +1,5 @@
 /* PATH: interpreter/js/src/25-comments-toggle.js */
-/* REEMPLAZAR ARCHIVO COMPLETO */
+/* V2.1.0 - Motor de colapso de brechas estructurales */
 
 document.addEventListener('DOMContentLoaded', () => {
     const paneGroup = document.querySelector('[data-j0-pane-group="repl-views"]');
@@ -25,9 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (codeEl.hasAttribute('data-gaps-cleaned')) return;
             codeEl.setAttribute('data-gaps-cleaned', 'true');
             
-            // Regex: Busca 1 salto de línea (\n), seguido de 1 o más saltos de línea adicionales (con o sin espacios)
-            // Reemplaza dejando el primer \n intacto (para que la línea baje) y envuelve el exceso en el span colapsable.
-            codeEl.innerHTML = codeEl.innerHTML.replace(/\n([ \t\r]*\n)+/g, '\n<span class="j0ui-blank-line">$1</span>');
+            let html = codeEl.innerHTML;
+            
+            // 1. Capturar el salto de línea y la indentación previa a un comentario.
+            // Esto ancla el espacio estructural al comentario para que, al ocultarse ambos,
+            // la siguiente instrucción suba y ocupe el lugar exacto.
+            html = html.replace(/(\n[ \t]*)(<span class="token [^>]*?comment[^>]*>)/g, '<span class="j0ui-comment-gap">$1</span>$2');
+            
+            // 2. Colapsar líneas en blanco múltiples generales que hayan quedado huérfanas
+            html = html.replace(/\n([ \t\r]*\n)+/g, '\n<span class="j0ui-blank-line">$1</span>');
+            
+            codeEl.innerHTML = html;
         });
     };
 
@@ -54,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (window.j0?.vfs) {
-        // Fallback inicial cambiado a 'false'
         const savedPref = window.j0.vfs.get('fs_repl_show_comments', 'false');
         const isVisible = savedPref === 'true';
         

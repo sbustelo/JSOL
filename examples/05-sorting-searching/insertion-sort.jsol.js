@@ -28,8 +28,8 @@
 const $aInsertionSort = function($aValues) {
     // Arr.slice over the full range makes a shallow copy: JSOL has no
     // dedicated Arr.copy, and the input array must not be mutated.
-    const $aSorted = Arr.slice($aValues, 0, Arr.count($aValues));
-    const $qLen = Arr.count($aSorted);
+    const $aSorted = Arr.slice($aValues, 0, Arr.len($aValues));
+    const $qLen = Arr.len($aSorted);
 
     for (let $i = 1; $i < $qLen; $i = $i + 1) {
         const $nKey = $aSorted[$i];

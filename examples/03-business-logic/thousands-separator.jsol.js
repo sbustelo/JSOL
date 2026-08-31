@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -32,22 +32,22 @@ const $sFormatThousands = function($nAmount, $sSeparator) {
         $nAbsAmount = -1 * $nAmount;
     }
 
-    // Round to 2 decimals first (same multiply-round-divide pattern as
-    // invoice-tax-rounding.jsol.js in 02-finance), then split into the
-    // integer part and the cents.
-    const $nRounded = Math.round($nAbsAmount * 100) / 100;
-    const $qIntegerPart = Math.floor($nRounded);
-    const $qCents = Math.round(($nRounded - $qIntegerPart) * 100);
+    // Round to 2 decimals first using Math.roundX (half away from zero), 
+    // then split into the integer part and the cents.
+    const $nRounded = Math.roundX($nAbsAmount * 100) / 100;
+    const $nIntegerPart = Math.floor($nRounded);
+    const $nCents = Math.roundX(($nRounded - $nIntegerPart) * 100);
 
-    const $sDigits = Cast.toStr($qIntegerPart);
-    const $iLen = Str.len($sDigits);
+    const $sDigits = Cast.toStr($nIntegerPart);
+    const $nLen = Str.len($sDigits);
 
     // Walk the integer digits right to left, inserting the separator every
     // 3 digits, building the result backwards.
     let $sReversedGrouped = "";
-    for (let $i = 0; $i < $iLen; $i = $i + 1) {
-        const $sChar = Str.sub($sDigits, $iLen - 1 - $i, 1);
-        if ($i > 0 && $i % 3 === 0) {
+    for (let $nIndex = 0; $nIndex < $nLen; $nIndex = $nIndex + 1) {
+        const $sChar = Str.sub($sDigits, $nLen - 1 - $nIndex, 1);
+        // JSOL 0.3.0: Uses Math.modX instead of % to check position boundaries.
+        if ($nIndex > 0 && Math.modX($nIndex, 3) === 0) {
             $sReversedGrouped = $sReversedGrouped + $sSeparator;
         }
         $sReversedGrouped = $sReversedGrouped + $sChar;
@@ -55,15 +55,15 @@ const $sFormatThousands = function($nAmount, $sSeparator) {
 
     // Reverse it back into normal left-to-right reading order.
     let $sGroupedInteger = "";
-    const $iGroupedLen = Str.len($sReversedGrouped);
-    for (let $i = 0; $i < $iGroupedLen; $i = $i + 1) {
-        $sGroupedInteger = $sGroupedInteger + Str.sub($sReversedGrouped, $iGroupedLen - 1 - $i, 1);
+    const $nGroupedLen = Str.len($sReversedGrouped);
+    for (let $nIndex = 0; $nIndex < $nGroupedLen; $nIndex = $nIndex + 1) {
+        $sGroupedInteger = $sGroupedInteger + Str.sub($sReversedGrouped, $nGroupedLen - 1 - $nIndex, 1);
     }
 
     // Cents always shown as 2 digits, zero-padded on the left if needed.
-    let $sCents = Cast.toStr($qCents);
-    if (Str.len($sCents) === 1) {
-        $sCents = "0" + $sCents;
+    let $saCentsStr = Cast.toStr($nCents);
+    if (Str.len($saCentsStr) === 1) {
+        $saCentsStr = "0" + $saCentsStr;
     }
 
     let $sSign = "";
@@ -71,5 +71,5 @@ const $sFormatThousands = function($nAmount, $sSeparator) {
         $sSign = "-";
     }
 
-    return $sSign + $sGroupedInteger + "." + $sCents;
+    return $sSign + $sGroupedInteger + "." + $saCentsStr;
 };

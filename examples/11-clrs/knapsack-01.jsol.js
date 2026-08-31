@@ -30,7 +30,7 @@
 */
 
 const $qKnapsack01 = function($aWeights, $aValues, $qCapacity) {
-    const $qItemCount = Arr.count($aWeights);
+    const $qItemCount = Arr.len($aWeights);
 
     // $aTable[i][w]: best value using only the first i items, capacity w.
     // Row 0 (no items) and column 0 (no capacity) are always 0.

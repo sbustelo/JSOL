@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -53,42 +53,43 @@ const $bValidateLuhn = function($sCardNumber) {
     // of Regex.*: this is a digit-processing problem, not a pattern-matching
     // one, and it keeps the example free of any regex engine parity concerns.
     // ASCII '0' = 48, '9' = 57 — anything outside that range is discarded.
-    const $iRawLen = Str.len($sCardNumber);
+    const $nRawLen = Str.len($sCardNumber);
     let $sCleanCard = "";
-    for (let $i = 0; $i < $iRawLen; $i = $i + 1) {
-        const $qCode = Str.char($sCardNumber, $i);
-        if ($qCode >= 48 && $qCode <= 57) {
-            $sCleanCard = $sCleanCard + Str.sub($sCardNumber, $i, 1);
+    for (let $nIndex = 0; $nIndex < $nRawLen; $nIndex = $nIndex + 1) {
+        const $nCode = Str.char($sCardNumber, $nIndex);
+        if ($nCode >= 48 && $nCode <= 57) {
+            $sCleanCard = $sCleanCard + Str.sub($sCardNumber, $nIndex, 1);
         }
     }
 
     // Step 2: length guard. Most major card brands use 13-19 digits.
-    const $iLen = Str.len($sCleanCard);
-    if ($iLen < 13 || $iLen > 19) {
+    const $nLen = Str.len($sCleanCard);
+    if ($nLen < 13 || $nLen > 19) {
         return false;
     }
 
     // Step 3: walk right to left. The rightmost digit is the check digit and
     // is never doubled; every second digit after it is.
-    let $qSum = 0;
+    let $nSum = 0;
     let $bAlternate = false;
 
-    for (let $i = $iLen - 1; $i >= 0; $i = $i - 1) {
-        let $qDigit = Cast.toInt(Str.sub($sCleanCard, $i, 1));
+    for (let $nIndex = $nLen - 1; $nIndex >= 0; $nIndex = $nIndex - 1) {
+        let $nDigit = Cast.toInt(Str.sub($sCleanCard, $nIndex, 1));
 
         if ($bAlternate === true) {
-            $qDigit = $qDigit * 2;
+            $nDigit = $nDigit * 2;
             // If doubling produces a two-digit number, sum its digits
             // (equivalent to subtracting 9): e.g. 16 -> 1+6 = 7 = 16-9.
-            if ($qDigit > 9) {
-                $qDigit = $qDigit - 9;
+            if ($nDigit > 9) {
+                $nDigit = $nDigit - 9;
             }
         }
 
-        $qSum = $qSum + $qDigit;
+        $nSum = $nSum + $nDigit;
         $bAlternate = !$bAlternate;
     }
 
     // Step 4: valid Luhn numbers make the total sum a multiple of 10.
-    return ($qSum % 10) === 0;
+    // JSOL 0.3.0: Uses Math.modX to evaluate the modulus deterministically.
+    return Math.modX($nSum, 10) === 0;
 };

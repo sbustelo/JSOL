@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -28,12 +28,12 @@
 
 const $bValidateCuit = function($sCuit) {
     // Step 1: keep only ASCII digits.
-    const $iRawLen = Str.len($sCuit);
+    const $nRawLen = Str.len($sCuit);
     let $sDigits = "";
-    for (let $i = 0; $i < $iRawLen; $i = $i + 1) {
-        const $qCode = Str.char($sCuit, $i);
-        if ($qCode >= 48 && $qCode <= 57) {
-            $sDigits = $sDigits + Str.sub($sCuit, $i, 1);
+    for (let $nIndex = 0; $nIndex < $nRawLen; $nIndex = $nIndex + 1) {
+        const $nCode = Str.char($sCuit, $nIndex);
+        if ($nCode >= 48 && $nCode <= 57) {
+            $sDigits = $sDigits + Str.sub($sCuit, $nIndex, 1);
         }
     }
 
@@ -43,23 +43,24 @@ const $bValidateCuit = function($sCuit) {
 
     // Step 2: weighted sum over the first 10 digits.
     const $aWeights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
-    let $qSum = 0;
-    for (let $i = 0; $i < 10; $i = $i + 1) {
-        const $qDigit = Cast.toInt(Str.sub($sDigits, $i, 1));
-        $qSum = $qSum + ($qDigit * $aWeights[$i]);
+    let $nSum = 0;
+    for (let $nIndex = 0; $nIndex < 10; $nIndex = $nIndex + 1) {
+        const $nDigit = Cast.toInt(Str.sub($sDigits, $nIndex, 1));
+        $nSum = $nSum + ($nDigit * $aWeights[$nIndex]);
     }
 
     // Step 3: derive the expected check digit from the remainder.
-    const $qRemainder = $qSum % 11;
-    let $qExpectedCheck = 11 - $qRemainder;
-    if ($qExpectedCheck === 11) {
-        $qExpectedCheck = 0;
+    // JSOL 0.3.0: Uses Math.modX for deterministic mod-11 calculation across all targets.
+    const $nRemainder = Math.modX($nSum, 11);
+    let $nExpectedCheck = 11 - $nRemainder;
+    if ($nExpectedCheck === 11) {
+        $nExpectedCheck = 0;
     }
-    if ($qExpectedCheck === 10) {
+    if ($nExpectedCheck === 10) {
         // No valid CUIT exists for this base number.
         return false;
     }
 
-    const $qActualCheck = Cast.toInt(Str.sub($sDigits, 10, 1));
-    return $qActualCheck === $qExpectedCheck;
+    const $nActualCheck = Cast.toInt(Str.sub($sDigits, 10, 1));
+    return $nActualCheck === $nExpectedCheck;
 };

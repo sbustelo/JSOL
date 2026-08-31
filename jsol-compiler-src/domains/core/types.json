@@ -4,6 +4,8 @@
     "q": ["q", "qty", "quantity"],
     "n": ["n", "num", "number", "float"],
     "s": ["s", "str", "string", "text"],
+    "su": ["su", "sutf", "unicode"],
+    "sa": ["sa", "sascii", "ascii"],
     "a": ["a", "arr", "array", "list"],
     "m": ["m", "map", "dict", "obj"],
     "b": ["b", "bool", "boolean", "is", "has"],

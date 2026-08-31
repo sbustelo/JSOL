@@ -1,41 +1,42 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
- Checks whether $qN is a perfect number: a positive integer equal to the
+ Checks whether $nN is a perfect number: a positive integer equal to the
  sum of its own proper divisors (every divisor except itself). 6 is the
  smallest example: its proper divisors are 1, 2, and 3, and 1+2+3=6.
  Studied since Euclid's Elements, still a standard example for teaching
  divisor enumeration.
 
-@param {integer} $qN - Positive integer to test.
-@returns {boolean} - True if $qN is a perfect number.
+@param {number} $nN - Positive integer to test.
+@returns {boolean} - True if $nN is a perfect number.
 */
 
 /**
  @contract
  {
    "cases": [
-     { "$qN": 6 },
-     { "$qN": 28 },
-     { "$qN": 12 }
+     { "$nN": 6 },
+     { "$nN": 28 },
+     { "$nN": 12 }
    ]
  }
 */
 
-const $bIsPerfectNumber = function($qN) {
-    if ($qN < 2) {
+const $bIsPerfectNumber = function($nN) {
+    if ($nN < 2) {
         return false;
     }
 
-    // Only divisors up to $qN / 2 need checking: nothing strictly between
-    // $qN/2 and $qN can divide $qN evenly other than $qN itself.
-    let $qSumOfDivisors = 0;
-    for (let $qDivisor = 1; $qDivisor <= $qN / 2; $qDivisor = $qDivisor + 1) {
-        if ($qN % $qDivisor === 0) {
-            $qSumOfDivisors = $qSumOfDivisors + $qDivisor;
+    // Only divisors up to $nN / 2 need checking: nothing strictly between
+    // $nN/2 and $nN can divide $nN evenly other than $nN itself.
+    let $nSumOfDivisors = 0;
+    for (let $nDivisor = 1; $nDivisor <= $nN / 2; $nDivisor = $nDivisor + 1) {
+        // JSOL 0.3.0: Replaced % with Math.modX.
+        if (Math.modX($nN, $nDivisor) === 0) {
+            $nSumOfDivisors = $nSumOfDivisors + $nDivisor;
         }
     }
 
-    return $qSumOfDivisors === $qN;
+    return $nSumOfDivisors === $nN;
 };

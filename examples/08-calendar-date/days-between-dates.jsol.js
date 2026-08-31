@@ -1,4 +1,4 @@
-// @JSOL v0.2.94
+// @JSOL v0.2.97
 
 /**
  @description
@@ -9,17 +9,17 @@
  current year from a fixed month-length table. Reducing both dates to a
  single linear count turns "days between" into a simple subtraction,
  instead of walking month by month.
-  This file defines a helper function ($qDaysSinceEpoch) alongside the
- main one: the @contract cases match $qDaysBetweenDates by parameter
+  This file defines a helper function ($nDaysSinceEpoch) alongside the
+ main one: the @contract cases match $nDaysBetweenDates by parameter
  name, since that is the function meant to be run against test inputs.
 
-@param {integer} $qYear1 - Year of the first date.
-@param {integer} $qMonth1 - Month of the first date, 1-12.
-@param {integer} $qDay1 - Day of the first date.
-@param {integer} $qYear2 - Year of the second date.
-@param {integer} $qMonth2 - Month of the second date, 1-12.
-@param {integer} $qDay2 - Day of the second date.
-@returns {integer} - Days from the first date to the second (negative
+@param {number} $nYear1 - Year of the first date.
+@param {number} $nMonth1 - Month of the first date, 1-12.
+@param {number} $nDay1 - Day of the first date.
+@param {number} $nYear2 - Year of the second date.
+@param {number} $nMonth2 - Month of the second date, 1-12.
+@param {number} $nDay2 - Day of the second date.
+@returns {number} - Days from the first date to the second (negative
    if the second date comes before the first).
 */
 
@@ -27,39 +27,39 @@
  @contract
  {
    "cases": [
-     { "$qYear1": 2026, "$qMonth1": 1, "$qDay1": 1, "$qYear2": 2026, "$qMonth2": 8, "$qDay2": 13 },
-     { "$qYear1": 2024, "$qMonth1": 2, "$qDay1": 28, "$qYear2": 2024, "$qMonth2": 3, "$qDay2": 1 }
+     { "$nYear1": 2026, "$nMonth1": 1, "$nDay1": 1, "$nYear2": 2026, "$nMonth2": 8, "$nDay2": 13 },
+     { "$nYear1": 2024, "$nMonth1": 2, "$nDay1": 28, "$nYear2": 2024, "$nMonth2": 3, "$nDay2": 1 }
    ]
  }
 */
 
-const $qDaysSinceEpoch = function($qYear, $qMonth, $qDay) {
-    // Full years elapsed before $qYear, counting the leap days those years
+const $nDaysSinceEpoch = function($nYear, $nMonth, $nDay) {
+    // Full years elapsed before $nYear, counting the leap days those years
     // contributed (same rule as leap-year.jsol.js, expressed with counts
     // instead of a boolean).
-    const $qY = $qYear - 1;
-    const $qDaysBeforeYear = (365 * $qY) + Math.floor($qY / 4) - Math.floor($qY / 100) + Math.floor($qY / 400);
+    const $nY = $nYear - 1;
+    const $nDaysBeforeYear = (365 * $nY) + Math.floor($nY / 4) - Math.floor($nY / 100) + Math.floor($nY / 400);
 
     // Cumulative days before each month, in a non-leap year.
     const $aCumulativeDays = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-    let $qDaysBeforeMonth = $aCumulativeDays[$qMonth - 1];
+    let $nDaysBeforeMonth = $aCumulativeDays[$nMonth - 1];
 
-    // If $qYear itself is a leap year and the date is past February, the
-    // extra day (Feb 29) falls before this month and must be added.
-    const $bLeap = ($qYear % 400 === 0) || (($qYear % 4 === 0) && ($qYear % 100 !== 0));
-    if ($bLeap === true && $qMonth > 2) {
-        $qDaysBeforeMonth = $qDaysBeforeMonth + 1;
+    // JSOL 0.3.0: Uses Math.modX for leap year evaluation.
+    const $bLeap = (Math.modX($nYear, 400) === 0) || ((Math.modX($nYear, 4) === 0) && (Math.modX($nYear, 100) !== 0));
+    if ($bLeap === true && $nMonth > 2) {
+        $nDaysBeforeMonth = $nDaysBeforeMonth + 1;
     }
 
-    return $qDaysBeforeYear + $qDaysBeforeMonth + $qDay;
+    return $nDaysBeforeYear + $nDaysBeforeMonth + $nDay;
 };
 
-const $qDaysBetweenDates = function($qYear1, $qMonth1, $qDay1, $qYear2, $qMonth2, $qDay2) {
-    JSOL.use($qDaysSinceEpoch);
-	// JSOL.use: Injects external dependencies into the closure's isolated scope, required for PHP target compatibility.
-	
-    const $qDays1 = $qDaysSinceEpoch($qYear1, $qMonth1, $qDay1);
-    const $qDays2 = $qDaysSinceEpoch($qYear2, $qMonth2, $qDay2);
+const $nDaysBetweenDates = function($nYear1, $nMonth1, $nDay1, $nYear2, $nMonth2, $nDay2) {
+    // JSOL 0.3.0 Note: JSOL.use() is explicitly retained to bind scope dependencies 
+    // for closure isolation in host target environments.
+    JSOL.use($nDaysSinceEpoch);
 
-    return $qDays2 - $qDays1;
+    const $nDays1 = $nDaysSinceEpoch($nYear1, $nMonth1, $nDay1);
+    const $nDays2 = $nDaysSinceEpoch($nYear2, $nMonth2, $nDay2);
+
+    return $nDays2 - $nDays1;
 };

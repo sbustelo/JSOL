@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -23,12 +23,12 @@
 
 const $bValidateIsbn13 = function($sIsbn) {
     // Step 1: keep only ASCII digits (same manual walk as luhn-validator.jsol.js).
-    const $iRawLen = Str.len($sIsbn);
+    const $nRawLen = Str.len($sIsbn);
     let $sDigits = "";
-    for (let $i = 0; $i < $iRawLen; $i = $i + 1) {
-        const $qCode = Str.char($sIsbn, $i);
-        if ($qCode >= 48 && $qCode <= 57) {
-            $sDigits = $sDigits + Str.sub($sIsbn, $i, 1);
+    for (let $nIndex = 0; $nIndex < $nRawLen; $nIndex = $nIndex + 1) {
+        const $nCode = Str.char($sIsbn, $nIndex);
+        if ($nCode >= 48 && $nCode <= 57) {
+            $sDigits = $sDigits + Str.sub($sIsbn, $nIndex, 1);
         }
     }
 
@@ -37,18 +37,20 @@ const $bValidateIsbn13 = function($sIsbn) {
     }
 
     // Step 2: weighted sum over the first 12 digits, alternating 1 and 3.
-    let $qSum = 0;
-    for (let $i = 0; $i < 12; $i = $i + 1) {
-        const $qDigit = Cast.toInt(Str.sub($sDigits, $i, 1));
-        let $qWeight = 1;
-        if ($i % 2 === 1) {
-            $qWeight = 3;
+    let $nSum = 0;
+    for (let $nIndex = 0; $nIndex < 12; $nIndex = $nIndex + 1) {
+        const $nDigit = Cast.toInt(Str.sub($sDigits, $nIndex, 1));
+        let $nWeight = 1;
+        // JSOL 0.3.0: Replaced % 2 with Math.modX.
+        if (Math.modX($nIndex, 2) === 1) {
+            $nWeight = 3;
         }
-        $qSum = $qSum + ($qDigit * $qWeight);
+        $nSum = $nSum + ($nDigit * $nWeight);
     }
 
     // Step 3: the check digit (13th digit) must bring the total to a
     // multiple of 10.
-    const $qCheckDigit = Cast.toInt(Str.sub($sDigits, 12, 1));
-    return ($qSum + $qCheckDigit) % 10 === 0;
+    const $nCheckDigit = Cast.toInt(Str.sub($sDigits, 12, 1));
+    // JSOL 0.3.0: Replaced % 10 with Math.modX.
+    return Math.modX(($nSum + $nCheckDigit), 10) === 0;
 };

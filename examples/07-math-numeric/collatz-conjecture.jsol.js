@@ -1,40 +1,41 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
  Counts how many steps the Collatz sequence takes to reach 1, starting
- from $qN: if the current value is even, divide it by 2; if odd,
+ from $nN: if the current value is even, divide it by 2; if odd,
  multiply by 3 and add 1; repeat until it reaches 1. Conjectured, but
  never proven, to always reach 1 for any positive starting value. This
  simple rule produces sequences of wildly unpredictable length, which is
  exactly what makes it a famous open problem in mathematics.
 
-@param {integer} $qN - Positive integer to start from.
-@returns {integer} - Number of steps taken to reach 1.
+@param {number} $nN - Positive integer to start from.
+@returns {number} - Number of steps taken to reach 1.
 */
 
 /**
  @contract
  {
    "cases": [
-     { "$qN": 27 },
-     { "$qN": 1 }
+     { "$nN": 27 },
+     { "$nN": 1 }
    ]
  }
 */
 
-const $qCollatzSteps = function($qN) {
-    let $qCurrent = $qN;
-    let $qSteps = 0;
+const $nCollatzSteps = function($nN) {
+    let $nCurrent = $nN;
+    let $nSteps = 0;
 
-    while ($qCurrent !== 1) {
-        if ($qCurrent % 2 === 0) {
-            $qCurrent = $qCurrent / 2;
+    while ($nCurrent !== 1) {
+        // JSOL 0.3.0: Uses Math.modX instead of % 2.
+        if (Math.modX($nCurrent, 2) === 0) {
+            $nCurrent = $nCurrent / 2;
         } else {
-            $qCurrent = (3 * $qCurrent) + 1;
+            $nCurrent = (3 * $nCurrent) + 1;
         }
-        $qSteps = $qSteps + 1;
+        $nSteps = $nSteps + 1;
     }
 
-    return $qSteps;
+    return $nSteps;
 };

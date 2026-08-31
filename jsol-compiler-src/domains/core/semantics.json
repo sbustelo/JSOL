@@ -1,0 +1,108 @@
+{
+  "version": "0.2.97",
+  "families": {
+    "numeric": {
+      "q": { "dispatch": "static", "rank": 10, "bits": 64, "description": "Quantity / Integer 64-bit" },
+      "ni32": { "dispatch": "static", "rank": 15, "bits": 32, "description": "Integer 32-bit" },
+      "nf64": { "dispatch": "static", "rank": 40, "bits": 64, "description": "Float 64-bit" },
+      "n": { "dispatch": "dynamic", "rank": null, "bits": 64, "description": "Generic Number (Incertidumbre)" }
+    },
+    "string": {
+      "sa": { "dispatch": "static", "rank": 10, "encoding": "ascii", "description": "ASCII String" },
+      "su": { "dispatch": "static", "rank": 20, "encoding": "utf8", "description": "Unicode String" },
+      "s": { "dispatch": "dynamic", "rank": null, "encoding": "unknown", "description": "Generic String (Incertidumbre)" }
+    },
+    "array": {
+      "a": { "dispatch": "static", "rank": 10, "description": "Sequential Array" }
+    },
+    "map": {
+      "m": { "dispatch": "static", "rank": 10, "description": "Hash Map" }
+    },
+    "boolean": {
+      "b": { "dispatch": "static", "rank": 10, "description": "Boolean" }
+    }
+  },
+  "function_outputs": {
+    "Math.sum": "inherit_dominant",
+    "Math.sub": "inherit_dominant",
+    "Math.mul": "inherit_dominant",
+    "Math.div": "n",
+    "Math.idiv": "q",
+    "Math.modX": "q",
+    "Math.abs": "inherit_dominant",
+    "Math.floor": "q",
+    "Math.ceil": "q",
+    "Math.trunc": "q",
+    "Str.concat": "inherit_dominant",
+    "Str.sub": "s",
+    "Str.len": "q",
+    "Str.indexOf": "i",
+    "Str.char": "q",
+    "Str.fromChar": "s",
+    "Arr.len": "q",
+    "Arr.count": "q",
+    "Arr.indexOf": "i",
+    "Map.count": "q"
+  },
+  "coercions": {
+    "n": {
+      "q": {
+        "adapter": "TRUNC_CHECKED",
+        "mode": "auto",
+        "overflow": "error",
+        "nan": "error",
+        "infinity": "error"
+      },
+      "ni32": {
+        "adapter": "TRUNC_CHECKED",
+        "mode": "auto",
+        "overflow": "error",
+        "nan": "error",
+        "infinity": "error"
+      },
+      "s": {
+        "adapter": "Cast.toStr",
+        "mode": "explicit_only"
+      }
+    },
+    "q": {
+      "n": {
+        "adapter": "implicit",
+        "mode": "auto"
+      },
+      "s": {
+        "adapter": "Cast.toStr",
+        "mode": "explicit_only"
+      }
+    },
+    "s": {
+      "n": {
+        "adapter": "Cast.toFloat",
+        "mode": "explicit_only"
+      },
+      "q": {
+        "adapter": "Cast.toInt",
+        "mode": "explicit_only"
+      }
+    },
+    "su": {
+      "sa": {
+        "mode": "forbidden"
+      }
+    },
+    "sa": {
+      "su": {
+        "adapter": "implicit",
+        "mode": "auto"
+      }
+    }
+  },
+  "mathConventions": {
+    "division": {
+      "Math.div": { "type": "real_float", "returns": "n" },
+      "Math.idiv": { "type": "integer_truncated", "rounding": "trunc_zero", "returns": "q" },
+      "Math.modX": { "type": "excel_modulo", "formula": "a - b * floor(a / b)", "sign": "divisor_sign", "returns": "q" },
+      "Math.divmod": { "type": "structured_map", "returns": "m", "fields": { "quotient": "q", "remainder": "q" } }
+    }
+  }
+}

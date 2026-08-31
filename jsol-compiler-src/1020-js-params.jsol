@@ -1,0 +1,58 @@
+// @JSOL v0.2.97
+const $fProcessParams = function ($saCode) {
+	JSOL.use($iComp_FindCloseParen);
+	let $saResult = $saCode;
+	let $bContinue = true;
+	let $iOffset = 0;
+
+	while ($bContinue === true) {
+		const $iSearchLen = Str.len($saResult) - $iOffset;
+		if ($iSearchLen <= 0) { $bContinue = false; continue; }
+
+		const $saSearchArea = Str.sub($saResult, $iOffset, $iSearchLen);
+		const $iRelIdx = Str.indexOf($saSearchArea, "function");
+		if ($iRelIdx === -1) { $bContinue = false; continue; }
+
+		const $iStartIdx = $iOffset + $iRelIdx;
+		let $iParenScan = $iStartIdx + 8;
+		const $iRLen = Str.len($saResult);
+
+		while ($iParenScan < $iRLen && (Str.sub($saResult, $iParenScan, 1) === " " || Str.sub($saResult, $iParenScan, 1) === "\t" || Str.sub($saResult, $iParenScan, 1) === "\n" || Str.sub($saResult, $iParenScan, 1) === "\r")) {
+			$iParenScan = $iParenScan + 1;
+		}
+
+		if ($iParenScan >= $iRLen || Str.sub($saResult, $iParenScan, 1) !== "(") {
+			$iOffset = $iStartIdx + 8;
+			continue;
+		}
+
+		const $iCloseParen = $iComp_FindCloseParen($saResult, $iParenScan);
+		if ($iCloseParen === -1) { $bContinue = false; continue; }
+
+		const $saRawParams = Str.sub($saResult, $iParenScan + 1, $iCloseParen - $iParenScan - 1);
+		const $saTrimmedParams = Str.trim($saRawParams);
+		let $saTypedParams = "";
+
+		if (Str.len($saTrimmedParams) > 0) {
+			const $aParts = Str.split($saTrimmedParams, ",");
+			const $iPartsCount = Arr.len($aParts);
+			let $aTypedParts = [];
+			for (let $iP = 0; $iP < $iPartsCount; $iP = $iP + 1) {
+				const $saRawPart = Str.trim($aParts[$iP]);
+				let $saTypedPart = $saRawPart;
+				if (Str.len($saRawPart) > 0 && Str.indexOf($saRawPart, ":") === -1) {
+					$saTypedPart = $saRawPart + ": any";
+				}
+				Arr.push($aTypedParts, $saTypedPart);
+			}
+			$saTypedParams = Arr.join($aTypedParts, ", ");
+		}
+
+		const $saBefore = Str.sub($saResult, 0, $iParenScan + 1);
+		const $saAfter = Str.sub($saResult, $iCloseParen, Str.len($saResult) - $iCloseParen);
+
+		$saResult = $saBefore + "" + $saTypedParams + "" + $saAfter;
+		$iOffset = $iParenScan + 1 + Str.len($saTypedParams) + 1;
+	}
+	return $saResult;
+};

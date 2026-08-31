@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -37,12 +37,12 @@
 */
 
 const $mRgbToHsb = function($qR, $qG, $qB) {
-    const $nR = $qR / 255;
-    const $nG = $qG / 255;
-    const $nB = $qB / 255;
+    const $nRedNorm = $qR / 255;
+    const $nGreenNorm = $qG / 255;
+    const $nBlueNorm = $qB / 255;
 
-    const $nMax = Math.max($nR, Math.max($nG, $nB));
-    const $nMin = Math.min($nR, Math.min($nG, $nB));
+    const $nMax = Math.max($nRedNorm, Math.max($nGreenNorm, $nBlueNorm));
+    const $nMin = Math.min($nRedNorm, Math.min($nGreenNorm, $nBlueNorm));
     const $nDelta = $nMax - $nMin;
     const $nBrightness = $nMax;
 
@@ -53,12 +53,12 @@ const $mRgbToHsb = function($qR, $qG, $qB) {
 
     let $nHue = 0;
     if ($nDelta > 0) {
-        if ($nMax === $nR) {
-            $nHue = 60 * (($nG - $nB) / $nDelta);
-        } else if ($nMax === $nG) {
-            $nHue = 60 * ((($nB - $nR) / $nDelta) + 2);
+        if ($nMax === $nRedNorm) {
+            $nHue = 60 * (($nGreenNorm - $nBlueNorm) / $nDelta);
+        } else if ($nMax === $nGreenNorm) {
+            $nHue = 60 * ((($nBlueNorm - $nRedNorm) / $nDelta) + 2);
         } else {
-            $nHue = 60 * ((($nR - $nG) / $nDelta) + 4);
+            $nHue = 60 * ((($nRedNorm - $nGreenNorm) / $nDelta) + 4);
         }
     }
     if ($nHue < 0) {

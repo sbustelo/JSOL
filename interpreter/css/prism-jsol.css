@@ -1,5 +1,7 @@
-/* PATH: interpreter/css/prism-jsol.css */
-/* NUEVO ARCHIVO: Motor de color y conmutación semántica de comentarios */
+/* =============================================================================
+   prism-jsol.css
+   Motor de color y conmutación semántica de comentarios para JSOL REPL.
+   ============================================================================= */
 
 /* 1. Mapeo de tokens de PrismJS a las variables nativas del Theme de JSOL */
 code[class*="language-"], pre[class*="language-"] {
@@ -8,9 +10,9 @@ code[class*="language-"], pre[class*="language-"] {
     font-family: monospace;
     direction: ltr;
     text-align: left;
-    white-space: pre;
-    word-spacing: normal;
-    word-break: normal;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-wrap: anywhere;
     line-height: 1.5;
     tab-size: 4;
     hyphens: none;
@@ -24,13 +26,8 @@ code[class*="language-"], pre[class*="language-"] {
     font-style: italic;
 }
 
-.token.punctuation {
-    color: var(--jsol-text-muted);
-}
-
-.token.namespace {
-    opacity: .7;
-}
+.token.punctuation { color: var(--jsol-text-muted); }
+.token.namespace { opacity: .7; }
 
 .token.property,
 .token.tag,
@@ -61,138 +58,62 @@ code[class*="language-"], pre[class*="language-"] {
 
 .token.atrule,
 .token.attr-value,
-.token.keyword {
-    color: var(--jsol-accent);
-}
-
+.token.keyword { color: var(--jsol-accent); }
 .token.function,
-.token.class-name {
-    color: var(--jsol-accent-input, #e6a200);
-}
-
+.token.class-name { color: var(--jsol-accent-input, #e6a200); }
 .token.regex,
 .token.important,
-.token.variable {
-    color: var(--jsol-accent);
-}
+.token.variable { color: var(--jsol-accent); }
 
-/* 2. REGLA MAESTRA DE OCULTAMIENTO DE COMENTARIOS */
-/* Anclada por especificidad estructural pura (Sin !important) */
-[data-j0-pane-group="repl-views"][data-comments-visible="false"] code[class*="language-"] .token.comment {
+
+/* 2. REGLA MAESTRA DE OCULTAMIENTO DE COMENTARIOS Y ESPACIOS MUERTOS */
+[data-j0-pane-group="repl-views"][data-comments-visible="false"] code[class*="language-"] .token.comment,
+[data-j0-pane-group="repl-views"][data-comments-visible="false"] code[class*="language-"] .j0ui-comment-gap,
+[data-j0-pane-group="repl-views"][data-comments-visible="false"] code[class*="language-"] .j0ui-blank-line {
     display: none;
 }
 
-/* 3. Comportamiento UI de los botones flotantes */
-.j0ui-code-pane-wrapper .j0ui-code-actions-floating {
+
+/* 3. Ajustes de UI para Botones Flotantes y Contenedor */
+[data-j0-pane-group="repl-views"] .j0ui-code-pane-wrapper {
+    position: relative;
+    margin-top: 0;
+}
+
+.j0ui-code-actions-floating {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
     opacity: 0.2;
     transition: opacity 0.2s ease;
 }
 
-.j0ui-code-pane-wrapper:hover .j0ui-code-actions-floating,
-.j0ui-code-pane-wrapper .j0ui-code-actions-floating:focus-within {
+[data-j0-pane-group="repl-views"] .j0ui-code-pane-wrapper:hover .j0ui-code-actions-floating,
+[data-j0-pane-group="repl-views"] .j0ui-code-pane-wrapper .j0ui-code-actions-floating:focus-within {
     opacity: 1;
 }
 
-
-
-/* PATH: interpreter/css/prism-jsol.css */
-/* AÑADIR EXCLUSIVAMENTE AL FINAL DEL ARCHIVO */
-
-/* 4. Colapso estructural de saltos de línea huérfanos generados por Prism */
-[data-j0-pane-group="repl-views"][data-comments-visible="false"] code[class*="language-"] .j0ui-comment-gap {
-    display: none;
+[data-j0-pane-group="repl-views"] pre.jsol-repl-source-code {
+    margin-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    padding-top: 3.5rem; 
+    border-top: none; 
 }
 
 
-/* PATH: interpreter/css/prism-jsol.css */
-/* AÑADIR ESTAS LÍNEAS AL FINAL DEL ARCHIVO PARA CORREGIR WRAP, LÍNEAS VACÍAS Y POSICIÓN DE BOTONES */
-
-/* Forzar envoltura suave para evitar scroll horizontal (Soft Wrap) */
-code[class*="language-"], pre[class*="language-"] {
-    white-space: pre-wrap !important;
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
-}
-
-/* Ocultar saltos de línea múltiples envueltos por JS al apagar comentarios */
-[data-comments-visible="false"] .j0ui-blank-line {
-    display: none !important;
-}
-
-/* Forzar anclaje absoluto estricto de la botonera dentro del panel y dar padding al código */
-.j0ui-code-pane-wrapper {
-    position: relative !important;
-}
-
-.j0ui-code-actions-floating {
-    position: absolute !important;
-    top: 12px !important;
-    right: 12px !important;
-    z-index: 10 !important;
-    display: flex !important;
-    gap: 8px !important;
-}
-
-pre.jsol-repl-source-code {
-    padding-top: 3.5rem !important; /* Espacio para que la botonera no pise el código */
-}
-
-
-/* PATH: interpreter/css/prism-jsol.css */
-/* AÑADIR EXCLUSIVAMENTE AL FINAL DEL ARCHIVO */
-
-/* Forzar envoltura suave para evitar scroll horizontal (Soft Wrap) */
-code[class*="language-"], pre[class*="language-"] {
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-}
-
-/* Ocultar saltos de línea múltiples envueltos por JS al apagar comentarios */
-[data-comments-visible="false"] code[class*="language-"] .j0ui-blank-line {
-    display: none !important;
-}
-
-
-
-/* PATH: interpreter/css/prism-jsol.css */
-/* AÑADIR EXCLUSIVAMENTE AL FINAL DEL ARCHIVO */
-
-/* --- CORRECCIÓN ESTRUCTURAL DE GAPS Y MÁRGENES (J0UI OVERRIDES) --- */
-
-/* 1. Planchar los paddings inyectados por j0ui base */
+/* 4. Overrides de Espaciado Estructural (j0ui Base) */
 [data-j0-pane-group="repl-views"] .j0ui-tab-pane,
 [data-j0-pane-group="repl-views"] [data-j0-panel] {
-    padding: 0 !important;
-    gap: 0 !important;
+    padding: 0;
+    gap: 0;
 }
 
-/* 2. Planchar márgenes del wrapper para pegar el código a la solapa */
-.j0ui-code-pane-wrapper {
-    margin-top: 0 !important;
-}
-
-/* 3. Ajuste de la caja de código */
-pre.jsol-repl-source-code {
-    margin-top: 0 !important;
-    border-top-left-radius: 0 !important;
-    border-top-right-radius: 0 !important;
-    padding-top: 2.75rem !important; /* Espacio reducido y exacto para la botonera flotante */
-    border-top: none !important; /* Evita doble borde con la fila de solapas */
-}
-
-
-/* PATH: interpreter/css/prism-jsol.css */
-/* AÑADIR EXCLUSIVAMENTE AL FINAL DEL ARCHIVO */
-
-/* Mapeo de variables puente para reparar componentes base de j0ui en el REPL (Ej: Gradientes del botón Overflow) */
 .jsol-repl-container {
     --j0ui-bg-panel: var(--jsol-surface);
     --j0ui-bg-dropdown: var(--jsol-surface);
     --j0ui-border-subtle: var(--jsol-border);
-}
-
-/* Ocultar saltos de línea envueltos dinámicamente de forma infalible */
-[data-comments-visible="false"] .j0ui-comment-gap {
-    display: none !important;
 }

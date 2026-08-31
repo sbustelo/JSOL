@@ -1,0 +1,125 @@
+// @JSOL v0.2.97 - Self-Hosted Engine Orchestrator
+
+const $mResolveWrappers = function($mTargetsConfig, $saCliTargetFlag, $saCliPrefixOverride, $saCliSuffixOverride) {
+    if (Str.len($saCliPrefixOverride) > 0 || Str.len($saCliSuffixOverride) > 0) {
+        return Map.create("prefix", $saCliPrefixOverride, "suffix", $saCliSuffixOverride);
+    }
+    if (Str.len($saCliTargetFlag) > 0) {
+        if ($mTargetsConfig["targets"] !== null && $mTargetsConfig["targets"][$saCliTargetFlag] !== null) {
+            const $mTargetObj = $mTargetsConfig["targets"][$saCliTargetFlag];
+            return Map.create("prefix", $mTargetObj["prefix"], "suffix", $mTargetObj["suffix"]);
+        }
+    }
+    const $saDefaultPointer = $mTargetsConfig["default"];
+    if ($saDefaultPointer !== null && Str.len($saDefaultPointer) > 0) {
+        if ($mTargetsConfig["targets"] !== null && $mTargetsConfig["targets"][$saDefaultPointer] !== null) {
+            const $mDefaultObj = $mTargetsConfig["targets"][$saDefaultPointer];
+            return Map.create("prefix", $mDefaultObj["prefix"], "suffix", $mDefaultObj["suffix"]);
+        }
+    }
+    return Map.create("prefix", "", "suffix", "");
+};
+
+const $fCompileBackendJS = function($saMaskedCode, $saPrefix, $saSuffix, $mSSOTRules, $aTokens) {
+    JSOL.use($sCompileToJS, $saIndentCode);
+    const $saCompiled = $sCompileToJS($saMaskedCode, $saPrefix, $saSuffix, $mSSOTRules);
+    const $saIndented = $saIndentCode($saCompiled, "  ");
+    return Map.create("code", $saIndented, "tokens", $aTokens);
+};
+
+const $fCompileBackendPHP = function($saMaskedCode, $saPrefix, $saSuffix, $mSSOTRules, $aTokens) {
+    JSOL.use($sCompileToPHP, $saIndentCode);
+    const $saCompiled = $sCompileToPHP($saMaskedCode, $saPrefix, $saSuffix, $mSSOTRules);
+    const $saIndented = $saIndentCode($saCompiled, "  ");
+    return Map.create("code", $saIndented, "tokens", $aTokens);
+};
+
+const $fCompileBackendTS = function($saMaskedCode, $saPrefix, $saSuffix, $mSSOTRules, $aTokens) {
+    JSOL.use($sCompileToJS, $saIndentCode);
+    const $saCompiled = $sCompileToJS($saMaskedCode, $saPrefix, $saSuffix, $mSSOTRules);
+    const $saIndented = $saIndentCode($saCompiled, "  ");
+    return Map.create("code", $saIndented, "tokens", $aTokens);
+};
+
+const $fCompileBackendPython = function($saMaskedCode, $saPrefix, $saSuffix, $mSSOTRules, $aTokens) {
+    JSOL.use($sCompileToJS, $saConvertControlFlowToPython, $saConvertTernaries, $saSanitizePythonIdentifiers, $saIndentCode, $saStripPythonBraces, $aTranslateCommentTokensToPython);
+    const $saCompiled = $sCompileToJS($saMaskedCode, $saPrefix, $saSuffix, $mSSOTRules);
+    const $saControlFlow = $saConvertControlFlowToPython($saCompiled);
+    const $saTernary = $saConvertTernaries($saControlFlow);
+    const $saSanitized = $saSanitizePythonIdentifiers($saTernary);
+    const $saIndented = $saIndentCode($saSanitized, "  ");
+    const $saStripped = $saStripPythonBraces($saIndented, "  ");
+    const $aPyTokens = $aTranslateCommentTokensToPython($aTokens);
+    return Map.create("code", $saStripped, "tokens", $aPyTokens);
+};
+
+const $mBackendRegistry = Map.create(
+    "js", $fCompileBackendJS,
+    "php", $fCompileBackendPHP,
+    "ts", $fCompileBackendTS,
+    "python", $fCompileBackendPython
+);
+
+const $mExecuteCompilationPipeline = function($saSourceCode, $mTargetsConfig, $mCliOptions, $mSSOT) {
+    JSOL.use($mMaskSourceCode, $saUnmaskSourceCode, $mAuditPragma, $mAuditForbiddenPatterns, $mAuditStrictTyping, $mResolveWrappers, $mBackendRegistry);
+
+    const $mPragmaResult = $mAuditPragma($saSourceCode);
+    if ($mPragmaResult["valid"] === false) {
+        return Map.create("success", false, "errors", $mPragmaResult["errors"]);
+    }
+
+    const $mMaskedData = $mMaskSourceCode($saSourceCode);
+    const $saMaskedCode = $mMaskedData["maskedCode"];
+    const $aTokens = $mMaskedData["tokens"];
+
+    const $mPatternResult = $mAuditForbiddenPatterns($saMaskedCode);
+    if ($mPatternResult["valid"] === false) {
+        return Map.create("success", false, "errors", $mPatternResult["errors"]);
+    }
+
+    const $mTypingResult = $mAuditStrictTyping($saMaskedCode, $mSSOT);
+    if ($mTypingResult["valid"] === false) {
+        return Map.create("success", false, "errors", $mTypingResult["errors"]);
+    }
+
+    const $aTargetIds = Map.keys($mBackendRegistry);
+    const $mResults = Map.create();
+
+    for (let $i = 0; $i < Arr.len($aTargetIds); $i = $i + 1) {
+        const $saTargetId = $aTargetIds[$i];
+        const $fBackend = $mBackendRegistry[$saTargetId];
+
+        let $saTargetFlag = "";
+        if (Map.has($mCliOptions, $saTargetId + "" + "Target") === true) {
+            $saTargetFlag = $mCliOptions[$saTargetId + "" + "Target"];
+        } else if (Map.has($mCliOptions, "target") === true) {
+            $saTargetFlag = $mCliOptions["target"];
+        }
+
+        let $saPrefixArg = "";
+        if (Map.has($mCliOptions, $saTargetId + "" + "Prefix") === true) {
+            $saPrefixArg = $mCliOptions[$saTargetId + "" + "Prefix"];
+        }
+        let $saSuffixArg = "";
+        if (Map.has($mCliOptions, $saTargetId + "" + "Suffix") === true) {
+            $saSuffixArg = $mCliOptions[$saTargetId + "" + "Suffix"];
+        }
+
+        const $mWrapperConfig = $mTargetsConfig[$saTargetId];
+        const $mWrappers = $mResolveWrappers($mWrapperConfig, $saTargetFlag, $saPrefixArg, $saSuffixArg);
+        const $mSSOTRules = $mSSOT["targets"][$saTargetId];
+
+        const $mBackendResult = $fBackend($saMaskedCode, $mWrappers["prefix"], $mWrappers["suffix"], $mSSOTRules, $aTokens);
+        const $saFinal = $saUnmaskSourceCode($mBackendResult["code"], $mBackendResult["tokens"]);
+
+        $mResults[$saTargetId] = $saFinal;
+    }
+
+    return Map.create(
+        "success", true,
+        "js", $mResults["js"],
+        "php", $mResults["php"],
+        "ts", $mResults["ts"],
+        "py", $mResults["python"]
+    );
+};

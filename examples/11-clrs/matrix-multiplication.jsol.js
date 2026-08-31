@@ -27,9 +27,9 @@
 */
 
 const $aMatrixMultiply = function($aMatrixA, $aMatrixB) {
-    const $qRowsA = Arr.count($aMatrixA);
-    const $qColsA = Arr.count($aMatrixA[0]);
-    const $qColsB = Arr.count($aMatrixB[0]);
+    const $qRowsA = Arr.len($aMatrixA);
+    const $qColsA = Arr.len($aMatrixA[0]);
+    const $qColsB = Arr.len($aMatrixB[0]);
 
     const $aResult = [];
 

@@ -1,0 +1,90 @@
+// @JSOL v0.2.97 - AOT Symbol Table Expander (2/2)
+
+const $saComp_ExpandSymbols = function($saCode) {
+    JSOL.use($bComp_IsWordChar);
+    let $saResult = "";
+    const $iLen = Str.len($saCode);
+    let $iBraceDepth = 0;
+    let $mSymTable = Map.create(); 
+
+    let $i = 0;
+    while ($i < $iLen) {
+        const $saCh = Str.sub($saCode, $i, 1);
+        if ($saCh === "{") {
+            $iBraceDepth = $iBraceDepth + 1;
+            $saResult = $saResult + $saCh;
+            $i = $i + 1;
+        } else if ($saCh === "}") {
+            $mSymTable[Cast.toStr($iBraceDepth)] = null;
+            $iBraceDepth = $iBraceDepth - 1;
+            $saResult = $saResult + $saCh;
+            $i = $i + 1;
+        } else if ($saCh === "$") {
+            let $iJ = $i + 1;
+            while ($iJ < $iLen && $bComp_IsWordChar(Str.sub($saCode, $iJ, 1))) {
+                $iJ = $iJ + 1;
+            }
+            const $saVarName = Str.sub($saCode, $i, $iJ - $i);
+
+            if (Str.indexOf($saVarName, '$_') === 0 || Str.indexOf($saVarName, '$JSOL_') === 0) {
+                $saResult = $saResult + $saVarName;
+                $i = $iJ;
+                continue;
+            }
+
+            let $saPrefix = "";
+            let $iK = 1;
+            const $iVarLen = Str.len($saVarName);
+            while ($iK < $iVarLen) {
+                const $iCode = Str.char($saVarName, $iK);
+                if ($iCode >= 97 && $iCode <= 122) {
+                    $saPrefix = $saPrefix + Str.fromChar($iCode);
+                    $iK = $iK + 1;
+                } else { break; }
+            }
+
+            let $bIsDeclaration = false;
+            let $saRoot = "";
+
+            if (Str.len($saPrefix) > 0 && $iVarLen > Str.len($saPrefix) + 1) {
+                const $saDelim = Str.sub($saVarName, Str.len($saPrefix) + 1, 1);
+                const $iNextCode = Str.char($saVarName, Str.len($saPrefix) + 1);
+                const $bIsUpper = ($iNextCode >= 65 && $iNextCode <= 90);
+
+                if ($saDelim === "_" || $bIsUpper === true) {
+                    $bIsDeclaration = true;
+                    let $iOffset = 0;
+                    if ($saDelim === "_") { $iOffset = 1; }
+                    $saRoot = Str.lower(Str.sub($saVarName, $iK + $iOffset, $iVarLen));
+                }
+            }
+
+            if ($bIsDeclaration === true) {
+                const $saDepthKey = Cast.toStr($iBraceDepth);
+                if (Map.has($mSymTable, $saDepthKey) === false || $mSymTable[$saDepthKey] === null) {
+                    $mSymTable[$saDepthKey] = Map.create();
+                }
+                $mSymTable[$saDepthKey][$saRoot] = $saVarName;
+                $saResult = $saResult + $saVarName;
+            } else {
+                const $saQueryRoot = Str.lower(Str.sub($saVarName, 1, $iVarLen - 1));
+                let $saCanonical = $saVarName;
+                
+                // CORRECCIÓN: variable de bucle $iD en lugar de la prohibida $d
+                for (let $iD = $iBraceDepth; $iD >= 0; $iD = $iD - 1) {
+                    const $saDKey = Cast.toStr($iD);
+                    if (Map.has($mSymTable, $saDKey) && $mSymTable[$saDKey] !== null && Map.has($mSymTable[$saDKey], $saQueryRoot)) {
+                        $saCanonical = $mSymTable[$saDKey][$saQueryRoot];
+                        break;
+                    }
+                }
+                $saResult = $saResult + $saCanonical;
+            }
+            $i = $iJ;
+        } else {
+            $saResult = $saResult + $saCh;
+            $i = $i + 1;
+        }
+    }
+    return $saResult;
+};

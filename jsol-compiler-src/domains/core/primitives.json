@@ -1,10 +1,18 @@
 [
-  "Str.concat", "Str.sub", "Str.len", "Str.indexOf", "Str.replace", "Str.char", "Str.fromChar", "Str.upper", "Str.lower", "Str.trim", "Str.split",
-  "Arr.count", "Arr.push", "Arr.pop", "Arr.shift", "Arr.slice", "Arr.indexOf", "Arr.join",
-  "Map.has", "Map.keys", "Map.create",
+  "Str.concat", "Str.sub", "Str.len", "Str.indexOf", "Str.char", "Str.fromChar", "Str.upper", "Str.lower", "Str.trim", "Str.split",
+  "Str.contains", "Str.startsWith", "Str.endsWith", "Str.replaceAll", "Str.replace", "Str.same", "Str.padStart", "Str.padEnd", "Str.repeat",
+  "Str.eq", "Str.neq",
+  "Arr.len", "Arr.count", "Arr.push", "Arr.pop", "Arr.shift", "Arr.unshift", "Arr.slice", "Arr.indexOf", "Arr.join", "Arr.sort", "Arr.contains",
+  "Map.has", "Map.keys", "Map.values", "Map.count", "Map.create", "Map.get",
+  "Bool.and", "Bool.or", "Bool.xor", "Bool.not", "Bool.eq", "Bool.neq",
   "Cast.toInt", "Cast.toStr", "Cast.toFloat",
   "Bit.and", "Bit.or", "Bit.xor", "Bit.not", "Bit.shiftL", "Bit.shiftR",
   "Regex.match", "Regex.replace", "Regex.test",
-  "JSOL.hasKey", "JSOL.len", "JSOL.count", "JSOL.set", "JSOL.unset",
-  "JSOL.JS", "JSOL.PHP", "JSOL.use", "JSOL.range", "Math.PI", "isNaN", "Math."
+  "JSOL.hasKey", "JSOL.len", "JSOL.count", "JSOL.set", "JSOL.unset", "JSOL.ok", "JSOL.resetShadow",
+  "JSOL.JS", "JSOL.PHP", "JSOL.PY", "JSOL.use", "JSOL.range", "isNaN",
+  "Math.abs", "Math.pow", "Math.sqrt", "Math.cbrt", "Math.floor", "Math.ceil", "Math.trunc",
+  "Math.sum", "Math.sub", "Math.mul", "Math.div", "Math.idiv",
+  "Math.E", "Math.PI", "Math.sin", "Math.cos", "Math.tan", "Math.asin", "Math.acos", "Math.atan", "Math.atan2",
+  "Math.modX", "Math.roundX", "Math.logX", "Math.ln",
+  "Math.eq", "Math.neq", "Math.gt", "Math.lt", "Math.gte", "Math.lte"
 ]

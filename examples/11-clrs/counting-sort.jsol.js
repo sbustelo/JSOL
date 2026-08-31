@@ -35,7 +35,7 @@ const $aCountingSort = function($aValues, $qMaxValue) {
         Arr.push($aCounts, 0);
     }
 
-    const $qLen = Arr.count($aValues);
+    const $qLen = Arr.len($aValues);
     for (let $i = 0; $i < $qLen; $i = $i + 1) {
         const $qValue = $aValues[$i];
         $aCounts[$qValue] = $aCounts[$qValue] + 1;

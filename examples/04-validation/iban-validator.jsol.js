@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -30,46 +30,47 @@
 
 const $bValidateIban = function($sIban) {
     // Step 1: strip spaces, uppercase for consistent letter comparison.
-    const $iRawLen = Str.len($sIban);
+    const $nRawLen = Str.len($sIban);
     let $sClean = "";
-    for (let $i = 0; $i < $iRawLen; $i = $i + 1) {
-        const $sChar = Str.sub($sIban, $i, 1);
+    for (let $nIndex = 0; $nIndex < $nRawLen; $nIndex = $nIndex + 1) {
+        const $sChar = Str.sub($sIban, $nIndex, 1);
         if ($sChar !== " ") {
             $sClean = $sClean + $sChar;
         }
     }
     $sClean = Str.upper($sClean);
 
-    const $iLen = Str.len($sClean);
-    if ($iLen < 5) {
+    const $nLen = Str.len($sClean);
+    if ($nLen < 5) {
         return false;
     }
 
     // Step 2: move the first 4 characters to the end.
     const $sFirstFour = Str.sub($sClean, 0, 4);
-    const $sRest = Str.sub($sClean, 4, $iLen - 4);
+    const $sRest = Str.sub($sClean, 4, $nLen - 4);
     const $sRearranged = $sRest + $sFirstFour;
 
     // Step 3: walk the rearranged string, folding each character's numeric
     // contribution into a running mod-97 remainder.
-    const $iRearrangedLen = Str.len($sRearranged);
-    let $qRemainder = 0;
+    const $nRearrangedLen = Str.len($sRearranged);
+    let $nRemainder = 0;
 
-    for (let $i = 0; $i < $iRearrangedLen; $i = $i + 1) {
-        const $qCode = Str.char($sRearranged, $i);
+    for (let $nIndex = 0; $nIndex < $nRearrangedLen; $nIndex = $nIndex + 1) {
+        const $nCode = Str.char($sRearranged, $nIndex);
 
-        if ($qCode >= 48 && $qCode <= 57) {
+        if ($nCode >= 48 && $nCode <= 57) {
             // '0'-'9': use the digit directly.
-            const $qDigit = $qCode - 48;
-            $qRemainder = ($qRemainder * 10 + $qDigit) % 97;
-        } else if ($qCode >= 65 && $qCode <= 90) {
+            const $nDigit = $nCode - 48;
+            // JSOL 0.3.0: Uses Math.modX instead of % 97 for exact cross-target evaluation.
+            $nRemainder = Math.modX(($nRemainder * 10 + $nDigit), 97);
+        } else if ($nCode >= 65 && $nCode <= 90) {
             // 'A'-'Z': letter value is 10-35, two digits, folded in as two
             // separate steps.
-            const $qLetterValue = $qCode - 55;
-            const $qTens = Math.floor($qLetterValue / 10);
-            const $qUnits = $qLetterValue % 10;
-            $qRemainder = ($qRemainder * 10 + $qTens) % 97;
-            $qRemainder = ($qRemainder * 10 + $qUnits) % 97;
+            const $nLetterValue = $nCode - 55;
+            const $nTens = Math.floor($nLetterValue / 10);
+            const $nUnits = Math.modX($nLetterValue, 10);
+            $nRemainder = Math.modX(($nRemainder * 10 + $nTens), 97);
+            $nRemainder = Math.modX(($nRemainder * 10 + $nUnits), 97);
         } else {
             // Anything that isn't a digit or an uppercase letter means
             // $sIban was never validly formatted to begin with.
@@ -77,5 +78,5 @@ const $bValidateIban = function($sIban) {
         }
     }
 
-    return $qRemainder === 1;
+    return $nRemainder === 1;
 };

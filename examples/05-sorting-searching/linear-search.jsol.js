@@ -23,7 +23,7 @@
 */
 
 const $qLinearSearch = function($aValues, $nTarget) {
-    const $qLen = Arr.count($aValues);
+    const $qLen = Arr.len($aValues);
 
     for (let $i = 0; $i < $qLen; $i = $i + 1) {
         if ($aValues[$i] === $nTarget) {

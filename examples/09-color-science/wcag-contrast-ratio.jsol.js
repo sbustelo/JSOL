@@ -1,4 +1,4 @@
-// @JSOL v0.2.94
+// @JSOL v0.2.97
 
 /**
  @description
@@ -44,23 +44,23 @@ const $nLinearizeChannel = function($qChannel8Bit) {
 };
 
 const $nRelativeLuminance = function($qR, $qG, $qB) {
-    // JSOL.use: Binds helper function to closure scope for PHP target execution.
-    JSOL.use($nLinearizeChannel);
+    // JSOL.use deprecado en 0.2.97: el compilador auto-inyecta variables libres.
+	// JSOL.use($nLinearizeChannel); 
 
-    const $nRs = $qR / 255;
-    const $nGs = $qG / 255;
-    const $nBs = $qB / 255;
+    const $nRedScaled = $qR / 255;
+    const $nGreenScaled = $qG / 255;
+    const $nBlueScaled = $qB / 255;
 
-    const $nR = $nLinearizeChannel($nRs);
-    const $nG = $nLinearizeChannel($nGs);
-    const $nB = $nLinearizeChannel($nBs);
+    const $nRedLinear = $nLinearizeChannel($nRedScaled);
+    const $nGreenLinear = $nLinearizeChannel($nGreenScaled);
+    const $nBlueLinear = $nLinearizeChannel($nBlueScaled);
 
-    return (0.2126 * $nR) + (0.7152 * $nG) + (0.0722 * $nB);
+    return (0.2126 * $nRedLinear) + (0.7152 * $nGreenLinear) + (0.0722 * $nBlueLinear);
 };
 
 const $nContrastRatio = function($qR1, $qG1, $qB1, $qR2, $qG2, $qB2) {
-    // JSOL.use: Binds helper function to closure scope for PHP target execution.
-    JSOL.use($nRelativeLuminance);
+    // JSOL.use deprecado en 0.2.97: el compilador auto-inyecta variables libres.
+    // JSOL.use($nRelativeLuminance);
 
     const $nL1 = $nRelativeLuminance($qR1, $qG1, $qB1);
     const $nL2 = $nRelativeLuminance($qR2, $qG2, $qB2);

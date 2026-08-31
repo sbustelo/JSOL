@@ -1,4 +1,4 @@
-// @JSOL v0.2.91
+// @JSOL v0.2.97
 
 /**
  @description
@@ -22,18 +22,19 @@
 */
 
 const $sRot13 = function($sText) {
-    const $iLen = Str.len($sText);
+    const $nLen = Str.len($sText);
     let $sResult = "";
 
-    for (let $i = 0; $i < $iLen; $i = $i + 1) {
-        const $qCode = Str.char($sText, $i);
+    for (let $nIndex = 0; $nIndex < $nLen; $nIndex = $nIndex + 1) {
+        const $nCode = Str.char($sText, $nIndex);
 
-        if ($qCode >= 65 && $qCode <= 90) {
-            $sResult = $sResult + Str.fromChar((($qCode - 65 + 13) % 26) + 65);
-        } else if ($qCode >= 97 && $qCode <= 122) {
-            $sResult = $sResult + Str.fromChar((($qCode - 97 + 13) % 26) + 97);
+        if ($nCode >= 65 && $nCode <= 90) {
+            // JSOL 0.3.0: Replaced % 26 with Math.modX for exact isomorphic execution.
+            $sResult = $sResult + Str.fromChar(Math.modX(($nCode - 65 + 13), 26) + 65);
+        } else if ($nCode >= 97 && $nCode <= 122) {
+            $sResult = $sResult + Str.fromChar(Math.modX(($nCode - 97 + 13), 26) + 97);
         } else {
-            $sResult = $sResult + Str.sub($sText, $i, 1);
+            $sResult = $sResult + Str.sub($sText, $nIndex, 1);
         }
     }
 

@@ -43,7 +43,7 @@ const $sReverseWordOrder = function($sSentence) {
 
     // Step 2: rebuild the sentence walking $aWords from the last entry to
     // the first.
-    const $qCount = Arr.count($aWords);
+    const $qCount = Arr.len($aWords);
     let $sResult = "";
     for (let $i = $qCount - 1; $i >= 0; $i = $i - 1) {
         $sResult = $sResult + $aWords[$i];

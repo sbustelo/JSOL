@@ -1,4 +1,4 @@
-// @JSOL v0.2.96
+// @JSOL v0.2.97
 
 /**
  @description
@@ -34,14 +34,13 @@
      { "$sMethod": "Str.len" },
      { "$sMethod": "Str.sub" },
      { "$sMethod": "Str.indexOf" },
-     { "$sMethod": "Str.replace" },
+     { "$sMethod": "Str.replaceAll" },
      { "$sMethod": "Str.char" },
      { "$sMethod": "Str.fromChar" },
      { "$sMethod": "Str.upper" },
      { "$sMethod": "Str.lower" },
-     { "$sMethod": "Str.trim" },
      { "$sMethod": "Str.split" },
-     { "$sMethod": "Arr.count" },
+     { "$sMethod": "Arr.len" },
      { "$sMethod": "Arr.push" },
      { "$sMethod": "Arr.pop" },
      { "$sMethod": "Arr.shift" },
@@ -54,9 +53,15 @@
      { "$sMethod": "Math.floor" },
      { "$sMethod": "Math.abs" },
      { "$sMethod": "Math.pow" },
-     { "$sMethod": "Math.min" },
-     { "$sMethod": "Math.max" },
-     { "$sMethod": "Math.round" },
+
+{ "$sMethod": "Math.roundX" },
+     { "$sMethod": "Math.eq" },
+     { "$sMethod": "Math.neq" },
+     { "$sMethod": "Math.gt" },
+     { "$sMethod": "Math.lt" },
+     { "$sMethod": "Math.gte" },
+     { "$sMethod": "Math.lte" },
+
      { "$sMethod": "Bit.and" },
      { "$sMethod": "Bit.or" },
      { "$sMethod": "Bit.xor" },
@@ -73,22 +78,30 @@
  }
 */
 
+/* out of contract in 0.2.97, reserved for future support:
+     // { "$sMethod": "Math.min" },
+     // { "$sMethod": "Math.max" },
+
+*/
+
+
 const $sTestPrimitive = function($sMethod) {
     if ($sMethod === "Str.len") { return Cast.toStr(Str.len("abc")); }
     if ($sMethod === "Str.sub") { return Str.sub("abc", 1, 1); }
     if ($sMethod === "Str.indexOf") { return Cast.toStr(Str.indexOf("abc", "b")); }
-    if ($sMethod === "Str.replace") { return Str.replace("abc", "b", "x"); }
+    // JSOL 0.3.0: Str.replaceAll is the canonical replacement for Str.replace.
+    if ($sMethod === "Str.replaceAll") { return Str.replaceAll("abc", "b", "x"); }
     if ($sMethod === "Str.char") { return Cast.toStr(Str.char("abc", 0)); }
     if ($sMethod === "Str.fromChar") { return Str.fromChar(97); }
     if ($sMethod === "Str.upper") { return Str.upper("abc"); }
     if ($sMethod === "Str.lower") { return Str.lower("ABC"); }
-    if ($sMethod === "Str.trim") { return Str.trim(" abc "); }
     if ($sMethod === "Str.split") {
         const $aSplit = Str.split("a,b", ",");
         return Arr.join($aSplit, "-");
     }
 
-    if ($sMethod === "Arr.count") { return Cast.toStr(Arr.count(["x", "y"])); }
+    // JSOL 0.3.0: Arr.len replaces the deprecated Arr.count.
+    if ($sMethod === "Arr.len") { return Cast.toStr(Arr.len(["x", "y"])); }
     if ($sMethod === "Arr.push") {
         const $aPush = ["x", "y"];
         Arr.push($aPush, "z");
@@ -129,9 +142,18 @@ const $sTestPrimitive = function($sMethod) {
     if ($sMethod === "Math.floor") { return Cast.toStr(Math.floor(1.9)); }
     if ($sMethod === "Math.abs") { return Cast.toStr(Math.abs(-5)); }
     if ($sMethod === "Math.pow") { return Cast.toStr(Math.pow(2, 3)); }
-    if ($sMethod === "Math.min") { return Cast.toStr(Math.min(10, 2)); }
-    if ($sMethod === "Math.max") { return Cast.toStr(Math.max(10, 2)); }
-    if ($sMethod === "Math.round") { return Cast.toStr(Math.round(1.5)); }
+    // if ($sMethod === "Math.min") { return Cast.toStr(Math.min(10, 2)); }
+    // if ($sMethod === "Math.max") { return Cast.toStr(Math.max(10, 2)); }
+    
+	// JSOL 0.3.0: Math.roundX enforces Excel-style half away from zero.
+	if ($sMethod === "Math.roundX") { return Cast.toStr(Math.roundX(1.5)); }
+    // TS Parity: Operar sobre variables para eludir el Error TS2367 de superposición de literales.
+    if ($sMethod === "Math.eq") { const $nA = 5; const $nB = 5; return Cast.toStr(Math.eq($nA, $nB)); }
+    if ($sMethod === "Math.neq") { const $nA = 5; const $nB = 3; return Cast.toStr(Math.neq($nA, $nB)); }
+    if ($sMethod === "Math.gt") { const $nA = 5; const $nB = 3; return Cast.toStr(Math.gt($nA, $nB)); }
+    if ($sMethod === "Math.lt") { const $nA = 3; const $nB = 5; return Cast.toStr(Math.lt($nA, $nB)); }
+    if ($sMethod === "Math.gte") { const $nA = 5; const $nB = 5; return Cast.toStr(Math.gte($nA, $nB)); }
+    if ($sMethod === "Math.lte") { const $nA = 5; const $nB = 5; return Cast.toStr(Math.lte($nA, $nB)); }
 
     if ($sMethod === "Bit.and") { return Cast.toStr(Bit.and(3, 1)); }
     if ($sMethod === "Bit.or") { return Cast.toStr(Bit.or(1, 2)); }

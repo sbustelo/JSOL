@@ -1,0 +1,93 @@
+// @JSOL v0.2.97
+const $fProcessRange = function ($saCode) {
+	JSOL.use($mComp_ParseArgs, $iComp_FindCloseBrace);
+	if (Str.indexOf($saCode, "JSOL.range") === -1) { return $saCode; }
+	let $saResult = $saCode;
+	let $bContinue = true;
+
+	while ($bContinue === true) {
+		const $iRelIdx = Str.indexOf($saResult, "for");
+		if ($iRelIdx === -1) { $bContinue = false; continue; }
+
+		const $iStartIdx = $iRelIdx;
+		let $i = $iStartIdx + 3;
+		
+		while ($i < Str.len($saResult) && (Str.sub($saResult, $i, 1) === " " || Str.sub($saResult, $i, 1) === "\n" || Str.sub($saResult, $i, 1) === "\t" || Str.sub($saResult, $i, 1) === "\r" || Str.sub($saResult, $i, 1) === "(")) { $i = $i + 1; }
+
+		if (Str.sub($saResult, $i, 4) === "let ") { $i = $i + 4; }
+
+		let $iV = $i;
+		if (Str.sub($saResult, $iV, 1) !== "$") {
+			$saResult = Str.sub($saResult, 0, $iStartIdx) + "__JSOL_FOR__" + Str.sub($saResult, $iStartIdx + 3, Str.len($saResult) - $iStartIdx - 3);
+			continue;
+		}
+
+		while ($iV < Str.len($saResult)) {
+			const $saC = Str.sub($saResult, $iV, 1);
+			if ($saC === "_" || $saC === "$" || ($saC >= "a" && $saC <= "z") || ($saC >= "A" && $saC <= "Z") || ($saC >= "0" && $saC <= "9")) {
+				$iV = $iV + 1;
+			} else { break; }
+		}
+		const $saVarName = Str.sub($saResult, $i, $iV - $i);
+		$i = $iV;
+
+		while ($i < Str.len($saResult) && (Str.sub($saResult, $i, 1) === " " || Str.sub($saResult, $i, 1) === "\n" || Str.sub($saResult, $i, 1) === "\t" || Str.sub($saResult, $i, 1) === "\r")) { $i = $i + 1; }
+
+		if (Str.sub($saResult, $i, 2) !== "of") {
+			$saResult = Str.sub($saResult, 0, $iStartIdx) + "__JSOL_FOR__" + Str.sub($saResult, $iStartIdx + 3, Str.len($saResult) - $iStartIdx - 3);
+			continue;
+		}
+
+		$i = $i + 2;
+		while ($i < Str.len($saResult) && (Str.sub($saResult, $i, 1) === " " || Str.sub($saResult, $i, 1) === "\n" || Str.sub($saResult, $i, 1) === "\t" || Str.sub($saResult, $i, 1) === "\r")) { $i = $i + 1; }
+
+		if (Str.sub($saResult, $i, 11) !== "JSOL.range(") {
+			$saResult = Str.sub($saResult, 0, $iStartIdx) + "__JSOL_FOR__" + Str.sub($saResult, $iStartIdx + 3, Str.len($saResult) - $iStartIdx - 3);
+			continue;
+		}
+
+		const $iParenOpen = $i + 10;
+		const $mDataArgs = $mComp_ParseArgs($saResult, $iParenOpen);
+		if ($mDataArgs["close"] === -1) {
+			$saResult = Str.sub($saResult, 0, $iStartIdx) + "__JSOL_FOR__" + Str.sub($saResult, $iStartIdx + 3, Str.len($saResult) - $iStartIdx - 3);
+			continue;
+		}
+
+		let $iB = $mDataArgs["close"] + 1;
+		while ($iB < Str.len($saResult) && (Str.sub($saResult, $iB, 1) === " " || Str.sub($saResult, $iB, 1) === "\n" || Str.sub($saResult, $iB, 1) === "\t" || Str.sub($saResult, $iB, 1) === "\r" || Str.sub($saResult, $iB, 1) === ")")) { $iB = $iB + 1; }
+
+		if (Str.sub($saResult, $iB, 1) !== "{") {
+			$saResult = Str.sub($saResult, 0, $iStartIdx) + "__JSOL_FOR__" + Str.sub($saResult, $iStartIdx + 3, Str.len($saResult) - $iStartIdx - 3);
+			continue;
+		}
+
+		const $iBraceClose = $iComp_FindCloseBrace($saResult, $iB);
+		if ($iBraceClose === -1) {
+			$saResult = Str.sub($saResult, 0, $iStartIdx) + "__JSOL_FOR__" + Str.sub($saResult, $iStartIdx + 3, Str.len($saResult) - $iStartIdx - 3);
+			continue;
+		}
+
+		const $saBody = Str.sub($saResult, $iB + 1, $iBraceClose - $iB - 1);
+		const $aArgs = $mDataArgs["args"];
+		const $saCleanVar = Str.sub($saVarName, 1, Str.len($saVarName) - 1);
+		const $saFromVar = '$JSOL_from_' + $saCleanVar;
+		const $saToVar = '$JSOL_to_' + $saCleanVar;
+		const $saStepVar = '$JSOL_step_' + $saCleanVar;
+		const $saIncVar = '$JSOL_inc_' + $saCleanVar;
+		const $saIxVar = '$JSOL_i_' + $saCleanVar;
+
+		let $saSetup = "let " + $saFromVar + " = (" + $aArgs[0] + ");\nlet " + $saToVar + " = (" + $aArgs[1] + ");\n";
+		if (Arr.len($aArgs) > 2 && Str.len($aArgs[2]) > 0) { $saSetup = $saSetup + "let " + $saStepVar + " = (" + $aArgs[2] + ");\n"; } 
+		else { $saSetup = $saSetup + "let " + $saStepVar + " = 1;\n"; }
+		$saSetup = $saSetup + "let " + $saIncVar + " = Math.abs(" + $saStepVar + ");\nif (" + $saFromVar + " > " + $saToVar + ") { " + $saIncVar + " = -" + $saIncVar + "; }\nlet " + $saVarName + " = " + $saFromVar + ";\nlet " + $saIxVar + " = 1;\n";
+
+		const $saCond = "((" + $saIncVar + " > 0 && " + $saVarName + " <= " + $saToVar + ") || (" + $saIncVar + " <= 0 && " + $saVarName + " >= " + $saToVar + "))";
+
+		let $saNewBody = 'let $JSOL_i = ' + $saIxVar + ';\n' + $saBody + "\n" + $saVarName + " = " + $saVarName + " + " + $saIncVar + ";\n" + $saIxVar + " = " + $saIxVar + " + 1;\n";
+
+		const $saReplace = "if (true) {\n" + $saSetup + "while (" + $saCond + ") {\n" + $saNewBody + "}\n}";
+		$saResult = Str.sub($saResult, 0, $iStartIdx) + "" + $saReplace + "" + Str.sub($saResult, $iBraceClose + 1, Str.len($saResult) - $iBraceClose - 1);
+	}
+	$saResult = Str.replace($saResult, "__JSOL_FOR__", "for");
+	return $saResult;
+};

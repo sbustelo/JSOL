@@ -1,5 +1,3 @@
-// REEMPLAZAR ARCHIVO COMPLETO EN interpreter/js/src/40-grid-eval.js
-
 document.addEventListener('DOMContentLoaded', () => {
 	const table = document.querySelector('[data-js-hook="repl-table"]');
 	const tbody = document.querySelector('[data-js-hook="repl-tbody"]');
@@ -60,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (outVal === false) out.setAttribute('data-bool', 'false');
 			});
 		} catch (error) {
+			console.error("[JSOL REPL] Execution Error:", error);
 			outputs.forEach(out => {
 				out.textContent = 'ERR';
 				out.setAttribute('data-error', 'true');

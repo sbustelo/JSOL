@@ -1,12 +1,15 @@
 <?php
 /* PATH: interpreter/engine/bits/assets.php */
-/* REEMPLAZAR ARCHIVO COMPLETO */
 declare(strict_types=1);
 
 $basePath = dirname(__DIR__, 2);
 
-// Orden estricto de carga para evitar dependencias huérfanas
-$targetDirs = ['css', 'js/vendor', 'stdlib', 'js', 'js/src'];
+// 1. Inyectar Polyfills explícitamente (viven en el compilador, no en /interpreter)
+// El asset-router.php se encarga de resolver esta ruta hacia ../jsol-compiler-node/dist/
+echo '<script src="?core_asset=stdlib/jsol-core.js"></script>' . PHP_EOL;
+
+// 2. Orden estricto de carga para dependencias locales de la UI
+$targetDirs = ['css', 'js/vendor', 'js', 'js/src'];
 
 foreach ($targetDirs as $dir) {
     $fullPath = $basePath . '/' . $dir;

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 #
 # JSOL CLI Host Runner (Python) — mirrors index.js's logic exactly, since

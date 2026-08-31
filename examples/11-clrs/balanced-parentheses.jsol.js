@@ -37,7 +37,7 @@ const $bIsBalanced = function($sText) {
         if ($sChar === "(" || $sChar === "[" || $sChar === "{") {
             Arr.push($aStack, $sChar);
         } else if ($sChar === ")" || $sChar === "]" || $sChar === "}") {
-            if (Arr.count($aStack) === 0) {
+            if (Arr.len($aStack) === 0) {
                 // A closing bracket with nothing open to match: unbalanced.
                 return false;
             }
@@ -58,5 +58,5 @@ const $bIsBalanced = function($sText) {
     }
 
     // If anything is left on the stack, some opening bracket was never closed.
-    return Arr.count($aStack) === 0;
+    return Arr.len($aStack) === 0;
 };
