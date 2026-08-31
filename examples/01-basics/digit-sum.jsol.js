@@ -1,7 +1,7 @@
 // @JSOL v0.2.91
 
 /**
- @description
+@description
 
  Sums the individual digits of a digit sequence $sDigits
  (e.g. "493" -> 4 + 9 + 3 = 16).

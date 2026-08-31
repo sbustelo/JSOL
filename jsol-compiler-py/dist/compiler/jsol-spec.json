@@ -141,6 +141,7 @@
     "Cast.toInt",
     "Cast.toStr",
     "Cast.toFloat",
+    "Cast.toBool",
     "Bit.and",
     "Bit.or",
     "Bit.xor",
@@ -157,6 +158,7 @@
     "JSOL.unset",
     "JSOL.ok",
     "JSOL.resetShadow",
+    "JSOL.eval",
     "JSOL.JS",
     "JSOL.PHP",
     "JSOL.PY",
@@ -188,6 +190,8 @@
     "Math.roundX",
     "Math.logX",
     "Math.ln",
+    "Math.min",
+    "Math.max",
     "Math.eq",
     "Math.neq",
     "Math.gt",
@@ -410,6 +414,9 @@
         },
         "JSOL.resetShadow": {
           "template": "JSOL[\"resetShadow\"]()"
+        },
+        "JSOL.eval": {
+          "template": "JSOL[\"eval\"]({0})"
         },
         "JSOL.JS": {
           "type": "block",
@@ -773,6 +780,9 @@
         },
         "JSOL.resetShadow": {
           "template": "JSOL::resetShadow()"
+        },
+        "JSOL.eval": {
+          "template": "JSOL::eval({0})"
         },
         "JSOL.JS": {
           "type": "block",
@@ -1274,6 +1284,11 @@
         "template": "JSOL[\"resetShadow\"]()"
       },
       {
+        "id": "JSOL.eval",
+        "type": "call",
+        "template": "JSOL[\"eval\"]({0})"
+      },
+      {
         "id": "JSOL.JS",
         "type": "block",
         "template": "unwrap"
@@ -1712,6 +1727,9 @@
         },
         "JSOL.resetShadow": {
           "template": "JSOL.reset_shadow()"
+        },
+        "JSOL.eval": {
+          "template": "JSOL.eval({0})"
         },
         "JSOL.JS": {
           "type": "block",

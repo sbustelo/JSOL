@@ -94,6 +94,7 @@
     "JSOL.unset": { "template": "# mem-op" },
     "JSOL.ok": { "template": "JSOL.ok()" },
     "JSOL.resetShadow": { "template": "JSOL.reset_shadow()" },
+    "JSOL.eval": { "template": "JSOL.eval({0})" },
     "JSOL.JS": { "type": "block", "template": "strip" },
     "JSOL.PHP": { "type": "block", "template": "strip" },
     "JSOL.PY": { "type": "block", "template": "unwrap" },

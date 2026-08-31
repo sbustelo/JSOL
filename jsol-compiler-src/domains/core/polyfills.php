@@ -34,6 +34,9 @@ class JSOL {
     public static function arrIndexOf($arr, $item) {
         return Arr::indexOf($arr, $item);
     }
+    public static function eval($expr) {
+        return "[EVAL_UNAVAILABLE_IN_AOT_MODE]";
+    }
 }
 
 

@@ -1,6 +1,5 @@
-<?php
+<?php declare(strict_types=1);
 /* PATH: interpreter/engine/bits/assets.php */
-declare(strict_types=1);
 
 $basePath = dirname(__DIR__, 2);
 

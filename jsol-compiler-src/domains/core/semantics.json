@@ -42,7 +42,8 @@
     "Arr.len": "q",
     "Arr.count": "q",
     "Arr.indexOf": "i",
-    "Map.count": "q"
+	"Map.count": "q",
+    "JSOL.eval": "s"
   },
   "coercions": {
     "n": {

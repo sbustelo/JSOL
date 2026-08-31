@@ -74,6 +74,7 @@
   { "id": "JSOL.unset", "type": "call", "template": "/* mem-op */" },
   { "id": "JSOL.ok", "type": "call", "template": "JSOL[\"ok\"]()" },
   { "id": "JSOL.resetShadow", "type": "call", "template": "JSOL[\"resetShadow\"]()" },
+  { "id": "JSOL.eval", "type": "call", "template": "JSOL[\"eval\"]({0})" },
   { "id": "JSOL.JS", "type": "block", "template": "unwrap" },
   { "id": "JSOL.PHP", "type": "block", "template": "strip" },
   { "id": "JSOL.PY", "type": "block", "template": "strip" },

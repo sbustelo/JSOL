@@ -1,5 +1,5 @@
 /* PATH: interpreter/js/src/25-comments-toggle.js */
-/* V2.1.0 - Motor de colapso de brechas estructurales */
+/* V2.3.0 - Colapso absoluto de brechas con soporte para solapamiento continuo */
 
 document.addEventListener('DOMContentLoaded', () => {
     const paneGroup = document.querySelector('[data-j0-pane-group="repl-views"]');
@@ -27,13 +27,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let html = codeEl.innerHTML;
             
-            // 1. Capturar el salto de línea y la indentación previa a un comentario.
-            // Esto ancla el espacio estructural al comentario para que, al ocultarse ambos,
-            // la siguiente instrucción suba y ocupe el lugar exacto.
-            html = html.replace(/(\n[ \t]*)(<span class="token [^>]*?comment[^>]*>)/g, '<span class="j0ui-comment-gap">$1</span>$2');
-            
-            // 2. Colapsar líneas en blanco múltiples generales que hayan quedado huérfanas
+            // 1. Colapsar líneas en blanco múltiples huérfanas primero
             html = html.replace(/\n([ \t\r]*\n)+/g, '\n<span class="j0ui-blank-line">$1</span>');
+
+            // 2. Envolver los espacios y saltos de línea adyacentes a CADA comentario solitario en su línea.
+            // El bucle do-while garantiza que los comentarios consecutivos se procesen en cadena
+            // reconociendo los spans inyectados previamente como un inicio válido de línea.
+            let lastHtml;
+            do {
+                lastHtml = html;
+                html = html.replace(/(^|\n|<span class="j0ui-comment-gap">[^<]*?\n<\/span>|<span class="j0ui-blank-line">[^<]*?\n<\/span>)([ \t]*)(<span class="token [^>]*?comment[^>]*>[\s\S]*?<\/span>)([ \t]*(?:\n|$))/g, 
+                    '$1<span class="j0ui-comment-gap">$2</span>$3<span class="j0ui-comment-gap">$4</span>');
+            } while (html !== lastHtml);
             
             codeEl.innerHTML = html;
         });

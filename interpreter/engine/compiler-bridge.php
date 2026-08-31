@@ -31,8 +31,14 @@ function parseJsolMetadata(string $filePath): array
 
 	if (preg_match_all('/\/\*(.*?)\*\//s', $sourceCode, $docMatches)) {
 		foreach ($docMatches[1] as $docContent) {
-			if (strpos($docContent, '@contract') === false) {
-				$cleanDoc = preg_replace('/^\s*\*\s?/m', '', $docContent);
+			$cleanDoc = preg_replace('/^\s*\*\s?/m', '', $docContent);
+			
+			// Si el bloque NO arranca declarando explícitamente el @contract, se asume como documentación
+			if (!preg_match('/^\s*@contract\b/m', $cleanDoc)) {
+				
+				// Purgar la etiqueta @description literal y sus espacios adyacentes
+				$cleanDoc = preg_replace('/^\s*@description\s*/im', '', $cleanDoc);
+				
 				$metadata['documentation'] .= trim($cleanDoc) . "\n\n";
 			}
 		}

@@ -35,7 +35,11 @@
  @contract
  {
    "cases": [
-     { "$sExpression": "7.5 % 2" },
+	{ "$sExpression": "7.5 % 2" },
+	{ "$sExpression": "7 % 3" },
+	{ "$sExpression": "7 % -3" },
+	{ "$sExpression": "-7 % 3" },
+	{ "$sExpression": "-7 % -3" },
      { "$sExpression": "Math.round(2.5)" },
      { "$sExpression": "Math.round(-2.5)" },
      { "$sExpression": "😀.length" },
@@ -120,5 +124,8 @@ if ($sExpression === "[10, 1, 2].sort()") {
         return Cast.toStr(0.1 + 0.2);
     }
 
-    return "UNKNOWN_EXPRESSION";
+    // FALLBACK HÍBRIDO (Sandbox JIT para la REPL Frontend)
+    // Permite testear cualquier expresión al vuelo (ej: "Math.min(NaN, 1)").
+    // En las validaciones automatizadas (AOT), PHP y PY devuelven [EVAL_UNAVAILABLE_IN_AOT_MODE].
+    return Cast.toStr(JSOL.eval($sExpression));
 };

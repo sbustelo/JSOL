@@ -1,3 +1,6 @@
+/* PATH: interpreter/css/repl.css */
+/* REEMPLAZAR ARCHIVO COMPLETO */
+
 /* Default / Light Theme */
 :root, 
 [data-theme="light"] {
@@ -25,10 +28,7 @@
     --jsol-surface: #2d2d2d;
     --jsol-text: #e0e0e0;
     --jsol-text-muted: #888888;
-
-    /* --jsol-accent: #4a90e2; */
-	    --jsol-accent: oklch(0.75 0.23 250 / 1);
-
+    --jsol-accent: oklch(0.75 0.23 250 / 1);
     --jsol-accent-input: #f1c40f;
     --jsol-input-bg: #fffbdd;
     --jsol-input-text: #000000;
@@ -49,22 +49,20 @@
     background: var(--jsol-bg);
     color: var(--jsol-text);
     display: flex;
-    height: 100%; /* Fluido para poder ser embebido y llenar cualquier contenedor */
+    height: 100%;
     overflow: hidden;
-    /* Aislamiento estricto contra contaminación de cascada desde el framework j0ui */
     --j0ui-text-main: var(--jsol-text);
     --j0ui-text-muted: var(--jsol-text-muted);
     --j0ui-text-accent: var(--jsol-accent);
 }
 
-/* Regla exclusiva para Standalone: Si el container es el <body>, toma el viewport exacto (fix iOS Mobile Safari 100vh) */
 body.jsol-repl-container {
     height: 100dvh;
     width: 100vw;
 }
 
-.jsol-repl-container H2 code{
-	background-color:var(--jsol-surface);
+.jsol-repl-container H2 code {
+    background-color: var(--jsol-surface);
 }
 
 .jsol-repl-sidebar {
@@ -244,19 +242,155 @@ body.jsol-repl-container {
     outline: none;
 }
 
+/* --- TABS J0UI OVERRIDES --- */
+.j0ui-tab-pane { display: none; }
+.j0ui-tab-pane.j0ui-active { display: block; }
 
+.j0ui-tabs-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--jsol-border);
+    margin-top: 1rem;
+    padding-bottom: 0;
+    overflow-x: auto;
+    background: transparent;
+}
 
+.j0ui-tab-item {
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    color: var(--jsol-text-muted);
+    padding: 0.5rem 0.85rem;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease;
+    height: auto;
+}
 
+.j0ui-tab-item:hover {
+    color: var(--jsol-text);
+    background: var(--jsol-dim);
+}
 
-/* PATH: interpreter/css/repl.css */
-/* REEMPLAZAR EXACTAMENTE EL BLOQUE ".jsol-repl-docs" EXISTENTE POR ESTAS LÍNEAS */
+.j0ui-tab-item.j0ui-active {
+    color: var(--jsol-accent);
+    background: var(--jsol-surface);
+    border-color: var(--jsol-border);
+    border-bottom-color: var(--jsol-surface);
+}
 
+.j0ui-toolbar-spacer {
+    flex: 1;
+}
+
+.j0ui-code-pane-wrapper {
+    position: relative;
+    margin-top: 0.5rem;
+}
+
+.j0ui-code-actions-floating {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    z-index: 5;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.j0ui-btn-icon, .j0ui-toolbar-btn {
+    background: var(--jsol-surface-btn, #2a2a2a);
+    color: var(--jsol-text, #e0e0e0);
+    border: 1px solid var(--jsol-border, #444);
+    border-radius: 4px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: auto;
+}
+
+.j0ui-btn-icon:hover, .j0ui-toolbar-btn:hover {
+    background: var(--jsol-dim-strong);
+    color: #fff;
+}
+
+.jsol-repl-source-code {
+    position: relative;
+    margin: 0;
+    padding: 1rem;
+    background: var(--jsol-surface, #181818);
+    border: 1px solid var(--jsol-border, #2a2a2a);
+    border-radius: 6px;
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* --- SIDEBAR FOLDERS --- */
+.jsol-repl-folder {
+    margin-bottom: 0.2rem;
+}
+
+.jsol-repl-folder-summary {
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--jsol-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 4px;
+    user-select: none;
+    list-style: none;
+}
+
+.jsol-repl-folder-summary::-webkit-details-marker {
+    display: none;
+}
+
+.jsol-repl-folder-summary:hover {
+    background: var(--jsol-surface-hover, rgba(255,255,255,0.05));
+    color: var(--jsol-text);
+}
+
+.jsol-repl-folder[open] > .jsol-repl-folder-summary {
+    color: var(--jsol-accent);
+}
+
+.jsol-repl-sublist {
+    list-style: none;
+    padding-left: 1.2rem;
+    margin: 0.2rem 0 0.5rem 0.8rem;
+    border-left: 1px solid var(--jsol-border);
+}
+
+.jsol-repl-sublist li {
+    margin-top: 0.15rem;
+}
+
+.jsol-repl-folder-icon {
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.jsol-repl-folder[open] > .jsol-repl-folder-summary .jsol-repl-folder-icon {
+    opacity: 1;
+}
+
+/* --- MARKDOWN DOCS --- */
 .jsol-repl-docs {
-    margin-top: 0 !important; /* Eliminado el gap invisible */
+    margin-top: 0 !important;
     padding: 2rem;
     background: var(--jsol-surface);
     border: 1px solid var(--jsol-border);
-    border-top: none; /* Soldeo con la pestaña activa */
+    border-top: none;
     border-radius: 0 0 6px 6px;
     font-family: system-ui, -apple-system, sans-serif;
     color: var(--jsol-text);
@@ -304,26 +438,6 @@ body.jsol-repl-container {
     font-size: 0.85em;
 }
 
-
-
-
-
-
-
-
-.jsol-repl-source-code {
-    margin-top: 0.5rem;
-    padding: 1rem;
-    background: var(--jsol-surface);
-    border: 1px solid var(--jsol-border);
-    border-radius: 4px;
-    white-space: pre-wrap;
-    font-family: monospace;
-    font-size: 0.85rem;
-    color: var(--jsol-text);
-    overflow-x: auto;
-}
-
 .jsol-repl-error-log {
     background: var(--jsol-error-bg);
     border: 1px solid var(--jsol-error);
@@ -334,11 +448,10 @@ body.jsol-repl-container {
     white-space: pre-wrap;
 }
 
-/* Reglas de Adaptación Responsive (Mobile) */
+/* --- MOBILE RESPONSIVE --- */
 @media (max-width: 768px) {
     .jsol-repl-container {
         flex-direction: column;
-        /* Se delega la altura al contenedor padre o al body.jsol-repl-container */
     }
 
     .jsol-repl-sidebar {
@@ -350,7 +463,6 @@ body.jsol-repl-container {
         flex-shrink: 0;
     }
 
-    /* Especificidad estructural limpia (0,2,2) para ocultar las listas tanto en standalone como embebido, venciendo cascadas externas */
     .jsol-repl-container .jsol-repl-sidebar h3,
     .jsol-repl-container .jsol-repl-sidebar ul.jsol-repl-desktop-list {
         display: none;
@@ -378,73 +490,4 @@ body.jsol-repl-container {
     .jsol-repl-table-wrap {
         overflow-x: auto;
     }
-}
-
-
-
-
-
-/* PATH: interpreter/css/repl.css */
-/* AÑADIR EXCLUSIVAMENTE AL FINAL DEL ARCHIVO (DESPUÉS DE LAS REGLAS DE FLOATING ACTIONS) */
-
-/* --- J0UI EXTENSIONS: TABS & TOOLBAR OVERRIDES FOR JSOL THEME --- */
-
-.j0ui-tabs-row {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    border-bottom: 1px solid var(--jsol-border);
-    margin-top: 1rem;
-    padding-bottom: 0;
-    overflow-x: auto;
-    background: transparent; /* Override j0ui default */
-}
-
-.j0ui-tab-item {
-    background: transparent;
-    border: 1px solid transparent;
-    border-bottom: none;
-    color: var(--jsol-text-muted);
-    padding: 0.5rem 0.85rem;
-    border-radius: 6px 6px 0 0;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: background 0.15s ease, color 0.15s ease;
-    height: auto; /* Override j0ui size */
-}
-
-.j0ui-tab-item:hover {
-    color: var(--jsol-text);
-    background: var(--jsol-dim);
-}
-
-.j0ui-tab-item.j0ui-active {
-    color: var(--jsol-accent);
-    background: var(--jsol-surface);
-    border-color: var(--jsol-border);
-    border-bottom-color: var(--jsol-surface);
-}
-
-.j0ui-toolbar-spacer {
-    flex: 1;
-}
-
-.j0ui-toolbar-btn {
-    background: var(--jsol-surface);
-    color: var(--jsol-text);
-    border: 1px solid var(--jsol-border);
-    border-radius: 4px;
-    padding: 0.35rem 0.6rem;
-    font-size: 0.75rem;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    height: auto;
-}
-
-.j0ui-toolbar-btn:hover {
-    background: var(--jsol-dim-strong);
-    color: #fff;
 }

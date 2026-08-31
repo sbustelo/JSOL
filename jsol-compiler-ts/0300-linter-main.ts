@@ -66,7 +66,7 @@ const $mAuditForbiddenPatterns = function($saMaskedCode: any): Record<string, an
     $aErrors.push( "Linter Error: Arr.map/filter/reduce lambdas cannot use multi-line blocks { ... }. Use single-expression lambdas or named functions.");
   }
   if (Str["indexOf"]($saMaskedCode,  "%") !== -1) {
-    $aErrors.push( "Linter Error: The modulo operator '%' is FORBIDDEN. Use Math.modX($a, $b).");
+    $aErrors.push( 'Linter Error: The modulo operator \'%\' is FORBIDDEN. Use Math.modX($a, $b).');
   }
   return JSOL.dict("valid",  $aErrors.length === 0,  "errors",  $aErrors,  "warnings",  $aWarnings);
 };

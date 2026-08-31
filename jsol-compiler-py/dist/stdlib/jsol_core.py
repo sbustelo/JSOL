@@ -22,6 +22,10 @@ class JSOL:
         return cls.JSOL_m_lastFunction_ok["ok"]
 
     @staticmethod
+    def eval(expr):
+        return "[EVAL_UNAVAILABLE_IN_AOT_MODE]"
+
+    @staticmethod
     def dict(*args):
         d = {}
         i = 0

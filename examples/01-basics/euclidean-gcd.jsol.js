@@ -15,6 +15,7 @@
 - @param {number} $nA - First non-negative integer.
 - @param {number} $nB - Second non-negative integer.
 - @returns {number} - The greatest common divisor of $nA and $nB.
+
 */
 
 /**

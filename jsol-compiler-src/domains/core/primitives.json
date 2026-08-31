@@ -5,14 +5,15 @@
   "Arr.len", "Arr.count", "Arr.push", "Arr.pop", "Arr.shift", "Arr.unshift", "Arr.slice", "Arr.indexOf", "Arr.join", "Arr.sort", "Arr.contains",
   "Map.has", "Map.keys", "Map.values", "Map.count", "Map.create", "Map.get",
   "Bool.and", "Bool.or", "Bool.xor", "Bool.not", "Bool.eq", "Bool.neq",
-  "Cast.toInt", "Cast.toStr", "Cast.toFloat",
+  "Cast.toInt", "Cast.toStr", "Cast.toFloat", "Cast.toBool",
   "Bit.and", "Bit.or", "Bit.xor", "Bit.not", "Bit.shiftL", "Bit.shiftR",
   "Regex.match", "Regex.replace", "Regex.test",
-  "JSOL.hasKey", "JSOL.len", "JSOL.count", "JSOL.set", "JSOL.unset", "JSOL.ok", "JSOL.resetShadow",
+  "JSOL.hasKey", "JSOL.len", "JSOL.count", "JSOL.set", "JSOL.unset", "JSOL.ok", "JSOL.resetShadow", "JSOL.eval",
   "JSOL.JS", "JSOL.PHP", "JSOL.PY", "JSOL.use", "JSOL.range", "isNaN",
   "Math.abs", "Math.pow", "Math.sqrt", "Math.cbrt", "Math.floor", "Math.ceil", "Math.trunc",
   "Math.sum", "Math.sub", "Math.mul", "Math.div", "Math.idiv",
   "Math.E", "Math.PI", "Math.sin", "Math.cos", "Math.tan", "Math.asin", "Math.acos", "Math.atan", "Math.atan2",
   "Math.modX", "Math.roundX", "Math.logX", "Math.ln",
+  "Math.min", "Math.max",
   "Math.eq", "Math.neq", "Math.gt", "Math.lt", "Math.gte", "Math.lte"
 ]

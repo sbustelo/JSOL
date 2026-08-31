@@ -25,9 +25,17 @@ const jsolGlobal = {
         },
         count: function(arr) { return arr ? arr.length : 0; },
         len: function(str) { return str ? str.length : 0; },
-        use: function() {}
+        use: function() {},
+        eval: function(expr) {
+            try {
+                const fn = new Function('Math', 'Str', 'Arr', 'Map', 'Cast', 'Bool', 'Rgx', 'JSOL', 'return (' + expr + ');');
+                return fn(jsolGlobal.Math, jsolGlobal.Str, jsolGlobal.Arr, jsolGlobal.Map, jsolGlobal.Cast, jsolGlobal.Bool, jsolGlobal.Rgx, jsolGlobal.JSOL);
+            } catch(e) {
+                return "[EVAL_ERROR: " + e.message + "]";
+            }
+        }
     },
-
+	
 Cast: {
         toInt: function(val) {
             let num;

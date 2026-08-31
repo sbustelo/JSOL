@@ -60,7 +60,7 @@ $mAuditForbiddenPatterns = function($saMaskedCode) use (&$bIsLinterWordChar) {
     $aErrors[] =  "Linter Error: Arr.map/filter/reduce lambdas cannot use multi-line blocks { ... }. Use single-expression lambdas or named functions.";
   }
   if (Str::indexOf($saMaskedCode,  "%") !== -1) {
-    $aErrors[] =  "Linter Error: The modulo operator '%' is FORBIDDEN. Use Math.modX($a, $b).";
+    $aErrors[] =  'Linter Error: The modulo operator \'%\' is FORBIDDEN. Use Math.modX($a, $b).';
   }
   return JSOL::dict("valid",  count($aErrors) === 0,  "errors",  $aErrors,  "warnings",  $aWarnings);
 };

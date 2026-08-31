@@ -54,8 +54,8 @@ const $mAuditForbiddenPatterns = function($saMaskedCode) {
     if (Regex.test("Arr\\.(map|filter|reduce)\\s*\\(.*=>\\s*\\{", $saMaskedCode, "")) {
         Arr.push($aErrors, "Linter Error: Arr.map/filter/reduce lambdas cannot use multi-line blocks { ... }. Use single-expression lambdas or named functions.");
     }
-    if (Str.indexOf($saMaskedCode, "%") !== -1) {
-        Arr.push($aErrors, "Linter Error: The modulo operator '%' is FORBIDDEN. Use Math.modX($a, $b).");
+	if (Str.indexOf($saMaskedCode, "%") !== -1) {
+        Arr.push($aErrors, 'Linter Error: The modulo operator \'%\' is FORBIDDEN. Use Math.modX($a, $b).');
     }
 
     return Map.create("valid", Arr.len($aErrors) === 0, "errors", $aErrors, "warnings", $aWarnings);

@@ -103,7 +103,7 @@ def mAuditForbiddenPatterns(saMaskedCode):
 
   if JSOL.str_index_of(saMaskedCode,  "%") != -1: 
 
-    aErrors.append( "Linter Error: The modulo operator '%' is FORBIDDEN. Use Math.modX($a, $b).");
+    aErrors.append( 'Linter Error: The modulo operator \'%\' is FORBIDDEN. Use Math.modX($a, $b).');
 
 
   return JSOL.dict("valid",  len(aErrors) == 0,  "errors",  aErrors,  "warnings",  aWarnings);
