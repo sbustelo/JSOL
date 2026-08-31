@@ -39,7 +39,7 @@ class JSOL {
 
 class Cast {
     public static function toInt($val) {
-        if (!is_numeric($val)) {
+        if (!is_numeric($val) || (is_string($val) && trim($val) === '')) {
             JSOL::setShadow(false, "PARSE_ERROR", "Cast.toInt", JSOL::dict("val", $val));
             return 0;
         }
@@ -47,7 +47,7 @@ class Cast {
         return intval($val);
     }
     public static function toFloat($val) {
-        if (!is_numeric($val)) {
+        if (!is_numeric($val) || (is_string($val) && trim($val) === '')) {
             JSOL::setShadow(false, "PARSE_ERROR", "Cast.toFloat", JSOL::dict("val", $val));
             return 0.0;
         }
@@ -58,6 +58,13 @@ class Cast {
         if ($val === null) return "";
         if ($val === false) return "false";
         if ($val === true) return "true";
+        // strval() en PHP restringe los decimales según la directiva 'precision'. 
+        // json_encode garantiza emitir el string bajo la representación exacta IEEE 754 Grisu3.
+        if (is_float($val) && !is_nan($val) && !is_infinite($val)) {
+            $enc = json_encode($val);
+            if ($enc === '0') return '0'; 
+            return $enc;
+        }
         return strval($val);
     }
     public static function toBool($val) {

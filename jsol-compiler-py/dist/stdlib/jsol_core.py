@@ -76,20 +76,26 @@ class JSOL:
     @staticmethod
     def to_int(val):
         try:
-            v = int(val)
+            # Si es un string con espacios vacíos, se fuerza a error para paridad con JS.
+            if isinstance(val, str) and val.strip() == '':
+                raise ValueError
+            # Permite procesar "12.5" como 12, igual que Math.trunc(Number("12.5")) en JS.
+            v = int(math.trunc(float(val)))
             JSOL.set_shadow(True, "NONE", "Cast.toInt", JSOL.dict("val", val))
             return v
-        except ValueError:
+        except (ValueError, TypeError):
             JSOL.set_shadow(False, "PARSE_ERROR", "Cast.toInt", JSOL.dict("val", val))
             return 0
 
     @staticmethod
     def to_float(val):
         try:
+            if isinstance(val, str) and val.strip() == '':
+                raise ValueError
             v = float(val)
             JSOL.set_shadow(True, "NONE", "Cast.toFloat", JSOL.dict("val", val))
             return v
-        except ValueError:
+        except (ValueError, TypeError):
             JSOL.set_shadow(False, "PARSE_ERROR", "Cast.toFloat", JSOL.dict("val", val))
             return 0.0
 

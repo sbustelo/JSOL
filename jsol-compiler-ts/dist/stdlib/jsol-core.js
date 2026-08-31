@@ -28,13 +28,23 @@ const jsolGlobal = {
         use: function() {}
     },
 
-    Cast: {
+Cast: {
         toInt: function(val) {
-            const parsed = parseInt(val, 10);
-            if (Number.isNaN(parsed)) {
+            let num;
+            if (typeof val === 'string') {
+                // Number() es estricto: "12abc" es NaN. parseInt es laxo ("12abc" -> 12).
+                if (val.trim() === '') num = NaN;
+                else num = Number(val);
+            } else {
+                num = Number(val);
+            }
+            
+            if (Number.isNaN(num)) {
                 jsolGlobal.JSOL.setShadow(false, "PARSE_ERROR", "Cast.toInt", jsolGlobal.JSOL.dict("val", val));
                 return 0;
             }
+            
+            const parsed = Math.trunc(num);
             if (parsed > 9007199254740991 || parsed < -9007199254740991) {
                 jsolGlobal.JSOL.setShadow(false, "OVERFLOW", "Cast.toInt", jsolGlobal.JSOL.dict("val", val));
             } else {
@@ -43,13 +53,20 @@ const jsolGlobal = {
             return parsed;
         },
         toFloat: function(val) {
-            const parsed = parseFloat(val);
-            if (Number.isNaN(parsed)) {
+            let num;
+            if (typeof val === 'string') {
+                if (val.trim() === '') num = NaN;
+                else num = Number(val);
+            } else {
+                num = Number(val);
+            }
+
+            if (Number.isNaN(num)) {
                 jsolGlobal.JSOL.setShadow(false, "PARSE_ERROR", "Cast.toFloat", jsolGlobal.JSOL.dict("val", val));
                 return 0.0;
             }
             jsolGlobal.JSOL.setShadow(true, "NONE", "Cast.toFloat", jsolGlobal.JSOL.dict());
-            return parsed;
+            return num;
         },
         toStr: function(val) {
             if (val === null) return "";
@@ -151,7 +168,7 @@ const jsolGlobal = {
                 const rounded = nativeMath.round(res);
                 return nativeMath.abs(res - rounded) < 1e-14 ? rounded : res;
             },
-			
+
             ln: function(n) { return nativeMath.log(n); },
             cbrt: function(n) { return Math.cbrt(n); }
 

@@ -78,8 +78,18 @@ function compileJsolInMemory(string $sourcePath, string $compilerDir, string $ou
 
         // [!] TRAMPA DE OUTPUT BUFFERING: Captura y destruye cualquier HTML escupido por los archivos del compilador
 		ob_start();
-		foreach ($parts as $part) {
-			require_once rtrim($compilerDir, '/') . '/' . $part;
+		try {
+			foreach ($parts as $part) {
+				require_once rtrim($compilerDir, '/') . '/' . $part;
+			}
+		} catch (\Throwable $e) {
+			ob_end_clean();
+			return [
+				'success' => false,
+				'outputLog' => "FATAL ENGINE BOOTSTRAP ERROR:\n" . $e->getMessage() . "\nIn file: " . $e->getFile() . " on line " . $e->getLine(),
+				'compiledFilename' => null,
+				'targets' => []
+			];
 		}
 		ob_end_clean();
 	}
@@ -148,7 +158,16 @@ function compileJsolInMemory(string $sourcePath, string $compilerDir, string $ou
 		'pyTarget' => '', 'pyPrefix' => '', 'pySuffix' => ''
 	];
 
-	$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOpts, $mSSOTData);
+	try {
+		$result = $mExecuteCompilationPipeline($sourceCode, $targetsConfig, $cliOpts, $mSSOTData);
+	} catch (\Throwable $e) {
+		return [
+			'success' => false,
+			'outputLog' => "FATAL INTERNAL ENGINE ERROR:\n" . $e->getMessage() . "\nIn file: " . $e->getFile() . " on line " . $e->getLine(),
+			'compiledFilename' => null,
+			'targets' => []
+		];
+	}
 
 	$baseName = preg_replace('/\.jsol(\.js)?$/', '', basename($sourcePath));
 	$compiledJsFilename = $baseName . '.js';

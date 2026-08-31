@@ -36,8 +36,9 @@ const $aPhp_ExtractVars = function($saText) {
 	return $aVars;
 };
 
+
 const $aPhp_ExtractLocals = function($saBody) {
-	JSOL.use($mPhp_ReadWord, $aPhp_ExtractVars, $iComp_FindCloseParen);
+	JSOL.use($mPhp_ReadWord, $aPhp_ExtractVars, $iComp_FindCloseParen, $bPhp_IsIdentChar);
 	let $aLocals = [];
 	let $i = 0;
 	const $iLen = Str.len($saBody);
