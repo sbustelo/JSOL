@@ -1,5 +1,3 @@
-<img src="assets/icn/jsol-icon.svg" width="64" alt="JSOL icon">
-
 # JSOL-X: JSOL for Excel (Vision)
 
 jsol-x-mascot-full.png
@@ -21,8 +19,6 @@ JSOL is at v0.2. JSOL-X is not on the roadmap for v1.0, or even v2.0. But the ty
 This directory holds the working documents for that projection. They are speculative by design. Their purpose is to give direction to current specification efforts, not to describe something that exists.
 
 
-
-_The JSOL-X mascot is a vision at the time: a fuzzy hologram with preliminary JSOL-X code for calculating Compound Interest_
 
 ## Documents
 

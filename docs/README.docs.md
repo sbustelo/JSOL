@@ -1,6 +1,3 @@
-==================================================
-FILE: docs/README.docs.md
-==================================================
 # JSOL Documentation
 
 ## For new users
@@ -25,6 +22,14 @@ FILE: docs/README.docs.md
 
 * * *
 
+## 11_ ESPECIFICACIÓN DEL LENGUAJE (LANGUAGE SPECIFICATION)
+## 12_ ARQUITECTURA DEL COMPILADOR Y TOOLING
+## 13_ GUÍAS, PRODUCTO Y HOJA DE RUTA (PRODUCT & ROADMAP)
+
+Working drafts for v0.3 (in spanish).
+
+* * *
+
 ## 20 product/ — Product and business context
 
 | File | What it covers |
@@ -40,9 +45,6 @@ FILE: docs/README.docs.md
 
 | File/Dir | What it covers |
 | --- | --- |
-| ROADMAP.md | Priority-ordered backlog: what's next (v0.3 and beyond). |
-| 0.3 SPEC CANDIDATE 0.2.96 - 2026 08 23.md | v0.3 target: namespace revamp, semantic parity, type prefixes. |
-| SPEC_CANDIDATES.md | Proposed new methods and pending decisions. |
 | EXTENDING.md | Structural feasibility of new language targets: syntax, closures, memory models, AST-free pipeline rationale. |
 | EXTENDING-TYPES.md | Type system expansion beyond current JSON natives. |
 | EXTENDING-SEMANTIC-PARITY.md | Semantic divergences across target languages that threaten Deterministic Parity. The full catalog with proposed resolutions. |
